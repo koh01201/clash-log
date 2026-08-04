@@ -419,8 +419,8 @@ table.kv td.down{background:var(--downbg);color:var(--down)}
 .badge.win{background:var(--up)}.badge.lose{background:var(--down)}
 .crowns{display:block;font-size:15px;font-weight:700;margin-top:4px}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
+@media(max-width:520px){.wideonly{display:none}.narrowonly{display:block}}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
-  .wideonly{display:none}.narrowonly{display:block}
   nav a{font-size:12px;padding:6px 11px}
   .navlab{width:100%;margin-bottom:2px}
   table.kv th{width:130px}
