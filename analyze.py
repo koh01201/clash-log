@@ -223,10 +223,11 @@ def _chart_wide(items, baseline, baseline_label, icon_mode):
 
 def _chart_narrow(items, baseline, baseline_label, icon_mode):
     """スマホ用。1件を数段に分け、絵と数字を大きく出す。"""
-    row_h = {"none": 64, "single": 90, "deck": 108}[icon_mode]
+    row_h = {"none": 64, "single": 90, "deck": 100}[icon_mode]
     top, W = 34, 380
     height = top + row_h * len(items) + 6
-    x0, x1 = 24, 286
+    x0 = 72 if icon_mode == "deck" else 24
+    x1 = 286
     span = x1 - x0
 
     def px(v):
@@ -234,7 +235,9 @@ def _chart_narrow(items, baseline, baseline_label, icon_mode):
 
     bx = px(baseline)
     out = [f'<svg viewBox="0 0 {W} {height}" class="chart">']
-    out.append(f'<line class="base" x1="{bx:.1f}" y1="{top-14}" x2="{bx:.1f}" y2="{height-6}"/>')
+    if icon_mode != "deck":
+        # カードを貫かない配置なので、基準線は通しで引く
+        out.append(f'<line class="base" x1="{bx:.1f}" y1="{top-14}" x2="{bx:.1f}" y2="{height-6}"/>')
     out.append(f'<text class="baselab" x="{bx:.1f}" y="{top-18}" text-anchor="middle">{esc(baseline_label)}</text>')
 
     for i, item in enumerate(items):
@@ -243,26 +246,29 @@ def _chart_narrow(items, baseline, baseline_label, icon_mode):
         base_y = top + row_h * i + 4
         p, lo, hi = wilson(wins, total)
         cls = tone_class(p, baseline, total)
-
-        out.append(f'<text class="n" x="{W}" y="{base_y+13:.1f}" text-anchor="end">{wins}勝{total-wins}敗</text>')
+        score = f"{wins}勝{total - wins}敗"
 
         if icon_mode == "deck":
             gap, iw = 4, 36
             ih = iw * 1.2
             offset = (W - (iw * 8 + gap * 7)) / 2
             for j, c in enumerate(cards[:8]):
-                out.append(icon_tag(c, offset + j * (iw + gap), base_y + 20, iw, ih))
-            ident_h = 20 + ih
-        elif icon_mode == "single":
-            if cards:
-                out.append(icon_tag(cards[0], 0, base_y, 38, 46))
-            out.append(f'<text class="lab" x="46" y="{base_y+28:.1f}">{esc(label)}</text>')
-            ident_h = 46
+                out.append(icon_tag(c, offset + j * (iw + gap), base_y + 6, iw, ih))
+            by = base_y + 6 + ih + 22
+            # 勝敗は帯の左、割合は帯の右。カードの上下に数字を置かない
+            out.append(f'<text class="n" x="0" y="{by+5:.1f}">{score}</text>')
+            out.append(f'<line class="base" x1="{bx:.1f}" y1="{by-15:.1f}" x2="{bx:.1f}" y2="{by+15:.1f}"/>')
         else:
-            out.append(f'<text class="lab" x="0" y="{base_y+13:.1f}">{esc(label)}</text>')
-            ident_h = 20
+            out.append(f'<text class="n" x="{W}" y="{base_y+13:.1f}" text-anchor="end">{score}</text>')
+            if icon_mode == "single":
+                if cards:
+                    out.append(icon_tag(cards[0], 0, base_y, 38, 46))
+                out.append(f'<text class="lab" x="46" y="{base_y+28:.1f}">{esc(label)}</text>')
+                by = base_y + 46 + 18
+            else:
+                out.append(f'<text class="lab" x="0" y="{base_y+13:.1f}">{esc(label)}</text>')
+                by = base_y + 20 + 18
 
-        by = base_y + ident_h + 18
         w = max(8.0, px(hi) - px(lo))
         out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{by-8:.1f}" width="{w:.1f}" height="16" rx="2"/>')
         out.append(f'<rect class="mark {cls}" x="{px(p)-1.5:.1f}" y="{by-12:.1f}" width="3" height="24"/>')
