@@ -25,6 +25,11 @@ jobs:
           CR_TOKEN: ${{ secrets.CR_TOKEN }}
         run: python collect_battles.py
 
+      - name: Fetch cards
+        env:
+          CR_TOKEN: ${{ secrets.CR_TOKEN }}
+        run: python fetch_cards.py
+
       - name: Build report
         run: python analyze.py
 
@@ -32,6 +37,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add battles.csv index.html chosi.html mydeck.html enemy.html
-          git diff --staged --quiet || git commit -m "update battles.csv"
+          git add -A
+          git diff --staged --quiet || git commit -m "update data"
           git push
