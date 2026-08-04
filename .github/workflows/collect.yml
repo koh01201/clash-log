@@ -2,7 +2,7 @@ name: collect
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "23 */2 * * *"
   workflow_dispatch:
 
 permissions:
