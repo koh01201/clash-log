@@ -265,7 +265,9 @@ body{margin:0;padding:20px 16px 64px;background:var(--bg);color:var(--ink);
   font-family:"Yu Gothic","Hiragino Kaku Gothic ProN","Noto Sans JP","Meiryo",sans-serif;
   font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
 .wrap{max-width:900px;margin:0 auto}
-nav{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+nav{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;z-index:20;
+  background:var(--bg);padding:10px 0 8px;margin:-10px 0 12px;
+  box-shadow:0 6px 8px -8px rgba(0,0,0,.28)}
 nav a{text-decoration:none;background:var(--panel);color:var(--ink);font-size:13px;
   padding:7px 18px;border:1px solid var(--line);border-radius:4px}
 nav a.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
@@ -313,6 +315,19 @@ table.kv td.down{background:var(--downbg);color:var(--down)}
 .bar{height:10px;background:#E7EAED;border-radius:2px;overflow:hidden;margin:10px 0 6px}
 .bar i{display:block;height:100%;background:var(--accent)}
 .barlab{display:flex;justify-content:space-between;font-size:12px;color:var(--label)}
+.hl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hl{background:var(--labelbg);border:1px solid var(--line);border-radius:4px;
+  padding:12px 14px 10px;display:flex;flex-direction:column;gap:6px}
+.hl-lab{font-size:11.5px;color:var(--label)}
+.hl-val{font-size:24px;font-weight:700;line-height:1.1}
+.hl-u{font-size:12px;font-weight:400;color:var(--label);margin-left:1px}
+.hl-sub{font-size:11px;color:var(--label);margin-top:-4px}
+.hl-card{display:flex;align-items:center;gap:8px;min-height:38px}
+.hl-card img,.hl-card .noimg{width:32px;aspect-ratio:5/6;border-radius:3px;display:block}
+.hl-card .noimg{background:#E7EAED;border:1px solid var(--line)}
+.hl-card b{font-size:13px;font-weight:700}
+.hl-card b.wide{font-size:14px}
+.hl .deck{grid-template-columns:repeat(4,1fr);gap:2px;max-width:150px}
 .menu{display:grid;gap:10px}
 .menu a{display:flex;justify-content:space-between;align-items:center;gap:16px;
   text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);
@@ -354,6 +369,7 @@ table.kv td.down{background:var(--downbg);color:var(--down)}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
   table.kv th{width:130px}
+  .hl-grid{grid-template-columns:1fr 1fr}
   .duel{grid-template-columns:1fr auto 1fr;gap:8px}
   .mid{min-width:52px}.badge{font-size:15px}.crowns{font-size:13px}
   .hp{font-size:9px}}
@@ -447,6 +463,24 @@ def battle_log(rows, limit=100):
     return "".join(blocks)
 
 
+def hl_box(label, inner, wins, total, baseline):
+    p, _, _ = wilson(wins, total)
+    tone = "up-t" if p > baseline else "down-t" if p < baseline else ""
+    return (f'<div class="hl"><span class="hl-lab">{esc(label)}</span>{inner}'
+            f'<span class="hl-val {tone}">{p*100:.1f}<span class="hl-u">%</span></span>'
+            f'<span class="hl-sub">{wins}勝{total-wins}敗</span></div>')
+
+
+def hl_card(name):
+    img = (f'<img src="{esc(ICONS[name])}" alt="{esc(name)}">' if ICONS.get(name)
+           else '<span class="noimg"></span>')
+    return f'<div class="hl-card">{img}<b>{esc(name)}</b></div>'
+
+
+def hl_text(text):
+    return f'<div class="hl-card"><b class="wide">{esc(text)}</b></div>'
+
+
 def coverage_strip(rows):
     per_day = defaultdict(int)
     for r in rows:
@@ -497,24 +531,6 @@ def main():
     first, last = all_rows[0]["_dt"], all_rows[-1]["_dt"]
     sessions = len({r["_session"] for r in rows})
     stamp = f"対象期間 {first:%Y/%m/%d} 〜 {last:%Y/%m/%d}　更新 {now_jst():%Y/%m/%d %H:%M} JST"
-
-    # ---- 概要 ----
-    page("index.html", "対戦記録レポート", stamp, f"""
-  {panel("現況", table([
-      ("勝率", f'<span class="big">{p*100:.1f}<span class="u">%</span></span>',
-       "up" if p > 0.5 else "down" if p < 0.5 else ""),
-      ("95%信頼区間", f"{lo*100:.1f}% 〜 {hi*100:.1f}%"),
-      ("勝敗", f'<span class="up-t">{wins}勝</span> / <span class="down-t">{decided-wins}敗</span>'),
-      ("集計対象", f"{len(rows)} 試合"),
-      ("記録総数", f"{len(all_rows)} 試合"),
-      ("プレイ回数", f"{sessions} 回"),
-  ]), "ランク戦のみを対象とする。")}
-  <div class="menu">
-    <a href="chosi.html"><span><b>調子の分析</b><span>連敗後の勝率、連続対戦数、時間帯、曜日</span></span><em>表示 &gt;</em></a>
-    <a href="mydeck.html"><span><b>使用デッキ別</b><span>デッキ構成ごとの勝率と、入れ替えたカードの影響</span></span><em>表示 &gt;</em></a>
-    <a href="enemy.html"><span><b>対戦相手カード別</b><span>相手の編成に含まれるカードと勝率の関係</span></span><em>表示 &gt;</em></a>
-  </div>
-""")
 
     # ---- 調子 ----
     by_hour = tally(rows, lambda r: r["_hour"])
@@ -655,6 +671,57 @@ def main():
   {panel("直近100試合", battle_log(all_rows, 100),
       "左が自分、右が相手の編成。数字は残ったタワーのHP。ランク戦以外も含む。",
       "画像にマウスを乗せるとカード名が出る。")}
+""")
+
+    # ---- 概要（ハイライト） ----
+    MIN_HL = 5
+    boxes = []
+
+    good_decks = [(k, w, t) for k, (w, t) in by_deck.items() if t >= MIN_HL]
+    if good_decks:
+        k, w, t = max(good_decks, key=lambda x: x[1] / x[2])
+        boxes.append(hl_box("最も勝てているデッキ", deck_grid(deck_face.get(k, [])), w, t, p))
+        k, w, t = min(good_decks, key=lambda x: x[1] / x[2])
+        if len(good_decks) > 1:
+            boxes.append(hl_box("苦戦しているデッキ", deck_grid(deck_face.get(k, [])), w, t, p))
+
+    if ranked:
+        c, (w, t) = ranked[0]
+        boxes.append(hl_box("苦手な相手カード", hl_card(c), w, t, p))
+        c, (w, t) = ranked[-1]
+        boxes.append(hl_box("得意な相手カード", hl_card(c), w, t, p))
+
+    good_hours = [(h, w, t) for h, (w, t) in by_hour.items() if t >= MIN_HL]
+    if good_hours:
+        h, w, t = max(good_hours, key=lambda x: x[1] / x[2])
+        boxes.append(hl_box("勝てている時間帯", hl_text(f"{h}時台"), w, t, p))
+        if len(good_hours) > 1:
+            h, w, t = min(good_hours, key=lambda x: x[1] / x[2])
+            boxes.append(hl_box("負けている時間帯", hl_text(f"{h}時台"), w, t, p))
+
+    highlights = ('<div class="hl-grid">' + "".join(boxes) + "</div>") if boxes \
+        else '<p class="empty">判定できるだけの試合数がまだない。</p>'
+
+    page("index.html", "対戦記録レポート", stamp, f"""
+  {panel("現況", table([
+      ("勝率", f'<span class="big">{p*100:.1f}<span class="u">%</span></span>',
+       "up" if p > 0.5 else "down" if p < 0.5 else ""),
+      ("95%信頼区間", f"{lo*100:.1f}% 〜 {hi*100:.1f}%"),
+      ("勝敗", f'<span class="up-t">{wins}勝</span> / <span class="down-t">{decided-wins}敗</span>'),
+      ("集計対象", f"{len(rows)} 試合"),
+      ("記録総数", f"{len(all_rows)} 試合"),
+      ("プレイ回数", f"{sessions} 回"),
+  ]), "ランク戦のみを対象とする。")}
+  {panel("いま目立つところ", highlights,
+      f"{MIN_HL}試合以上あるものから選んでいる。基準は全体平均 {p*100:.1f}%。",
+      "件数の少ないものは偶然で極端な値になりやすい。詳細は上のタブから。")}
+  {panel("検証課題：連敗後に勝率は低下するか", table([
+      ("現時点の判定", f'<span class="big {judge_cls}">{judge}</span>'),
+      ("敗戦後の勝率", f"{pl*100:.1f}%（{aft_l[0]}勝{aft_l[1]-aft_l[0]}敗）"),
+      ("勝利後の勝率", f"{pw*100:.1f}%（{aft_w[0]}勝{aft_w[1]-aft_w[0]}敗）"),
+  ]) + f'<div class="bar"><i style="width:{min(100, decided/goal*100):.1f}%"></i></div>'
+     f'<div class="barlab"><span>必要試合数に対する進捗 {decided} / {goal}</span>'
+     f'<span>残り {max(0, goal-decided)} 試合</span></div>')}
 """)
 
     print(f"5ページを出力（対象 {len(rows)} 試合 / 除外 {excluded} 件）")
