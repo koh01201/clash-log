@@ -14,6 +14,7 @@ battles.csv を読み、report.html を出力する。
 
 import csv
 import datetime
+import json
 import html
 import math
 import os
@@ -146,19 +147,50 @@ PAGES = [
 ]
 
 
+CARDS_FILE = os.path.join(SCRIPT_DIR, "cards.json")
+
+
+def load_icons():
+    """cards.json からカード名→画像URLの表を読む。無ければ空（文字だけで動く）。"""
+    if not os.path.exists(CARDS_FILE):
+        return {}
+    try:
+        with open(CARDS_FILE, encoding="utf-8") as f:
+            return json.load(f).get("cards", {}) or {}
+    except Exception:
+        return {}
+
+
+ICONS = {}
+
+
 def esc(text):
     return html.escape(str(text))
 
 
-def rate_rows(items, baseline=0.5, baseline_label="50%"):
-    """items: [(ラベル, 勝ち, 全体)]。基準より上は赤、下は青、試合数不足は灰。"""
+def icon_tag(name, x, y, w, h):
+    """カード1枚分の画像。未登録なら灰色の枠で埋める。"""
+    url = ICONS.get(name)
+    if not url:
+        return (f'<rect class="noicon" x="{x:.1f}" y="{y:.1f}" '
+                f'width="{w:.1f}" height="{h:.1f}" rx="2"/>')
+    return (f'<image href="{esc(url)}" x="{x:.1f}" y="{y:.1f}" '
+            f'width="{w:.1f}" height="{h:.1f}" preserveAspectRatio="xMidYMid meet">'
+            f'<title>{esc(name)}</title></image>')
+
+
+def rate_rows(items, baseline=0.5, baseline_label="50%", icon_mode="none"):
+    """items: [(ラベル, 勝ち, 全体)] または [(ラベル, 勝ち, 全体, カード名リスト)]。
+    基準より上は赤、下は青、試合数不足は灰。
+    icon_mode: none=文字のみ / single=絵＋名前 / deck=絵8枚のみ"""
     if not items:
         return '<p class="empty">該当するデータがない。</p>'
 
-    row_h = 42
+    row_h = 42 if icon_mode == "none" else 46
     top = 26
     height = top + row_h * len(items) + 4
-    x0, x1 = 210, 520
+    x0 = {"none": 210, "single": 210, "deck": 216}[icon_mode]
+    x1 = 520
     span = x1 - x0
 
     def px(p):
@@ -169,7 +201,9 @@ def rate_rows(items, baseline=0.5, baseline_label="50%"):
     out.append(f'<line class="base" x1="{bx:.1f}" y1="{top - 12}" x2="{bx:.1f}" y2="{height - 4}"/>')
     out.append(f'<text class="baselab" x="{bx:.1f}" y="{top - 16}" text-anchor="middle">{esc(baseline_label)}</text>')
 
-    for i, (label, wins, total) in enumerate(items):
+    for i, item in enumerate(items):
+        label, wins, total = item[0], item[1], item[2]
+        cards = item[3] if len(item) > 3 else []
         y = top + row_h * i + row_h / 2
         p, lo, hi = wilson(wins, total)
         if total < RELIABLE_N:
@@ -183,7 +217,15 @@ def rate_rows(items, baseline=0.5, baseline_label="50%"):
         w = max(10.0, px(hi) - px(lo))
 
         out.append(f'<line class="hair" x1="0" y1="{y + row_h / 2:.1f}" x2="720" y2="{y + row_h / 2:.1f}"/>')
-        out.append(f'<text class="lab" x="0" y="{y + 5:.1f}">{esc(label)}</text>')
+        if icon_mode == "deck":
+            for j, cname in enumerate(cards[:8]):
+                out.append(icon_tag(cname, j * 25, y - 14, 22, 27))
+        elif icon_mode == "single":
+            if cards:
+                out.append(icon_tag(cards[0], 0, y - 14, 22, 27))
+            out.append(f'<text class="lab small" x="28" y="{y + 5:.1f}">{esc(label)}</text>')
+        else:
+            out.append(f'<text class="lab" x="0" y="{y + 5:.1f}">{esc(label)}</text>')
         out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{y - 8:.1f}" width="{w:.1f}" height="16" rx="2"/>')
         out.append(f'<rect class="mark {cls}" x="{px(p) - 1.5:.1f}" y="{y - 13:.1f}" width="3" height="26"/>')
         out.append(f'<text class="val {cls}" x="600" y="{y + 7:.1f}" text-anchor="end">'
@@ -248,6 +290,8 @@ nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
 .base{stroke:#B6BDC4;stroke-width:1;stroke-dasharray:3 3}
 .baselab{font-size:10px;fill:var(--label)}
 .lab{font-size:12.5px;fill:var(--ink)}
+.lab.small{font-size:11.5px}
+.noicon{fill:#E7EAED;stroke:var(--line)}
 .band.up{fill:#F7D9DE}.band.down{fill:#D6E3F3}.band.na{fill:#E7EAED}
 .mark.up{fill:var(--up)}.mark.down{fill:var(--down)}.mark.na{fill:var(--na)}
 .val{font-size:19px;font-weight:700}
@@ -306,7 +350,7 @@ def page(fname, title, subtitle, body):
            f"<title>{esc(title)}｜対戦記録レポート</title><style>{CSS}</style></head><body><div class='wrap'>"
            + nav(fname)
            + f"<div class='head'><h1>{esc(title)}</h1><p>{esc(subtitle)}</p></div>"
-           + body + "<footer>battles.csv より自動生成</footer></div></body></html>")
+           + body + "<footer>battles.csv より自動生成<br>カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、Supercell は内容に関与していない。</footer></div></body></html>")
     with open(os.path.join(SCRIPT_DIR, fname), "w", encoding="utf-8") as f:
         f.write(doc)
 
@@ -357,6 +401,8 @@ def coverage_strip(rows):
 # ---------------- 本体 ----------------
 
 def main():
+    global ICONS
+    ICONS = load_icons()
     all_rows = add_sessions(load_rows())
     prev_state(all_rows)
     rows = [r for r in all_rows if is_ranked(r)] if RANKED_ONLY else list(all_rows)
@@ -469,10 +515,10 @@ def main():
     for r in rows:
         k = deck_key(r)
         if k and k not in deck_face:
-            deck_face[k] = "・".join([c for c in r["my_deck"].split("|") if c][:3])
+            deck_face[k] = [c for c in r["my_deck"].split("|") if c][:8]
     deck_rank = sorted(by_deck.items(), key=lambda kv: -kv[1][1])
-    deck_items = [(f"{i}. {deck_face.get(k, '?')}…", w, t)
-                  for i, (k, (w, t)) in enumerate(deck_rank[:8], 1)]
+    deck_items = [("", w, t, deck_face.get(k, []))
+                  for k, (w, t) in deck_rank[:8]]
 
     my_cards = defaultdict(lambda: [0, 0])
     for r in rows:
@@ -483,15 +529,15 @@ def main():
             if r["result"] == "win":
                 my_cards[c][0] += 1
     varying = {c: v for c, v in my_cards.items() if v[1] < decided}
-    my_items = [(c, w, t) for c, (w, t) in
+    my_items = [(c, w, t, [c]) for c, (w, t) in
                 sorted(varying.items(), key=lambda kv: -kv[1][1])[:TOP_CARDS]]
     fixed_n = len(my_cards) - len(varying)
 
     page("mydeck.html", "使用デッキ別の勝率", stamp, f"""
-  {panel("デッキ構成別の勝率", rate_rows(deck_items, p, f"平均 {p*100:.0f}%"),
-      "基準線は全体平均。デッキ変更の効果はここに現れる。",
+  {panel("デッキ構成別の勝率", rate_rows(deck_items, p, f"平均 {p*100:.0f}%", "deck"),
+      "左に並ぶ8枚がその構成。基準線は全体平均で、デッキ変更の効果はここに現れる。",
       f"使用したデッキ構成は{len(by_deck)}種類。試合数の多い順に上位8件を表示する。")}
-  {panel("入れ替えのあったカード", rate_rows(my_items, p, f"平均 {p*100:.0f}%") if my_items
+  {panel("入れ替えのあったカード", rate_rows(my_items, p, f"平均 {p*100:.0f}%", "single") if my_items
          else '<p class="empty">入れ替えの記録がまだない。</p>',
       "全試合に含まれる固定枠は差が生じないため除外している。",
       f"常時採用のカード{fixed_n}枚を表から除外した。")}
@@ -509,16 +555,16 @@ def main():
                 opp_cards[c][0] += 1
     enough = {c: v for c, v in opp_cards.items() if v[1] >= MIN_CARD_N}
     ranked = sorted(enough.items(), key=lambda kv: kv[1][0] / kv[1][1])
-    worst = [(c, w, t) for c, (w, t) in ranked[:TOP_CARDS]]
-    best = [(c, w, t) for c, (w, t) in ranked[::-1][:TOP_CARDS]]
+    worst = [(c, w, t, [c]) for c, (w, t) in ranked[:TOP_CARDS]]
+    best = [(c, w, t, [c]) for c, (w, t) in ranked[::-1][:TOP_CARDS]]
 
     page("enemy.html", "対戦相手のカード別の勝率", stamp, f"""
-  {panel("勝率の低いカード", rate_rows(worst, p, f"平均 {p*100:.0f}%") if worst
+  {panel("勝率の低いカード", rate_rows(worst, p, f"平均 {p*100:.0f}%", "single") if worst
          else '<p class="empty">判定できるカードがまだない。</p>',
       "相手の編成に当該カードが含まれていた試合における、自分の勝率。",
       f"{MIN_CARD_N}試合以上対戦したカードのみを対象とする"
       f"（全{len(opp_cards)}種類のうち{len(enough)}種類）。")}
-  {panel("勝率の高いカード", rate_rows(best, p, f"平均 {p*100:.0f}%") if best else "")}
+  {panel("勝率の高いカード", rate_rows(best, p, f"平均 {p*100:.0f}%", "single") if best else "")}
   {legend_panel("　カードの種類が多いため、偶然により極端な値が生じやすい。"
                 "個別のカードで判断せず、同種の役割を持つカードが揃って下振れしているかを確認するのが妥当。")}
 """)
