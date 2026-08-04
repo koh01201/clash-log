@@ -181,7 +181,7 @@ def icon_tag(name, x, y, w, h):
 
 
 def _chart_wide(items, baseline, baseline_label, icon_mode):
-    row_h = 42 if icon_mode == "none" else 46
+    row_h = {"none": 42, "deck": 46, "single": 54}[icon_mode]
     top, W = 26, 720
     height = top + row_h * len(items) + 4
     x0 = {"none": 210, "single": 210, "deck": 216}[icon_mode]
@@ -209,8 +209,8 @@ def _chart_wide(items, baseline, baseline_label, icon_mode):
                 out.append(icon_tag(c, j * 25, y - 14, 22, 27))
         elif icon_mode == "single":
             if cards:
-                out.append(icon_tag(cards[0], 0, y - 14, 22, 27))
-            out.append(f'<text class="lab small" x="28" y="{y+5:.1f}">{esc(label)}</text>')
+                out.append(icon_tag(cards[0], 0, y - 19, 32, 38))
+            out.append(f'<text class="lab" x="40" y="{y+5:.1f}">{esc(label)}</text>')
         else:
             out.append(f'<text class="lab" x="0" y="{y+5:.1f}">{esc(label)}</text>')
         out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{y-8:.1f}" width="{w:.1f}" height="16" rx="2"/>')
@@ -441,6 +441,15 @@ table.kv td.down{background:var(--downbg);color:var(--down)}
   padding:2px 0;background:var(--na)}
 .badge.win{background:var(--up)}.badge.lose{background:var(--down)}
 .crowns{display:block;font-size:15px;font-weight:700;margin-top:4px}
+.narrowonly{display:none}
+html[data-layout="narrow"] .wideonly{display:none}
+html[data-layout="narrow"] .narrowonly{display:block}
+.basenote{margin:0 0 6px;font-size:11px;color:var(--label)}
+.lyt{margin-left:auto;font-size:11.5px;color:var(--label);background:var(--panel);
+  border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;
+  font-family:inherit}
+.lyt:hover{border-color:var(--link);color:var(--link)}
+@media print{.navwrap{display:none}}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
   nav a{font-size:12px;padding:6px 11px}
