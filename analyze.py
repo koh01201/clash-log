@@ -265,9 +265,12 @@ body{margin:0;padding:20px 16px 64px;background:var(--bg);color:var(--ink);
   font-family:"Yu Gothic","Hiragino Kaku Gothic ProN","Noto Sans JP","Meiryo",sans-serif;
   font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
 .wrap{max-width:900px;margin:0 auto}
-nav{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;z-index:20;
-  background:var(--bg);padding:10px 0 8px;margin:-10px 0 12px;
-  box-shadow:0 6px 8px -8px rgba(0,0,0,.28)}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav.modes{position:sticky;top:0;z-index:21;background:var(--bg);padding:10px 0 4px;margin:-10px 0 0}
+nav.pages{position:sticky;top:42px;z-index:20;background:var(--bg);padding:0 0 8px;
+  margin:0 0 12px;box-shadow:0 6px 8px -8px rgba(0,0,0,.28)}
+nav.modes a{background:var(--labelbg);font-weight:700}
+nav.modes a.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 nav a{text-decoration:none;background:var(--panel);color:var(--ink);font-size:13px;
   padding:7px 18px;border:1px solid var(--line);border-radius:4px}
 nav a.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
@@ -276,7 +279,9 @@ nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
   padding:16px 20px;margin-bottom:12px;display:flex;justify-content:space-between;
   align-items:flex-end;flex-wrap:wrap;gap:8px}
 .head{border-top:3px solid var(--accent)}
-.head h1{font-size:20px;font-weight:700;margin:0}
+.head h1{font-size:20px;font-weight:700;margin:0;display:flex;align-items:center;gap:10px}
+.mtag{font-size:11.5px;font-weight:700;color:#fff;background:var(--accent);
+  border-radius:3px;padding:2px 9px}
 .head p{margin:0;color:var(--label);font-size:12px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
   padding:18px 20px 16px;margin-bottom:12px}
@@ -376,20 +381,50 @@ footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 """
 
 
-def nav(current):
-    return "<nav>" + "".join(
-        f'<a href="{f}"{" class=\"on\"" if f == current else ""}>{esc(l)}</a>' for f, l in PAGES
-    ) + "</nav>"
+MODES = [
+    ("pol", "", "伝説の道"),
+    ("cw", "cw-", "クラン戦"),
+    ("etc", "etc-", "その他"),
+    ("all", "all-", "すべて"),
+]
+
+AVAILABLE = []          # 実際に生成するモード（試合が1件以上あるもの）
 
 
-def page(fname, title, subtitle, body):
+def classify(row):
+    t = (row.get("battle_type") or "").lower()
+    if "pathoflegend" in t:
+        return "pol"
+    if "riverrace" in t or "clanwar" in t:
+        return "cw"
+    return "etc"
+
+
+def nav(prefix, base):
+    modes = "".join(
+        f'<a href="{pre}{base}"{" class=\'on\'" if pre == prefix else ""}>{esc(lab)}</a>'
+        for key, pre, lab in MODES if key in AVAILABLE
+    )
+    pages = "".join(
+        f'<a href="{prefix}{f}"{" class=\'on\'" if f == base else ""}>{esc(l)}</a>'
+        for f, l in PAGES
+    )
+    return f'<nav class="modes">{modes}</nav><nav class="pages">{pages}</nav>'
+
+
+def page(prefix, base, label, title, subtitle, body):
     doc = ("<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'>"
            "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-           f"<title>{esc(title)}｜対戦記録レポート</title><style>{CSS}</style></head><body><div class='wrap'>"
-           + nav(fname)
-           + f"<div class='head'><h1>{esc(title)}</h1><p>{esc(subtitle)}</p></div>"
-           + body + "<footer>battles.csv より自動生成<br>カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、Supercell は内容に関与していない。</footer></div></body></html>")
-    with open(os.path.join(SCRIPT_DIR, fname), "w", encoding="utf-8") as f:
+           f"<title>{esc(title)}｜{esc(label)}</title><style>{CSS}</style></head>"
+           "<body><div class='wrap'>"
+           + nav(prefix, base)
+           + f"<div class='head'><h1>{esc(title)}<span class='mtag'>{esc(label)}</span></h1>"
+             f"<p>{esc(subtitle)}</p></div>"
+           + body
+           + "<footer>battles.csv より自動生成<br>"
+             "カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、"
+             "Supercell は内容に関与していない。</footer></div></body></html>")
+    with open(os.path.join(SCRIPT_DIR, prefix + base), "w", encoding="utf-8") as f:
         f.write(doc)
 
 
@@ -515,28 +550,23 @@ def coverage_strip(rows):
 
 # ---------------- 本体 ----------------
 
-def main():
-    global ICONS
-    ICONS = load_icons()
-    all_rows = add_sessions(load_rows())
-    prev_state(all_rows)
-    rows = [r for r in all_rows if is_ranked(r)] if RANKED_ONLY else list(all_rows)
-    excluded = len(all_rows) - len(rows)
-    if not rows:
-        raise SystemExit("集計対象の試合がない。")
-
+def build(prefix, label, rows, total_records):
+    """1モード分の5ページを書き出す。"""
     wins = sum(1 for r in rows if r["result"] == "win")
     decided = sum(1 for r in rows if r["result"] != "draw")
+    if decided == 0:
+        return
     p, lo, hi = wilson(wins, decided)
-    first, last = all_rows[0]["_dt"], all_rows[-1]["_dt"]
+    first, last = rows[0]["_dt"], rows[-1]["_dt"]
     sessions = len({r["_session"] for r in rows})
-    stamp = f"対象期間 {first:%Y/%m/%d} 〜 {last:%Y/%m/%d}　更新 {now_jst():%Y/%m/%d %H:%M} JST"
+    stamp = (f"対象期間 {first:%Y/%m/%d} 〜 {last:%Y/%m/%d}"
+             f"　更新 {now_jst():%Y/%m/%d %H:%M} JST")
 
-    # ---- 調子 ----
     by_hour = tally(rows, lambda r: r["_hour"])
     hour_items = [(f"{h}時台", w, t) for h, (w, t) in sorted(by_hour.items())]
     by_pos = tally(rows, lambda r: "6戦目以降" if r["_pos"] >= 6 else f"{r['_pos']}戦目")
-    pos_items = [(k, *by_pos[k]) for k in ["1戦目", "2戦目", "3戦目", "4戦目", "5戦目", "6戦目以降"] if k in by_pos]
+    pos_items = [(k, *by_pos[k]) for k in
+                 ["1戦目", "2戦目", "3戦目", "4戦目", "5戦目", "6戦目以降"] if k in by_pos]
 
     def streak_key(r):
         s = r["_prev_streak"]
@@ -557,9 +587,9 @@ def main():
         box[1] += 1
         if r["result"] == "win":
             box[0] += 1
-    pl, ll, hl = wilson(*aft_l)
+    pl, ll, hl_ = wilson(*aft_l)
     pw, lw, hw = wilson(*aft_w)
-    conclusive = min(aft_l[1], aft_w[1]) >= RELIABLE_N and (hl < lw or hw < ll)
+    conclusive = min(aft_l[1], aft_w[1]) >= RELIABLE_N and (hl_ < lw or hw < ll)
     if not conclusive:
         judge, judge_cls = "判定不可", "na-t"
         judge_note = "試合数が不足しており、差の有無を判断できない。"
@@ -572,9 +602,9 @@ def main():
 
     need = needed_n()
     goal = need * 2
-    strip, day_count, empty_days = coverage_strip(all_rows)
+    strip, day_count, empty_days = coverage_strip(rows)
 
-    page("chosi.html", "調子の分析", stamp, f"""
+    page(prefix, "chosi.html", label, "調子の分析", stamp, f"""
   {panel("検証課題：連敗後に勝率は低下するか",
       table([
           ("現時点の判定", f'<span class="big {judge_cls}">{judge}</span>'),
@@ -593,16 +623,14 @@ def main():
   {panel("時間帯別の勝率", rate_rows(hour_items))}
   {panel("曜日別の勝率", rate_rows(wd_items))}
   {panel("データ取得状況", strip + table([
-      ("集計対象", f"{len(rows)} 試合"),
-      ("記録総数", f"{len(all_rows)} 試合"),
+      ("このモードの試合", f"{len(rows)} 試合"),
+      ("記録総数（全モード）", f"{total_records} 試合"),
       ("取得のない日", f"{empty_days} 日"),
-      ("除外した試合", f"{excluded} 試合"),
-  ]), "棒のない日は、未プレイまたは取得漏れ。",
-      "クラン戦など規則の異なる試合は集計から除外している。")}
+  ]), "棒のない日は、未プレイまたは取得漏れ。")}
   {legend_panel()}
 """)
 
-    # ---- 使用デッキ ----
+    # 使用デッキ
     def deck_key(r):
         cards = [c for c in r["my_deck"].split("|") if c]
         return "|".join(sorted(cards)) if cards else None
@@ -614,8 +642,7 @@ def main():
         if k and k not in deck_face:
             deck_face[k] = [c for c in r["my_deck"].split("|") if c][:8]
     deck_rank = sorted(by_deck.items(), key=lambda kv: -kv[1][1])
-    deck_items = [("", w, t, deck_face.get(k, []))
-                  for k, (w, t) in deck_rank[:8]]
+    deck_items = [("", w, t, deck_face.get(k, [])) for k, (w, t) in deck_rank[:8]]
 
     my_cards = defaultdict(lambda: [0, 0])
     for r in rows:
@@ -630,18 +657,19 @@ def main():
                 sorted(varying.items(), key=lambda kv: -kv[1][1])[:TOP_CARDS]]
     fixed_n = len(my_cards) - len(varying)
 
-    page("mydeck.html", "使用デッキ別の勝率", stamp, f"""
+    page(prefix, "mydeck.html", label, "使用デッキ別の勝率", stamp, f"""
   {panel("デッキ構成別の勝率", rate_rows(deck_items, p, f"平均 {p*100:.0f}%", "deck"),
       "左に並ぶ8枚がその構成。基準線は全体平均で、デッキ変更の効果はここに現れる。",
       f"使用したデッキ構成は{len(by_deck)}種類。試合数の多い順に上位8件を表示する。")}
-  {panel("入れ替えのあったカード", rate_rows(my_items, p, f"平均 {p*100:.0f}%", "single") if my_items
-         else '<p class="empty">入れ替えの記録がまだない。</p>',
+  {panel("入れ替えのあったカード",
+      rate_rows(my_items, p, f"平均 {p*100:.0f}%", "single") if my_items
+      else '<p class="empty">入れ替えの記録がまだない。</p>',
       "全試合に含まれる固定枠は差が生じないため除外している。",
       f"常時採用のカード{fixed_n}枚を表から除外した。")}
-  {legend_panel("　なお自分側のカードは、デッキを変更しない限り差が生じない構造にある。")}
+  {legend_panel()}
 """)
 
-    # ---- 対戦相手 ----
+    # 対戦相手
     opp_cards = defaultdict(lambda: [0, 0])
     for r in rows:
         if r["result"] == "draw":
@@ -655,42 +683,40 @@ def main():
     worst = [(c, w, t, [c]) for c, (w, t) in ranked[:TOP_CARDS]]
     best = [(c, w, t, [c]) for c, (w, t) in ranked[::-1][:TOP_CARDS]]
 
-    page("enemy.html", "対戦相手のカード別の勝率", stamp, f"""
-  {panel("勝率の低いカード", rate_rows(worst, p, f"平均 {p*100:.0f}%", "single") if worst
-         else '<p class="empty">判定できるカードがまだない。</p>',
+    page(prefix, "enemy.html", label, "対戦相手のカード別の勝率", stamp, f"""
+  {panel("勝率の低いカード",
+      rate_rows(worst, p, f"平均 {p*100:.0f}%", "single") if worst
+      else '<p class="empty">判定できるカードがまだない。</p>',
       "相手の編成に当該カードが含まれていた試合における、自分の勝率。",
       f"{MIN_CARD_N}試合以上対戦したカードのみを対象とする"
       f"（全{len(opp_cards)}種類のうち{len(enough)}種類）。")}
-  {panel("勝率の高いカード", rate_rows(best, p, f"平均 {p*100:.0f}%", "single") if best else "")}
-  {legend_panel("　カードの種類が多いため、偶然により極端な値が生じやすい。"
-                "個別のカードで判断せず、同種の役割を持つカードが揃って下振れしているかを確認するのが妥当。")}
+  {panel("勝率の高いカード",
+      rate_rows(best, p, f"平均 {p*100:.0f}%", "single") if best else "")}
+  {legend_panel("　カードの種類が多いため、偶然により極端な値が生じやすい。")}
 """)
 
-    # ---- 対戦記録 ----
-    page("log.html", "対戦記録", stamp, f"""
-  {panel("直近100試合", battle_log(all_rows, 100),
-      "左が自分、右が相手の編成。数字は残ったタワーのHP。ランク戦以外も含む。",
+    # 対戦記録
+    page(prefix, "log.html", label, "対戦記録", stamp, f"""
+  {panel("直近100試合", battle_log(rows, 100),
+      "左が自分、右が相手の編成。数字は残ったタワーのHP。",
       "画像にマウスを乗せるとカード名が出る。")}
 """)
 
-    # ---- 概要（ハイライト） ----
+    # 概要
     MIN_HL = 5
     boxes = []
-
     good_decks = [(k, w, t) for k, (w, t) in by_deck.items() if t >= MIN_HL]
     if good_decks:
         k, w, t = max(good_decks, key=lambda x: x[1] / x[2])
         boxes.append(hl_box("最も勝てているデッキ", deck_grid(deck_face.get(k, [])), w, t, p))
-        k, w, t = min(good_decks, key=lambda x: x[1] / x[2])
         if len(good_decks) > 1:
+            k, w, t = min(good_decks, key=lambda x: x[1] / x[2])
             boxes.append(hl_box("苦戦しているデッキ", deck_grid(deck_face.get(k, [])), w, t, p))
-
     if ranked:
         c, (w, t) = ranked[0]
         boxes.append(hl_box("苦手な相手カード", hl_card(c), w, t, p))
         c, (w, t) = ranked[-1]
         boxes.append(hl_box("得意な相手カード", hl_card(c), w, t, p))
-
     good_hours = [(h, w, t) for h, (w, t) in by_hour.items() if t >= MIN_HL]
     if good_hours:
         h, w, t = max(good_hours, key=lambda x: x[1] / x[2])
@@ -698,22 +724,21 @@ def main():
         if len(good_hours) > 1:
             h, w, t = min(good_hours, key=lambda x: x[1] / x[2])
             boxes.append(hl_box("負けている時間帯", hl_text(f"{h}時台"), w, t, p))
-
     highlights = ('<div class="hl-grid">' + "".join(boxes) + "</div>") if boxes \
         else '<p class="empty">判定できるだけの試合数がまだない。</p>'
 
-    page("index.html", "対戦記録レポート", stamp, f"""
+    page(prefix, "index.html", label, "対戦記録レポート", stamp, f"""
   {panel("現況", table([
       ("勝率", f'<span class="big">{p*100:.1f}<span class="u">%</span></span>',
        "up" if p > 0.5 else "down" if p < 0.5 else ""),
       ("95%信頼区間", f"{lo*100:.1f}% 〜 {hi*100:.1f}%"),
       ("勝敗", f'<span class="up-t">{wins}勝</span> / <span class="down-t">{decided-wins}敗</span>'),
-      ("集計対象", f"{len(rows)} 試合"),
-      ("記録総数", f"{len(all_rows)} 試合"),
+      ("このモードの試合", f"{len(rows)} 試合"),
+      ("記録総数（全モード）", f"{total_records} 試合"),
       ("プレイ回数", f"{sessions} 回"),
-  ]), "ランク戦のみを対象とする。")}
+  ]))}
   {panel("いま目立つところ", highlights,
-      f"{MIN_HL}試合以上あるものから選んでいる。基準は全体平均 {p*100:.1f}%。",
+      f"{MIN_HL}試合以上あるものから選んでいる。基準はこのモードの平均 {p*100:.1f}%。",
       "件数の少ないものは偶然で極端な値になりやすい。詳細は上のタブから。")}
   {panel("検証課題：連敗後に勝率は低下するか", table([
       ("現時点の判定", f'<span class="big {judge_cls}">{judge}</span>'),
@@ -724,9 +749,34 @@ def main():
      f'<span>残り {max(0, goal-decided)} 試合</span></div>')}
 """)
 
-    print(f"5ページを出力（対象 {len(rows)} 試合 / 除外 {excluded} 件）")
-    print(f"全体勝率 {p*100:.1f}%（95%CI {lo*100:.1f}〜{hi*100:.1f}%） / 相手カード判定可能 {len(enough)}種類")
+
+def main():
+    global ICONS, AVAILABLE
+    ICONS = load_icons()
+    all_rows = add_sessions(load_rows())
+    prev_state(all_rows)
+
+    groups = defaultdict(list)
+    for r in all_rows:
+        groups[classify(r)].append(r)
+
+    AVAILABLE = [k for k, _, _ in MODES
+                 if (k == "all" and all_rows) or groups.get(k)]
+
+    for key, prefix, label in MODES:
+        if key not in AVAILABLE:
+            continue
+        rows = all_rows if key == "all" else groups[key]
+        build(prefix, label, rows, len(all_rows))
+
+    counts = " / ".join(f"{lab} {len(all_rows) if k == 'all' else len(groups.get(k, []))}"
+                        for k, _, lab in MODES if k in AVAILABLE)
+    print(f"モード別に出力しました（{counts}）")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as error:
+        print(f"エラー: {error}")
+        raise
