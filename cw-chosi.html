@@ -1,0 +1,134 @@
+<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>調子の分析｜クラン戦</title><style>
+:root{
+  --bg:#F2F3F5;--panel:#FFFFFF;--line:#DCDFE3;--ink:#1F2328;--label:#5B646E;
+  --labelbg:#F6F7F9;--up:#C8102E;--down:#0B57A4;--na:#8A939C;
+  --accent:#BF0000;--link:#0B5FBF;--upbg:#FDF0F2;--downbg:#EFF4FA;
+  --warnbg:#FFF4E5;--warnline:#F0C078;--warnink:#A85E00;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:20px 16px 64px;background:var(--bg);color:var(--ink);
+  font-family:"Yu Gothic","Hiragino Kaku Gothic ProN","Noto Sans JP","Meiryo",sans-serif;
+  font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav.modes{position:sticky;top:0;z-index:21;background:var(--bg);padding:10px 0 4px;margin:-10px 0 0}
+nav.pages{position:sticky;top:42px;z-index:20;background:var(--bg);padding:0 0 8px;
+  margin:0 0 12px;box-shadow:0 6px 8px -8px rgba(0,0,0,.28)}
+nav.modes a{background:var(--labelbg);font-weight:700}
+nav.modes a.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+nav a{text-decoration:none;background:var(--panel);color:var(--ink);font-size:13px;
+  padding:7px 18px;border:1px solid var(--line);border-radius:4px}
+nav a.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
+nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
+.head{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+  padding:16px 20px;margin-bottom:12px;display:flex;justify-content:space-between;
+  align-items:flex-end;flex-wrap:wrap;gap:8px}
+.head{border-top:3px solid var(--accent)}
+.head h1{font-size:20px;font-weight:700;margin:0;display:flex;align-items:center;gap:10px}
+.mtag{font-size:11.5px;font-weight:700;color:#fff;background:var(--accent);
+  border-radius:3px;padding:2px 9px}
+.head p{margin:0;color:var(--label);font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+  padding:18px 20px 16px;margin-bottom:12px}
+.panel h2{font-size:15px;font-weight:700;margin:0 0 10px;padding-bottom:9px;
+  border-bottom:3px solid var(--line);position:relative}
+.panel h2::after{content:"";position:absolute;left:0;bottom:-3px;width:56px;height:3px;
+  background:var(--accent)}
+.lead{margin:-2px 0 12px;color:var(--label);font-size:12.5px}
+.note{margin:10px 0 0;color:var(--warnink);font-size:12px;background:var(--warnbg);
+  border:1px solid var(--warnline);border-radius:3px;padding:8px 12px}
+.empty{color:var(--label);font-size:13px;margin:4px 0}
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.hair{stroke:var(--line);stroke-width:1}
+.base{stroke:#B6BDC4;stroke-width:1;stroke-dasharray:3 3}
+.baselab{font-size:10px;fill:var(--label)}
+.lab{font-size:12.5px;fill:var(--ink)}
+.lab.small{font-size:11.5px}
+.noicon{fill:#E7EAED;stroke:var(--line)}
+.band.up{fill:#F7D9DE}.band.down{fill:#D6E3F3}.band.na{fill:#E7EAED}
+.mark.up{fill:var(--up)}.mark.down{fill:var(--down)}.mark.na{fill:var(--na)}
+.val{font-size:19px;font-weight:700}
+.val.up{fill:var(--up)}.val.down{fill:var(--down)}.val.na{fill:var(--na)}
+.unit{font-size:11px;font-weight:400}
+.n{font-size:11.5px;fill:var(--label)}
+table.kv{width:100%;border-collapse:collapse;margin:2px 0 0}
+table.kv th{width:190px;background:var(--labelbg);color:var(--label);font-weight:400;
+  text-align:left;padding:9px 14px;border:1px solid var(--line);font-size:12.5px}
+table.kv td{padding:9px 14px;border:1px solid var(--line);text-align:right;
+  font-size:15px;font-weight:700;background:#fff}
+table.kv tr:nth-child(even) td{background:#FCFCFD}
+table.kv td.up{background:var(--upbg);color:var(--up)}
+table.kv td.down{background:var(--downbg);color:var(--down)}
+.big{font-size:28px;font-weight:700;letter-spacing:-.01em}
+.big .u{font-size:13px;font-weight:400;color:var(--label);margin-left:2px}
+.up-t{color:var(--up)}.down-t{color:var(--down)}.na-t{color:var(--na)}
+.bar{height:10px;background:#E7EAED;border-radius:2px;overflow:hidden;margin:10px 0 6px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.barlab{display:flex;justify-content:space-between;font-size:12px;color:var(--label)}
+.hl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hl{background:var(--labelbg);border:1px solid var(--line);border-radius:4px;
+  padding:12px 14px 10px;display:flex;flex-direction:column;gap:6px}
+.hl-lab{font-size:11.5px;color:var(--label)}
+.hl-val{font-size:24px;font-weight:700;line-height:1.1}
+.hl-u{font-size:12px;font-weight:400;color:var(--label);margin-left:1px}
+.hl-sub{font-size:11px;color:var(--label);margin-top:-4px}
+.hl-card{display:flex;align-items:center;gap:8px;min-height:38px}
+.hl-card img,.hl-card .noimg{width:32px;aspect-ratio:5/6;border-radius:3px;display:block}
+.hl-card .noimg{background:#E7EAED;border:1px solid var(--line)}
+.hl-card b{font-size:13px;font-weight:700}
+.hl-card b.wide{font-size:14px}
+.hl .deck{grid-template-columns:repeat(4,1fr);gap:2px;max-width:150px}
+.menu{display:grid;gap:10px}
+.menu a{display:flex;justify-content:space-between;align-items:center;gap:16px;
+  text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);
+  border-radius:4px;padding:16px 20px}
+.menu a:hover{border-color:var(--ink)}
+.menu b{display:block;font-size:15px;font-weight:700}
+.menu span{font-size:12.5px;color:var(--label)}
+.menu em{font-style:normal;font-size:12px;color:var(--link);white-space:nowrap;font-weight:700}
+.menu a:hover b{color:var(--link)}
+.cov{width:100%;height:auto;display:block}
+.covbar.some{fill:#4E7CB8}.covbar.zero{fill:#EDEFF2}
+.covn{font-size:10px;fill:var(--label)}
+.covd{font-size:10.5px;fill:var(--ink)}
+.covw{font-size:9.5px;fill:var(--label)}
+.keys{display:flex;flex-wrap:wrap;gap:18px;font-size:12.5px;color:var(--label);margin:2px 0 0}
+.keys span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:22px;height:11px;border-radius:2px;display:inline-block}
+.sw-up{background:#F7D9DE;border-left:3px solid var(--up)}
+.sw-down{background:#D6E3F3;border-left:3px solid var(--down)}
+.sw-na{background:#E7EAED;border-left:3px solid var(--na)}
+.log{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+  margin-bottom:8px;padding:10px 14px 12px;border-left:4px solid var(--na)}
+.log.win{border-left-color:var(--up)}
+.log.lose{border-left-color:var(--down)}
+.log header{display:flex;align-items:center;gap:12px;font-size:11.5px;color:var(--label);
+  margin-bottom:8px}
+.log header .mode{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log header .tro{font-weight:700}
+.duel{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.deck{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.deck img,.deck .noimg{width:100%;aspect-ratio:5/6;display:block;border-radius:3px}
+.deck .noimg{background:#E7EAED;border:1px solid var(--line)}
+.hp{margin:6px 0 0;font-size:10.5px;color:var(--label);text-align:center}
+.mid{text-align:center;min-width:74px}
+.badge{display:block;font-size:19px;font-weight:700;color:#fff;border-radius:3px;
+  padding:2px 0;background:var(--na)}
+.badge.win{background:var(--up)}.badge.lose{background:var(--down)}
+.crowns{display:block;font-size:15px;font-weight:700;margin-top:4px}
+footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
+@media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
+  table.kv th{width:130px}
+  .hl-grid{grid-template-columns:1fr 1fr}
+  .duel{grid-template-columns:1fr auto 1fr;gap:8px}
+  .mid{min-width:52px}.badge{font-size:15px}.crowns{font-size:13px}
+  .hp{font-size:9px}}
+</style></head><body><div class='wrap'><nav class="modes"><a href="chosi.html">伝説の道</a><a href="cw-chosi.html" class='on'>クラン戦</a><a href="etc-chosi.html">その他</a><a href="all-chosi.html">すべて</a></nav><nav class="pages"><a href="cw-index.html">概要</a><a href="cw-chosi.html" class='on'>調子</a><a href="cw-mydeck.html">使用デッキ</a><a href="cw-enemy.html">対戦相手</a><a href="cw-log.html">対戦記録</a></nav><div class='head'><h1>調子の分析<span class='mtag'>クラン戦</span></h1><p>対象期間 2026/07/31 〜 2026/08/03　更新 2026/08/04 16:27 JST</p></div>
+  <section class="panel"><h2>検証課題：連敗後に勝率は低下するか</h2><table class="kv"><tr><th>現時点の判定</th><td><span class="big na-t">判定不可</span></tr><tr><th>敗戦後の勝率</th><td>0.0%（0勝0敗）</tr><tr><th>勝利後の勝率</th><td>50.0%（1勝1敗）</tr></table><div class="bar"><i style="width:0.6%"></i></div><div class="barlab"><span>必要試合数に対する進捗 5 / 770</span><span>残り 765 試合</span></div><p class="note">試合数が不足しており、差の有無を判断できない。 勝率50%と60%の差を有意水準5%・検出力80%で検出するには、各群385試合を要する。</p></section>
+  <section class="panel"><h2>直前の結果別の勝率</h2><p class="lead">縦線が左にあるほど勝率が低い。</p><svg viewBox="0 0 720 114" class="chart"><line class="base" x1="365.0" y1="14" x2="365.0" y2="110"/><text class="baselab" x="365.0" y="10" text-anchor="middle">50%</text><line class="hair" x1="0" y1="68.0" x2="720" y2="68.0"/><text class="lab" x="0" y="52.0">セッション初戦</text><rect class="band na" x="229.1" y="39.0" width="226.6" height="16" rx="2"/><rect class="mark na" x="311.8" y="34.0" width="3" height="26"/><text class="val na" x="600" y="54.0" text-anchor="end">33.3<tspan class="unit">%</tspan></text><text class="n" x="720" y="52.0" text-anchor="end">1勝2敗</text><line class="hair" x1="0" y1="110.0" x2="720" y2="110.0"/><text class="lab" x="0" y="94.0">1勝後</text><rect class="band na" x="239.3" y="81.0" width="251.4" height="16" rx="2"/><rect class="mark na" x="363.5" y="76.0" width="3" height="26"/><text class="val na" x="600" y="96.0" text-anchor="end">50.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="94.0" text-anchor="end">1勝1敗</text></svg></section>
+  <section class="panel"><h2>連続対戦数と勝率</h2><svg viewBox="0 0 720 156" class="chart"><line class="base" x1="365.0" y1="14" x2="365.0" y2="152"/><text class="baselab" x="365.0" y="10" text-anchor="middle">50%</text><line class="hair" x1="0" y1="68.0" x2="720" y2="68.0"/><text class="lab" x="0" y="52.0">1戦目</text><rect class="band na" x="229.1" y="39.0" width="226.6" height="16" rx="2"/><rect class="mark na" x="311.8" y="34.0" width="3" height="26"/><text class="val na" x="600" y="54.0" text-anchor="end">33.3<tspan class="unit">%</tspan></text><text class="n" x="720" y="52.0" text-anchor="end">1勝2敗</text><line class="hair" x1="0" y1="110.0" x2="720" y2="110.0"/><text class="lab" x="0" y="94.0">2戦目</text><rect class="band na" x="210.0" y="81.0" width="246.0" height="16" rx="2"/><rect class="mark na" x="208.5" y="76.0" width="3" height="26"/><text class="val na" x="600" y="96.0" text-anchor="end">0.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="94.0" text-anchor="end">0勝1敗</text><line class="hair" x1="0" y1="152.0" x2="720" y2="152.0"/><text class="lab" x="0" y="136.0">3戦目</text><rect class="band na" x="274.0" y="123.0" width="246.0" height="16" rx="2"/><rect class="mark na" x="518.5" y="118.0" width="3" height="26"/><text class="val na" x="600" y="138.0" text-anchor="end">100.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="136.0" text-anchor="end">1勝0敗</text></svg><p class="note">前の試合から30分以上の間隔があいた場合、別セッションとして数える。</p></section>
+  <section class="panel"><h2>時間帯別の勝率</h2><svg viewBox="0 0 720 198" class="chart"><line class="base" x1="365.0" y1="14" x2="365.0" y2="194"/><text class="baselab" x="365.0" y="10" text-anchor="middle">50%</text><line class="hair" x1="0" y1="68.0" x2="720" y2="68.0"/><text class="lab" x="0" y="52.0">9時台</text><rect class="band na" x="274.0" y="39.0" width="246.0" height="16" rx="2"/><rect class="mark na" x="518.5" y="34.0" width="3" height="26"/><text class="val na" x="600" y="54.0" text-anchor="end">100.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="52.0" text-anchor="end">1勝0敗</text><line class="hair" x1="0" y1="110.0" x2="720" y2="110.0"/><text class="lab" x="0" y="94.0">12時台</text><rect class="band na" x="239.3" y="81.0" width="251.4" height="16" rx="2"/><rect class="mark na" x="363.5" y="76.0" width="3" height="26"/><text class="val na" x="600" y="96.0" text-anchor="end">50.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="94.0" text-anchor="end">1勝1敗</text><line class="hair" x1="0" y1="152.0" x2="720" y2="152.0"/><text class="lab" x="0" y="136.0">14時台</text><rect class="band na" x="210.0" y="123.0" width="246.0" height="16" rx="2"/><rect class="mark na" x="208.5" y="118.0" width="3" height="26"/><text class="val na" x="600" y="138.0" text-anchor="end">0.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="136.0" text-anchor="end">0勝1敗</text><line class="hair" x1="0" y1="194.0" x2="720" y2="194.0"/><text class="lab" x="0" y="178.0">17時台</text><rect class="band na" x="210.0" y="165.0" width="246.0" height="16" rx="2"/><rect class="mark na" x="208.5" y="160.0" width="3" height="26"/><text class="val na" x="600" y="180.0" text-anchor="end">0.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="178.0" text-anchor="end">0勝1敗</text></svg></section>
+  <section class="panel"><h2>曜日別の勝率</h2><svg viewBox="0 0 720 198" class="chart"><line class="base" x1="365.0" y1="14" x2="365.0" y2="194"/><text class="baselab" x="365.0" y="10" text-anchor="middle">50%</text><line class="hair" x1="0" y1="68.0" x2="720" y2="68.0"/><text class="lab" x="0" y="52.0">月曜</text><rect class="band na" x="239.3" y="39.0" width="251.4" height="16" rx="2"/><rect class="mark na" x="363.5" y="34.0" width="3" height="26"/><text class="val na" x="600" y="54.0" text-anchor="end">50.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="52.0" text-anchor="end">1勝1敗</text><line class="hair" x1="0" y1="110.0" x2="720" y2="110.0"/><text class="lab" x="0" y="94.0">金曜</text><rect class="band na" x="274.0" y="81.0" width="246.0" height="16" rx="2"/><rect class="mark na" x="518.5" y="76.0" width="3" height="26"/><text class="val na" x="600" y="96.0" text-anchor="end">100.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="94.0" text-anchor="end">1勝0敗</text><line class="hair" x1="0" y1="152.0" x2="720" y2="152.0"/><text class="lab" x="0" y="136.0">土曜</text><rect class="band na" x="210.0" y="123.0" width="246.0" height="16" rx="2"/><rect class="mark na" x="208.5" y="118.0" width="3" height="26"/><text class="val na" x="600" y="138.0" text-anchor="end">0.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="136.0" text-anchor="end">0勝1敗</text><line class="hair" x1="0" y1="194.0" x2="720" y2="194.0"/><text class="lab" x="0" y="178.0">日曜</text><rect class="band na" x="210.0" y="165.0" width="246.0" height="16" rx="2"/><rect class="mark na" x="208.5" y="160.0" width="3" height="26"/><text class="val na" x="600" y="180.0" text-anchor="end">0.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="178.0" text-anchor="end">0勝1敗</text></svg></section>
+  <section class="panel"><h2>データ取得状況</h2><p class="lead">棒のない日は、未プレイまたは取得漏れ。</p><svg viewBox="0 0 720 96" class="cov"><rect class="covbar some" x="250.0" y="32.0" width="52.0" height="28.0" rx="1"/><text class="covn" x="276.0" y="27.0" text-anchor="middle">1</text><text class="covd" x="276.0" y="76" text-anchor="middle">7/31</text><text class="covw" x="276.0" y="90" text-anchor="middle">金</text><rect class="covbar some" x="306.0" y="32.0" width="52.0" height="28.0" rx="1"/><text class="covn" x="332.0" y="27.0" text-anchor="middle">1</text><text class="covd" x="332.0" y="76" text-anchor="middle">8/1</text><text class="covw" x="332.0" y="90" text-anchor="middle">土</text><rect class="covbar some" x="362.0" y="32.0" width="52.0" height="28.0" rx="1"/><text class="covn" x="388.0" y="27.0" text-anchor="middle">1</text><text class="covd" x="388.0" y="76" text-anchor="middle">8/2</text><text class="covw" x="388.0" y="90" text-anchor="middle">日</text><rect class="covbar some" x="418.0" y="8.0" width="52.0" height="52.0" rx="1"/><text class="covn" x="444.0" y="3.0" text-anchor="middle">2</text><text class="covd" x="444.0" y="76" text-anchor="middle">8/3</text><text class="covw" x="444.0" y="90" text-anchor="middle">月</text></svg><table class="kv"><tr><th>このモードの試合</th><td>5 試合</tr><tr><th>記録総数（全モード）</th><td>49 試合</tr><tr><th>取得のない日</th><td>0 日</tr></table></section>
+  <section class="panel"><h2>凡例と注意</h2><div class="keys"><span><i class="sw sw-up"></i>基準を上回る</span><span><i class="sw sw-down"></i>基準を下回る</span><span><i class="sw sw-na"></i>判定不可（20試合未満）</span></div><p class="note">縦線が推定値、帯が95%信頼区間。帯が長いほど推定の幅が大きい。帯どうしが重なる範囲では、差があるとは言えない。</p></section>
+<footer>battles.csv より自動生成<br>カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、Supercell は内容に関与していない。</footer></div></body></html>
