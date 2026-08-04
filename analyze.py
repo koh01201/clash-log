@@ -30,6 +30,13 @@ IN_FILE = os.path.join(SCRIPT_DIR, "battles.csv")
 OUT_FILE = os.path.join(SCRIPT_DIR, "report.html")
 
 WEEKDAY_JA = ["月", "火", "水", "木", "金", "土", "日"]
+JST = datetime.timezone(datetime.timedelta(hours=9))
+
+
+def now_jst():
+    """実行環境の時計に依存せず、必ず日本時間を返す。
+    GitHub Actions上ではdatetime.now()が世界標準時になるため。"""
+    return datetime.datetime.now(JST)
 
 
 # ---------------- 統計 ----------------
@@ -126,64 +133,193 @@ def tally(rows, key_func):
     return bucket
 
 
-# ---------------- 描画 ----------------
+# ---------------- 共通の描画部品 ----------------
+
+MIN_CARD_N = 5
+TOP_CARDS = 10
+
+PAGES = [
+    ("index.html", "概要"),
+    ("chosi.html", "調子"),
+    ("mydeck.html", "使用デッキ"),
+    ("enemy.html", "対戦相手"),
+]
+
 
 def esc(text):
     return html.escape(str(text))
 
 
-def verdict(total):
-    return "まだわからん" if total < RELIABLE_N else "そこそこ言える"
-
-
-def rate_rows(items, caption=""):
-    """items: [(ラベル, 勝ち, 全体)] を「帯＋玉」で描く。帯＝ありうる範囲、玉＝いまの見積り。"""
+def rate_rows(items, baseline=0.5, baseline_label="50%"):
+    """items: [(ラベル, 勝ち, 全体)]。基準より上は赤、下は青、試合数不足は灰。"""
     if not items:
-        return ""
+        return '<p class="empty">該当するデータがない。</p>'
 
-    row_h = 46
-    top = 30
-    height = top + row_h * len(items) + 10
-    x0, x1 = 132, 500
+    row_h = 42
+    top = 26
+    height = top + row_h * len(items) + 4
+    x0, x1 = 210, 520
     span = x1 - x0
 
     def px(p):
         return x0 + span * p
 
-    out = [f'<svg viewBox="0 0 700 {height}" class="chart">']
-    out.append(
-        f'<line class="half" x1="{px(0.5):.1f}" y1="{top - 16}" x2="{px(0.5):.1f}" y2="{height - 8}"/>'
-    )
-    out.append(f'<text class="halflab" x="{px(0.5):.1f}" y="{top - 20}" text-anchor="middle">五分五分</text>')
+    out = [f'<svg viewBox="0 0 720 {height}" class="chart">']
+    bx = px(baseline)
+    out.append(f'<line class="base" x1="{bx:.1f}" y1="{top - 12}" x2="{bx:.1f}" y2="{height - 4}"/>')
+    out.append(f'<text class="baselab" x="{bx:.1f}" y="{top - 16}" text-anchor="middle">{esc(baseline_label)}</text>')
 
     for i, (label, wins, total) in enumerate(items):
         y = top + row_h * i + row_h / 2
         p, lo, hi = wilson(wins, total)
-        weak = total < RELIABLE_N
-        cls = "weak" if weak else "sure"
-        w = max(14.0, px(hi) - px(lo))
+        if total < RELIABLE_N:
+            cls = "na"
+        elif p > baseline:
+            cls = "up"
+        elif p < baseline:
+            cls = "down"
+        else:
+            cls = "na"
+        w = max(10.0, px(hi) - px(lo))
 
-        out.append(f'<text class="lab" x="0" y="{y + 6:.1f}">{esc(label)}</text>')
-        out.append(
-            f'<rect class="band {cls}" x="{px(lo):.1f}" y="{y - 11:.1f}" '
-            f'width="{w:.1f}" height="22" rx="11"/>'
-        )
-        out.append(f'<circle class="ball {cls}" cx="{px(p):.1f}" cy="{y:.1f}" r="9"/>')
-        out.append(f'<text class="pct {cls}" x="518" y="{y + 8:.1f}">{p * 100:.0f}<tspan class="pctu">%</tspan></text>')
-        out.append(f'<text class="score" x="700" y="{y + 5:.1f}" text-anchor="end">{wins}勝{total - wins}敗</text>')
-
+        out.append(f'<line class="hair" x1="0" y1="{y + row_h / 2:.1f}" x2="720" y2="{y + row_h / 2:.1f}"/>')
+        out.append(f'<text class="lab" x="0" y="{y + 5:.1f}">{esc(label)}</text>')
+        out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{y - 8:.1f}" width="{w:.1f}" height="16" rx="2"/>')
+        out.append(f'<rect class="mark {cls}" x="{px(p) - 1.5:.1f}" y="{y - 13:.1f}" width="3" height="26"/>')
+        out.append(f'<text class="val {cls}" x="600" y="{y + 7:.1f}" text-anchor="end">'
+                   f'{p * 100:.1f}<tspan class="unit">%</tspan></text>')
+        out.append(f'<text class="n" x="720" y="{y + 5:.1f}" text-anchor="end">{wins}勝{total - wins}敗</text>')
     out.append("</svg>")
-    cap = f'<p class="cap">{esc(caption)}</p>' if caption else ""
-    return "".join(out), cap
+    return "".join(out)
 
 
-def card(title, lead, items, caption=""):
-    chart, cap = rate_rows(items, caption) if items else ("", "")
-    return f"""<section class="card">
-  <h2>{esc(title)}</h2>
-  <p class="lead">{esc(lead)}</p>
-  {chart}{cap}
-</section>"""
+def table(pairs):
+    """pairs: (項目, 値) または (項目, 値, "up"/"down"/"") """
+    rows_html = []
+    for item in pairs:
+        k, v = item[0], item[1]
+        cls = item[2] if len(item) > 2 else ""
+        td = f'<td class="{cls}">' if cls else "<td>"
+        rows_html.append(f'<tr><th>{esc(k)}</th>{td}{v}</tr>')
+    return f'<table class="kv">{"".join(rows_html)}</table>'
+
+
+def panel(title, inner, lead="", note=""):
+    lead_html = f'<p class="lead">{esc(lead)}</p>' if lead else ""
+    note_html = f'<p class="note">{esc(note)}</p>' if note else ""
+    return f'<section class="panel"><h2>{esc(title)}</h2>{lead_html}{inner}{note_html}</section>'
+
+
+CSS = """
+:root{
+  --bg:#F2F3F5;--panel:#FFFFFF;--line:#DCDFE3;--ink:#1F2328;--label:#5B646E;
+  --labelbg:#F6F7F9;--up:#C8102E;--down:#0B57A4;--na:#8A939C;
+  --accent:#BF0000;--link:#0B5FBF;--upbg:#FDF0F2;--downbg:#EFF4FA;
+  --warnbg:#FFF4E5;--warnline:#F0C078;--warnink:#A85E00;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:20px 16px 64px;background:var(--bg);color:var(--ink);
+  font-family:"Yu Gothic","Hiragino Kaku Gothic ProN","Noto Sans JP","Meiryo",sans-serif;
+  font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+nav a{text-decoration:none;background:var(--panel);color:var(--ink);font-size:13px;
+  padding:7px 18px;border:1px solid var(--line);border-radius:4px}
+nav a.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
+nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
+.head{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+  padding:16px 20px;margin-bottom:12px;display:flex;justify-content:space-between;
+  align-items:flex-end;flex-wrap:wrap;gap:8px}
+.head{border-top:3px solid var(--accent)}
+.head h1{font-size:20px;font-weight:700;margin:0}
+.head p{margin:0;color:var(--label);font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+  padding:18px 20px 16px;margin-bottom:12px}
+.panel h2{font-size:15px;font-weight:700;margin:0 0 10px;padding-bottom:9px;
+  border-bottom:3px solid var(--line);position:relative}
+.panel h2::after{content:"";position:absolute;left:0;bottom:-3px;width:56px;height:3px;
+  background:var(--accent)}
+.lead{margin:-2px 0 12px;color:var(--label);font-size:12.5px}
+.note{margin:10px 0 0;color:var(--warnink);font-size:12px;background:var(--warnbg);
+  border:1px solid var(--warnline);border-radius:3px;padding:8px 12px}
+.empty{color:var(--label);font-size:13px;margin:4px 0}
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.hair{stroke:var(--line);stroke-width:1}
+.base{stroke:#B6BDC4;stroke-width:1;stroke-dasharray:3 3}
+.baselab{font-size:10px;fill:var(--label)}
+.lab{font-size:12.5px;fill:var(--ink)}
+.band.up{fill:#F7D9DE}.band.down{fill:#D6E3F3}.band.na{fill:#E7EAED}
+.mark.up{fill:var(--up)}.mark.down{fill:var(--down)}.mark.na{fill:var(--na)}
+.val{font-size:19px;font-weight:700}
+.val.up{fill:var(--up)}.val.down{fill:var(--down)}.val.na{fill:var(--na)}
+.unit{font-size:11px;font-weight:400}
+.n{font-size:11.5px;fill:var(--label)}
+table.kv{width:100%;border-collapse:collapse;margin:2px 0 0}
+table.kv th{width:190px;background:var(--labelbg);color:var(--label);font-weight:400;
+  text-align:left;padding:9px 14px;border:1px solid var(--line);font-size:12.5px}
+table.kv td{padding:9px 14px;border:1px solid var(--line);text-align:right;
+  font-size:15px;font-weight:700;background:#fff}
+table.kv tr:nth-child(even) td{background:#FCFCFD}
+table.kv td.up{background:var(--upbg);color:var(--up)}
+table.kv td.down{background:var(--downbg);color:var(--down)}
+.big{font-size:28px;font-weight:700;letter-spacing:-.01em}
+.big .u{font-size:13px;font-weight:400;color:var(--label);margin-left:2px}
+.up-t{color:var(--up)}.down-t{color:var(--down)}.na-t{color:var(--na)}
+.bar{height:10px;background:#E7EAED;border-radius:2px;overflow:hidden;margin:10px 0 6px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.barlab{display:flex;justify-content:space-between;font-size:12px;color:var(--label)}
+.menu{display:grid;gap:10px}
+.menu a{display:flex;justify-content:space-between;align-items:center;gap:16px;
+  text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);
+  border-radius:4px;padding:16px 20px}
+.menu a:hover{border-color:var(--ink)}
+.menu b{display:block;font-size:15px;font-weight:700}
+.menu span{font-size:12.5px;color:var(--label)}
+.menu em{font-style:normal;font-size:12px;color:var(--link);white-space:nowrap;font-weight:700}
+.menu a:hover b{color:var(--link)}
+.cov{width:100%;height:auto;display:block}
+.covbar.some{fill:#4E7CB8}.covbar.zero{fill:#EDEFF2}
+.covn{font-size:10px;fill:var(--label)}
+.covd{font-size:10.5px;fill:var(--ink)}
+.covw{font-size:9.5px;fill:var(--label)}
+.keys{display:flex;flex-wrap:wrap;gap:18px;font-size:12.5px;color:var(--label);margin:2px 0 0}
+.keys span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:22px;height:11px;border-radius:2px;display:inline-block}
+.sw-up{background:#F7D9DE;border-left:3px solid var(--up)}
+.sw-down{background:#D6E3F3;border-left:3px solid var(--down)}
+.sw-na{background:#E7EAED;border-left:3px solid var(--na)}
+footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
+@media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
+  table.kv th{width:130px}}
+"""
+
+
+def nav(current):
+    return "<nav>" + "".join(
+        f'<a href="{f}"{" class=\"on\"" if f == current else ""}>{esc(l)}</a>' for f, l in PAGES
+    ) + "</nav>"
+
+
+def page(fname, title, subtitle, body):
+    doc = ("<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'>"
+           "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+           f"<title>{esc(title)}｜対戦記録レポート</title><style>{CSS}</style></head><body><div class='wrap'>"
+           + nav(fname)
+           + f"<div class='head'><h1>{esc(title)}</h1><p>{esc(subtitle)}</p></div>"
+           + body + "<footer>battles.csv より自動生成</footer></div></body></html>")
+    with open(os.path.join(SCRIPT_DIR, fname), "w", encoding="utf-8") as f:
+        f.write(doc)
+
+
+def legend_panel(extra=""):
+    keys = ('<div class="keys">'
+            '<span><i class="sw sw-up"></i>基準を上回る</span>'
+            '<span><i class="sw sw-down"></i>基準を下回る</span>'
+            f'<span><i class="sw sw-na"></i>判定不可（{RELIABLE_N}試合未満）</span>'
+            "</div>")
+    note = ("縦線が推定値、帯が95%信頼区間。帯が長いほど推定の幅が大きい。"
+            "帯どうしが重なる範囲では、差があるとは言えない。" + extra)
+    return panel("凡例と注意", keys, "", note)
 
 
 def coverage_strip(rows):
@@ -196,246 +332,199 @@ def coverage_strip(rows):
     while d <= end:
         days.append((d, per_day.get(d, 0)))
         d += datetime.timedelta(days=1)
+    days = days[-30:]
 
+    W, H = 720, 96          # 描画枠は常に固定（日数が変わっても文字の大きさが変わらない）
     peak = max(c for _, c in days) or 1
-    cell = min(64, max(30, int(660 / max(1, len(days)))))
-    width = cell * len(days)
-    height = 104
+    cell = min(56, W / max(1, len(days)))
+    offset = (W - cell * len(days)) / 2
 
-    out = [f'<svg viewBox="0 0 {width} {height}" class="cov">']
+    out = [f'<svg viewBox="0 0 {W} {H}" class="cov">']
     for i, (day, count) in enumerate(days):
-        x = cell * i
-        h = 6 + 54 * (count / peak)
+        x = offset + cell * i
+        h = 4 + 48 * (count / peak)
         cls = "zero" if count == 0 else "some"
-        out.append(
-            f'<rect class="covbar {cls}" x="{x + 4}" y="{66 - h:.1f}" '
-            f'width="{cell - 8}" height="{h:.1f}" rx="{min(10, (cell - 8) / 2):.1f}"/>'
-        )
+        out.append(f'<rect class="covbar {cls}" x="{x+2:.1f}" y="{60-h:.1f}" '
+                   f'width="{cell-4:.1f}" height="{h:.1f}" rx="1"/>')
         if count:
-            out.append(f'<text class="covn" x="{x + cell / 2:.1f}" y="{60 - h:.1f}" text-anchor="middle">{count}</text>')
-        out.append(f'<text class="covd" x="{x + cell / 2:.1f}" y="86" text-anchor="middle">{day.month}/{day.day}</text>')
-        out.append(f'<text class="covw" x="{x + cell / 2:.1f}" y="100" text-anchor="middle">{WEEKDAY_JA[day.weekday()]}</text>')
+            out.append(f'<text class="covn" x="{x+cell/2:.1f}" y="{55-h:.1f}" text-anchor="middle">{count}</text>')
+        out.append(f'<text class="covd" x="{x+cell/2:.1f}" y="76" text-anchor="middle">{day.month}/{day.day}</text>')
+        out.append(f'<text class="covw" x="{x+cell/2:.1f}" y="90" text-anchor="middle">{WEEKDAY_JA[day.weekday()]}</text>')
     out.append("</svg>")
     return "".join(out), len(days), sum(1 for _, c in days if c == 0)
 
 
-CSS = """
-@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
-:root{
-  --bg:#F3F1FE; --card:#FFFFFF; --ink:#241546; --sub:#7A6CA6;
-  --line:#E7E2FB; --violet:#6C4BF4; --violet-soft:#D9D0FF;
-  --gold:#FFB020; --gold-soft:#FFE6B8; --coral:#FF6B6B;
-}
-*{box-sizing:border-box}
-body{
-  margin:0; padding:28px 16px 72px; background:var(--bg); color:var(--ink);
-  font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Yu Gothic UI","Noto Sans JP",sans-serif;
-  line-height:1.75; -webkit-font-smoothing:antialiased;
-}
-.wrap{max-width:760px;margin:0 auto}
-.top{margin:0 0 22px}
-.top h1{font-size:27px;font-weight:800;margin:0 0 2px;letter-spacing:.01em}
-.top p{margin:0;color:var(--sub);font-size:13px}
-.card{background:var(--card);border-radius:20px;padding:24px 26px 20px;margin-bottom:16px;
-  box-shadow:0 2px 0 var(--line),0 10px 24px -18px rgba(60,30,140,.5)}
-.card h2{font-size:19px;font-weight:800;margin:0 0 4px}
-.lead{margin:0 0 16px;color:var(--sub);font-size:13.5px}
-.cap{margin:12px 0 0;color:var(--sub);font-size:12.5px}
-.hero{background:linear-gradient(135deg,#6C4BF4,#9B6BFF);color:#fff}
-.hero h2{color:#fff;font-size:16px;opacity:.85;font-weight:700}
-.answer{font-size:34px;font-weight:800;line-height:1.25;margin:2px 0 14px}
-.gauge{background:rgba(255,255,255,.25);border-radius:999px;height:16px;overflow:hidden}
-.gauge i{display:block;height:100%;background:var(--gold);border-radius:999px}
-.gaugelab{display:flex;justify-content:space-between;font-size:12.5px;margin-top:8px;opacity:.9}
-.chart,.cov{width:100%;height:auto;display:block;overflow:visible}
-.half{stroke:#C9BEEF;stroke-width:2;stroke-dasharray:4 5}
-.halflab{font-size:11px;fill:var(--sub)}
-.lab{font-size:14px;font-weight:700;fill:var(--ink)}
-.band.sure{fill:var(--violet-soft)}
-.band.weak{fill:var(--gold-soft)}
-.ball.sure{fill:var(--violet);stroke:#fff;stroke-width:3}
-.ball.weak{fill:var(--gold);stroke:#fff;stroke-width:3}
-.pct{font-size:21px;font-weight:800}
-.pct.sure{fill:var(--violet)} .pct.weak{fill:#C98800}
-.pctu{font-size:12px;font-weight:700}
-.score{font-size:12px;fill:var(--sub)}
-.covbar.some{fill:var(--violet);opacity:.85}
-.covbar.zero{fill:#EDE9FB}
-.covn{font-size:11px;fill:var(--sub);font-weight:700}
-.covd{font-size:11.5px;fill:var(--ink);font-weight:700}
-.covw{font-size:10.5px;fill:var(--sub)}
-.stats{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 0;padding:0;list-style:none}
-.stats li{background:var(--bg);border-radius:14px;padding:10px 16px;min-width:92px}
-.stats b{display:block;font-size:22px;font-weight:800;line-height:1.3}
-.stats span{font-size:11.5px;color:var(--sub)}
-.keys{display:flex;flex-wrap:wrap;gap:16px;margin-top:6px;font-size:13px;color:var(--sub)}
-.keys span{display:inline-flex;align-items:center;gap:7px}
-.pill{width:26px;height:13px;border-radius:999px;display:inline-block}
-.p-sure{background:var(--violet-soft)} .p-weak{background:var(--gold-soft)}
-.dotmini{width:11px;height:11px;border-radius:50%;background:var(--violet);
-  border:2px solid #fff;box-shadow:0 0 0 1px var(--violet-soft);display:inline-block}
-footer{color:var(--sub);font-size:12px;text-align:center;margin-top:24px}
-@media(max-width:600px){body{padding:20px 10px 56px}.card{padding:20px 16px 16px;border-radius:16px}
-  .answer{font-size:27px}.top h1{font-size:23px}}
-"""
-
+# ---------------- 本体 ----------------
 
 def main():
     all_rows = add_sessions(load_rows())
     prev_state(all_rows)
-
-    excluded = 0
-    if RANKED_ONLY:
-        rows = [r for r in all_rows if is_ranked(r)]
-        excluded = len(all_rows) - len(rows)
-    else:
-        rows = all_rows
+    rows = [r for r in all_rows if is_ranked(r)] if RANKED_ONLY else list(all_rows)
+    excluded = len(all_rows) - len(rows)
     if not rows:
-        raise SystemExit("集計対象の試合がありません。")
-
-    strip, day_count, empty_days = coverage_strip(all_rows)
+        raise SystemExit("集計対象の試合がない。")
 
     wins = sum(1 for r in rows if r["result"] == "win")
     decided = sum(1 for r in rows if r["result"] != "draw")
     p, lo, hi = wilson(wins, decided)
     first, last = all_rows[0]["_dt"], all_rows[-1]["_dt"]
     sessions = len({r["_session"] for r in rows})
+    stamp = f"対象期間 {first:%Y/%m/%d} 〜 {last:%Y/%m/%d}　更新 {now_jst():%Y/%m/%d %H:%M} JST"
 
+    # ---- 概要 ----
+    page("index.html", "対戦記録レポート", stamp, f"""
+  {panel("現況", table([
+      ("勝率", f'<span class="big">{p*100:.1f}<span class="u">%</span></span>',
+       "up" if p > 0.5 else "down" if p < 0.5 else ""),
+      ("95%信頼区間", f"{lo*100:.1f}% 〜 {hi*100:.1f}%"),
+      ("勝敗", f'<span class="up-t">{wins}勝</span> / <span class="down-t">{decided-wins}敗</span>'),
+      ("集計対象", f"{len(rows)} 試合"),
+      ("記録総数", f"{len(all_rows)} 試合"),
+      ("プレイ回数", f"{sessions} 回"),
+  ]), "ランク戦のみを対象とする。")}
+  <div class="menu">
+    <a href="chosi.html"><span><b>調子の分析</b><span>連敗後の勝率、連続対戦数、時間帯、曜日</span></span><em>表示 &gt;</em></a>
+    <a href="mydeck.html"><span><b>使用デッキ別</b><span>デッキ構成ごとの勝率と、入れ替えたカードの影響</span></span><em>表示 &gt;</em></a>
+    <a href="enemy.html"><span><b>対戦相手カード別</b><span>相手の編成に含まれるカードと勝率の関係</span></span><em>表示 &gt;</em></a>
+  </div>
+""")
+
+    # ---- 調子 ----
     by_hour = tally(rows, lambda r: r["_hour"])
     hour_items = [(f"{h}時台", w, t) for h, (w, t) in sorted(by_hour.items())]
-
-    def pos_key(r):
-        return "6戦目以降" if r["_pos"] >= 6 else f"{r['_pos']}戦目"
-
-    by_pos = tally(rows, pos_key)
-    pos_items = [(k, *by_pos[k]) for k in
-                 ["1戦目", "2戦目", "3戦目", "4戦目", "5戦目", "6戦目以降"] if k in by_pos]
+    by_pos = tally(rows, lambda r: "6戦目以降" if r["_pos"] >= 6 else f"{r['_pos']}戦目")
+    pos_items = [(k, *by_pos[k]) for k in ["1戦目", "2戦目", "3戦目", "4戦目", "5戦目", "6戦目以降"] if k in by_pos]
 
     def streak_key(r):
         s = r["_prev_streak"]
-        if s <= -2:
-            return "2連敗のあと"
-        if s == -1:
-            return "1敗のあと"
-        if s == 0:
-            return "その日の1戦目"
-        if s == 1:
-            return "1勝のあと"
-        return "2連勝のあと"
+        return ("2連敗後" if s <= -2 else "1敗後" if s == -1 else
+                "セッション初戦" if s == 0 else "1勝後" if s == 1 else "2連勝後")
 
     by_streak = tally(rows, streak_key)
     streak_items = [(k, *by_streak[k]) for k in
-                    ["2連敗のあと", "1敗のあと", "その日の1戦目", "1勝のあと", "2連勝のあと"]
-                    if k in by_streak]
-
+                    ["2連敗後", "1敗後", "セッション初戦", "1勝後", "2連勝後"] if k in by_streak]
     by_wd = tally(rows, lambda r: r["_wd"])
     wd_items = [(WEEKDAY_JA[k] + "曜", w, t) for k, (w, t) in sorted(by_wd.items())]
 
-    # 見出しの答え：負けたあと vs 勝ったあと
-    after_loss = [0, 0]
-    after_win = [0, 0]
+    aft_l, aft_w = [0, 0], [0, 0]
     for r in rows:
         if r["result"] == "draw" or r["_prev_streak"] == 0:
             continue
-        box = after_loss if r["_prev_streak"] < 0 else after_win
+        box = aft_l if r["_prev_streak"] < 0 else aft_w
         box[1] += 1
         if r["result"] == "win":
             box[0] += 1
-    pl, ll, hl = wilson(*after_loss)
-    pw, lw, hw = wilson(*after_win)
-    overlap = not (hl < lw or hw < ll)
-    enough = min(after_loss[1], after_win[1]) >= RELIABLE_N
-
-    if not enough or overlap:
-        answer = "まだ わからない"
-        answer_sub = "差があるとも、ないとも言えない段階。試合数が足りていない。"
+    pl, ll, hl = wilson(*aft_l)
+    pw, lw, hw = wilson(*aft_w)
+    conclusive = min(aft_l[1], aft_w[1]) >= RELIABLE_N and (hl < lw or hw < ll)
+    if not conclusive:
+        judge, judge_cls = "判定不可", "na-t"
+        judge_note = "試合数が不足しており、差の有無を判断できない。"
     elif pl < pw:
-        answer = "負けたあとは 弱いかも"
-        answer_sub = f"負けたあと{pl*100:.0f}% / 勝ったあと{pw*100:.0f}%。連敗したら止めるのが良さそう。"
+        judge, judge_cls = "低下の傾向あり", "down-t"
+        judge_note = f"敗戦後 {pl*100:.1f}% に対し勝利後 {pw*100:.1f}%。連敗時は中断が妥当と考えられる。"
     else:
-        answer = "負けたあとも 落ちてない"
-        answer_sub = f"負けたあと{pl*100:.0f}% / 勝ったあと{pw*100:.0f}%。引きずってはいないみたい。"
+        judge, judge_cls = "低下は認められない", "up-t"
+        judge_note = f"敗戦後 {pl*100:.1f}% に対し勝利後 {pw*100:.1f}%。"
 
     need = needed_n()
     goal = need * 2
-    pctdone = min(100, decided / goal * 100)
-    remain = max(0, goal - decided)
+    strip, day_count, empty_days = coverage_strip(all_rows)
 
-    body = f"""
-<div class="wrap">
-  <div class="top">
-    <h1>今日のクラロワ、どうだった？</h1>
-    <p>{first:%Y/%m/%d} 〜 {last:%Y/%m/%d} ／ {datetime.datetime.now():%m/%d %H:%M} 時点</p>
-  </div>
+    page("chosi.html", "調子の分析", stamp, f"""
+  {panel("検証課題：連敗後に勝率は低下するか",
+      table([
+          ("現時点の判定", f'<span class="big {judge_cls}">{judge}</span>'),
+          ("敗戦後の勝率", f"{pl*100:.1f}%（{aft_l[0]}勝{aft_l[1]-aft_l[0]}敗）",
+           "up" if aft_l[1] >= RELIABLE_N and pl > p else "down" if aft_l[1] >= RELIABLE_N and pl < p else ""),
+          ("勝利後の勝率", f"{pw*100:.1f}%（{aft_w[0]}勝{aft_w[1]-aft_w[0]}敗）",
+           "up" if aft_w[1] >= RELIABLE_N and pw > p else "down" if aft_w[1] >= RELIABLE_N and pw < p else ""),
+      ])
+      + f'<div class="bar"><i style="width:{min(100, decided/goal*100):.1f}%"></i></div>'
+        f'<div class="barlab"><span>必要試合数に対する進捗 {decided} / {goal}</span>'
+        f'<span>残り {max(0, goal-decided)} 試合</span></div>',
+      "", judge_note + f" 勝率50%と60%の差を有意水準5%・検出力80%で検出するには、各群{need}試合を要する。")}
+  {panel("直前の結果別の勝率", rate_rows(streak_items), "縦線が左にあるほど勝率が低い。")}
+  {panel("連続対戦数と勝率", rate_rows(pos_items), "",
+      f"前の試合から{SESSION_GAP_MINUTES}分以上の間隔があいた場合、別セッションとして数える。")}
+  {panel("時間帯別の勝率", rate_rows(hour_items))}
+  {panel("曜日別の勝率", rate_rows(wd_items))}
+  {panel("データ取得状況", strip + table([
+      ("集計対象", f"{len(rows)} 試合"),
+      ("記録総数", f"{len(all_rows)} 試合"),
+      ("取得のない日", f"{empty_days} 日"),
+      ("除外した試合", f"{excluded} 試合"),
+  ]), "棒のない日は、未プレイまたは取得漏れ。",
+      "クラン戦など規則の異なる試合は集計から除外している。")}
+  {legend_panel()}
+""")
 
-  <section class="card hero">
-    <h2>知りたいこと：連敗のあと、弱くなる？</h2>
-    <div class="answer">{esc(answer)}</div>
-    <div class="gauge"><i style="width:{pctdone:.1f}%"></i></div>
-    <div class="gaugelab"><span>答え合わせゲージ {decided} / {goal} 試合</span><span>あと {remain} 試合</span></div>
-    <p class="cap" style="color:rgba(255,255,255,.9);margin-top:14px">{esc(answer_sub)}</p>
-  </section>
+    # ---- 使用デッキ ----
+    def deck_key(r):
+        cards = [c for c in r["my_deck"].split("|") if c]
+        return "|".join(sorted(cards)) if cards else None
 
-  <section class="card">
-    <h2>ぜんぶまとめて</h2>
-    <p class="lead">ランク戦だけを数えたもの。</p>
-    <ul class="stats">
-      <li><b>{p*100:.0f}%</b><span>勝率</span></li>
-      <li><b>{wins}-{decided-wins}</b><span>勝敗</span></li>
-      <li><b>{lo*100:.0f}〜{hi*100:.0f}%</b><span>ほんとうの実力はこの辺</span></li>
-      <li><b>{sessions}</b><span>プレイした回数</span></li>
-    </ul>
-  </section>
+    by_deck = tally(rows, deck_key)
+    deck_face = {}
+    for r in rows:
+        k = deck_key(r)
+        if k and k not in deck_face:
+            deck_face[k] = "・".join([c for c in r["my_deck"].split("|") if c][:3])
+    deck_rank = sorted(by_deck.items(), key=lambda kv: -kv[1][1])
+    deck_items = [(f"{i}. {deck_face.get(k, '?')}…", w, t)
+                  for i, (k, (w, t)) in enumerate(deck_rank[:8], 1)]
 
-  {card("連敗したあと、弱くなる？", "これが一番知りたいところ。玉が左にあるほど弱い。", streak_items,
-        "帯が長いのは「まだ絞りきれてない」という意味。試合が増えると細くなる。")}
-  {card("何戦目でバテる？", "続けて遊んだとき、何戦目から崩れるか。", pos_items,
-        f"{SESSION_GAP_MINUTES}分あいたら別の回として数えている。")}
-  {card("何時が強い？", "生活リズムとの相性。", hour_items)}
-  {card("曜日でちがう？", "", wd_items)}
+    my_cards = defaultdict(lambda: [0, 0])
+    for r in rows:
+        if r["result"] == "draw":
+            continue
+        for c in set(x for x in r["my_deck"].split("|") if x):
+            my_cards[c][1] += 1
+            if r["result"] == "win":
+                my_cards[c][0] += 1
+    varying = {c: v for c, v in my_cards.items() if v[1] < decided}
+    my_items = [(c, w, t) for c, (w, t) in
+                sorted(varying.items(), key=lambda kv: -kv[1][1])[:TOP_CARDS]]
+    fixed_n = len(my_cards) - len(varying)
 
-  <section class="card">
-    <h2>どれくらい集まった？</h2>
-    <p class="lead">棒がない日は、遊んでいないか取り逃した日。</p>
-    {strip}
-    <ul class="stats" style="margin-top:14px">
-      <li><b>{len(rows)}</b><span>集計に使った試合</span></li>
-      <li><b>{len(all_rows)}</b><span>記録した全試合</span></li>
-      <li><b>{empty_days}</b><span>空っぽの日</span></li>
-      <li><b>{excluded}</b><span>除いた試合</span></li>
-    </ul>
-    <p class="cap">クラン戦などルールが違う試合は混ぜていない。同じ土俵じゃないと比べられないため。</p>
-  </section>
+    page("mydeck.html", "使用デッキ別の勝率", stamp, f"""
+  {panel("デッキ構成別の勝率", rate_rows(deck_items, p, f"平均 {p*100:.0f}%"),
+      "基準線は全体平均。デッキ変更の効果はここに現れる。",
+      f"使用したデッキ構成は{len(by_deck)}種類。試合数の多い順に上位8件を表示する。")}
+  {panel("入れ替えのあったカード", rate_rows(my_items, p, f"平均 {p*100:.0f}%") if my_items
+         else '<p class="empty">入れ替えの記録がまだない。</p>',
+      "全試合に含まれる固定枠は差が生じないため除外している。",
+      f"常時採用のカード{fixed_n}枚を表から除外した。")}
+  {legend_panel("　なお自分側のカードは、デッキを変更しない限り差が生じない構造にある。")}
+""")
 
-  <section class="card">
-    <h2>この図の見かた</h2>
-    <p class="lead">玉が「いまの見積り」、帯が「ほんとうはこのへん」。</p>
-    <div class="keys">
-      <span><i class="dotmini"></i>いまの見積り</span>
-      <span><i class="pill p-sure"></i>{RELIABLE_N}試合以上ある（そこそこ言える）</span>
-      <span><i class="pill p-weak"></i>{RELIABLE_N}試合未満（まだわからん）</span>
-    </div>
-    <p class="cap">
-      帯どうしが重なっているうちは、差があるとは言えない。
-      ちゃんと言い切るには、比べる2グループにそれぞれ約{need}試合ずつ必要。
-      いまは全部で{decided}試合。
-    </p>
-  </section>
+    # ---- 対戦相手 ----
+    opp_cards = defaultdict(lambda: [0, 0])
+    for r in rows:
+        if r["result"] == "draw":
+            continue
+        for c in set(x for x in r["opp_deck"].split("|") if x):
+            opp_cards[c][1] += 1
+            if r["result"] == "win":
+                opp_cards[c][0] += 1
+    enough = {c: v for c, v in opp_cards.items() if v[1] >= MIN_CARD_N}
+    ranked = sorted(enough.items(), key=lambda kv: kv[1][0] / kv[1][1])
+    worst = [(c, w, t) for c, (w, t) in ranked[:TOP_CARDS]]
+    best = [(c, w, t) for c, (w, t) in ranked[::-1][:TOP_CARDS]]
 
-  <footer>battles.csv から自動生成</footer>
-</div>
-"""
+    page("enemy.html", "対戦相手のカード別の勝率", stamp, f"""
+  {panel("勝率の低いカード", rate_rows(worst, p, f"平均 {p*100:.0f}%") if worst
+         else '<p class="empty">判定できるカードがまだない。</p>',
+      "相手の編成に当該カードが含まれていた試合における、自分の勝率。",
+      f"{MIN_CARD_N}試合以上対戦したカードのみを対象とする"
+      f"（全{len(opp_cards)}種類のうち{len(enough)}種類）。")}
+  {panel("勝率の高いカード", rate_rows(best, p, f"平均 {p*100:.0f}%") if best else "")}
+  {legend_panel("　カードの種類が多いため、偶然により極端な値が生じやすい。"
+                "個別のカードで判断せず、同種の役割を持つカードが揃って下振れしているかを確認するのが妥当。")}
+""")
 
-    doc = ("<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'>"
-           "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-           "<title>今日のクラロワ、どうだった？</title><style>" + CSS + "</style></head><body>"
-           + body + "</body></html>")
-    with open(OUT_FILE, "w", encoding="utf-8") as f:
-        f.write(doc)
-
-    print(f"report.html を書き出しました（対象 {len(rows)} 試合 / 除外 {excluded} 件）")
-    print(f"全体勝率 {p*100:.1f}%  ありうる範囲 {lo*100:.0f}〜{hi*100:.0f}%")
-    print(f"答え合わせゲージ {decided}/{goal}")
+    print(f"4ページを出力（対象 {len(rows)} 試合 / 除外 {excluded} 件）")
+    print(f"全体勝率 {p*100:.1f}%（95%CI {lo*100:.1f}〜{hi*100:.1f}%） / 相手カード判定可能 {len(enough)}種類")
 
 
 if __name__ == "__main__":
