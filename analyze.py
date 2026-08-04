@@ -222,8 +222,8 @@ def _chart_wide(items, baseline, baseline_label, icon_mode):
 
 
 def _chart_narrow(items, baseline, baseline_label, icon_mode):
-    """スマホ用。1件を2段に分け、絵と数字を大きく出す。"""
-    row_h = 58 if icon_mode == "none" else 84
+    """スマホ用。1件を数段に分け、絵と数字を大きく出す。"""
+    row_h = {"none": 64, "single": 90, "deck": 108}[icon_mode]
     top, W = 34, 380
     height = top + row_h * len(items) + 6
     x0, x1 = 24, 286
@@ -244,21 +244,22 @@ def _chart_narrow(items, baseline, baseline_label, icon_mode):
         p, lo, hi = wilson(wins, total)
         cls = tone_class(p, baseline, total)
 
-        out.append(f'<line class="hair" x1="0" y1="{base_y+row_h-14:.1f}" x2="{W}" y2="{base_y+row_h-14:.1f}"/>')
+        out.append(f'<text class="n" x="{W}" y="{base_y+13:.1f}" text-anchor="end">{wins}勝{total-wins}敗</text>')
 
         if icon_mode == "deck":
             gap, iw = 4, 36
+            ih = iw * 1.2
             offset = (W - (iw * 8 + gap * 7)) / 2
             for j, c in enumerate(cards[:8]):
-                out.append(icon_tag(c, offset + j * (iw + gap), base_y, iw, iw * 1.2))
-            ident_h = iw * 1.2
+                out.append(icon_tag(c, offset + j * (iw + gap), base_y + 20, iw, ih))
+            ident_h = 20 + ih
         elif icon_mode == "single":
             if cards:
                 out.append(icon_tag(cards[0], 0, base_y, 38, 46))
             out.append(f'<text class="lab" x="46" y="{base_y+28:.1f}">{esc(label)}</text>')
             ident_h = 46
         else:
-            out.append(f'<text class="lab" x="0" y="{base_y+16:.1f}">{esc(label)}</text>')
+            out.append(f'<text class="lab" x="0" y="{base_y+13:.1f}">{esc(label)}</text>')
             ident_h = 20
 
         by = base_y + ident_h + 18
@@ -266,7 +267,7 @@ def _chart_narrow(items, baseline, baseline_label, icon_mode):
         out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{by-8:.1f}" width="{w:.1f}" height="16" rx="2"/>')
         out.append(f'<rect class="mark {cls}" x="{px(p)-1.5:.1f}" y="{by-12:.1f}" width="3" height="24"/>')
         out.append(f'<text class="val {cls}" x="{W}" y="{by+7:.1f}" text-anchor="end">{p*100:.1f}<tspan class="unit">%</tspan></text>')
-        out.append(f'<text class="n" x="{W}" y="{base_y+16:.1f}" text-anchor="end">{wins}勝{total-wins}敗</text>')
+        out.append(f'<line class="hair" x1="0" y1="{base_y+row_h-12:.1f}" x2="{W}" y2="{base_y+row_h-12:.1f}"/>')
     out.append("</svg>")
     return "".join(out)
 
@@ -449,6 +450,7 @@ html[data-layout="wide"] .log .deck{grid-template-columns:repeat(8,1fr);gap:2px}
 .narrowonly{display:none}
 html[data-layout="narrow"] .wideonly{display:none}
 html[data-layout="narrow"] .narrowonly{display:block}
+html[data-layout="narrow"] .lead{display:none}
 .basenote{margin:0 0 6px;font-size:11px;color:var(--label)}
 .lyt{margin-left:auto;font-size:11.5px;color:var(--label);background:var(--panel);
   border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;
