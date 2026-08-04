@@ -223,29 +223,35 @@ def _chart_wide(items, baseline, baseline_label, icon_mode):
 
 def _chart_narrow(items, baseline, baseline_label, icon_mode):
     """スマホ用。1件を2段に分け、絵と数字を大きく出す。"""
-    row_h = 58 if icon_mode == "none" else 78
-    top, W = 22, 380
-    height = top + row_h * len(items) + 4
-    x0, x1 = 0, 268
+    row_h = 58 if icon_mode == "none" else 84
+    top, W = 34, 380
+    height = top + row_h * len(items) + 6
+    x0, x1 = 24, 286
     span = x1 - x0
 
     def px(v):
         return x0 + span * v
 
+    bx = px(baseline)
     out = [f'<svg viewBox="0 0 {W} {height}" class="chart">']
+    out.append(f'<line class="base" x1="{bx:.1f}" y1="{top-14}" x2="{bx:.1f}" y2="{height-6}"/>')
+    out.append(f'<text class="baselab" x="{bx:.1f}" y="{top-18}" text-anchor="middle">{esc(baseline_label)}</text>')
+
     for i, item in enumerate(items):
         label, wins, total = item[0], item[1], item[2]
         cards = item[3] if len(item) > 3 else []
-        base_y = top + row_h * i
+        base_y = top + row_h * i + 4
         p, lo, hi = wilson(wins, total)
         cls = tone_class(p, baseline, total)
 
-        out.append(f'<line class="hair" x1="0" y1="{base_y+row_h-8:.1f}" x2="{W}" y2="{base_y+row_h-8:.1f}"/>')
+        out.append(f'<line class="hair" x1="0" y1="{base_y+row_h-14:.1f}" x2="{W}" y2="{base_y+row_h-14:.1f}"/>')
 
         if icon_mode == "deck":
+            gap, iw = 4, 36
+            offset = (W - (iw * 8 + gap * 7)) / 2
             for j, c in enumerate(cards[:8]):
-                out.append(icon_tag(c, j * 43, base_y, 40, 48))
-            ident_h = 48
+                out.append(icon_tag(c, offset + j * (iw + gap), base_y, iw, iw * 1.2))
+            ident_h = iw * 1.2
         elif icon_mode == "single":
             if cards:
                 out.append(icon_tag(cards[0], 0, base_y, 38, 46))
@@ -255,8 +261,7 @@ def _chart_narrow(items, baseline, baseline_label, icon_mode):
             out.append(f'<text class="lab" x="0" y="{base_y+16:.1f}">{esc(label)}</text>')
             ident_h = 20
 
-        by = base_y + ident_h + 16
-        out.append(f'<line class="base" x1="{px(baseline):.1f}" y1="{by-11:.1f}" x2="{px(baseline):.1f}" y2="{by+11:.1f}"/>')
+        by = base_y + ident_h + 18
         w = max(8.0, px(hi) - px(lo))
         out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{by-8:.1f}" width="{w:.1f}" height="16" rx="2"/>')
         out.append(f'<rect class="mark {cls}" x="{px(p)-1.5:.1f}" y="{by-12:.1f}" width="3" height="24"/>')
@@ -278,7 +283,6 @@ def rate_rows(items, baseline=0.5, baseline_label="50%", icon_mode="none"):
         return '<p class="empty">該当するデータがない。</p>'
     return ('<div class="wideonly">' + _chart_wide(items, baseline, baseline_label, icon_mode) + "</div>"
             + '<div class="narrowonly">'
-            + f'<p class="basenote">破線・縦線の基準：{esc(baseline_label)}</p>'
             + _chart_narrow(items, baseline, baseline_label, icon_mode) + "</div>")
 
 
@@ -433,6 +437,7 @@ table.kv td.down{background:var(--downbg);color:var(--down)}
 .log header .tro{font-weight:700}
 .duel{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
 .deck{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+html[data-layout="wide"] .log .deck{grid-template-columns:repeat(8,1fr);gap:2px}
 .deck img,.deck .noimg{width:100%;aspect-ratio:5/6;display:block;border-radius:3px}
 .deck .noimg{background:#E7EAED;border:1px solid var(--line)}
 .hp{margin:6px 0 0;font-size:10.5px;color:var(--label);text-align:center}
