@@ -299,6 +299,29 @@ def panel(title, inner, lead="", note=""):
     return f'<section class="panel"><h2>{esc(title)}</h2>{lead_html}{inner}{note_html}</section>'
 
 
+SCRIPT = """
+function crLayout(m){
+  document.documentElement.setAttribute('data-layout', m);
+  try{ localStorage.setItem('crLayout', m); }catch(e){}
+  var b = document.getElementById('lytbtn');
+  if(b) b.textContent = (m === 'narrow') ? 'スマホ表示' : 'PC表示';
+}
+function crToggle(){
+  crLayout(document.documentElement.getAttribute('data-layout') === 'narrow' ? 'wide' : 'narrow');
+}
+(function(){
+  var saved = null;
+  try{ saved = localStorage.getItem('crLayout'); }catch(e){}
+  var ua = navigator.userAgent || '';
+  var mob = /Android|iPhone|iPod|iPad|Mobile|Silk|Kindle/i.test(ua)
+         || (/Mac/.test(navigator.platform) && navigator.maxTouchPoints > 1);
+  document.documentElement.setAttribute('data-layout', saved || (mob ? 'narrow' : 'wide'));
+})();
+document.addEventListener('DOMContentLoaded', function(){
+  crLayout(document.documentElement.getAttribute('data-layout'));
+});
+"""
+
 CSS = """
 :root{
   --bg:#F2F3F5;--panel:#FFFFFF;--line:#DCDFE3;--ink:#1F2328;--label:#5B646E;
@@ -419,7 +442,6 @@ table.kv td.down{background:var(--downbg);color:var(--down)}
 .badge.win{background:var(--up)}.badge.lose{background:var(--down)}
 .crowns{display:block;font-size:15px;font-weight:700;margin-top:4px}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
-@media(max-width:520px){.wideonly{display:none}.narrowonly{display:block}}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
   nav a{font-size:12px;padding:6px 11px}
   .navlab{width:100%;margin-bottom:2px}
@@ -461,14 +483,16 @@ def nav(prefix, base):
     )
     return ('<div class="navwrap">'
             f'<nav class="modes"><span class="navlab">モード</span>{modes}</nav>'
-            f'<nav class="pages"><span class="navlab">表示</span>{pages}</nav>'
+            f'<nav class="pages"><span class="navlab">表示</span>{pages}'
+            '<button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav>'
             "</div>")
 
 
 def page(prefix, base, label, title, subtitle, body):
     doc = ("<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'>"
            "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-           f"<title>{esc(title)}｜{esc(label)}</title><style>{CSS}</style></head>"
+           f"<title>{esc(title)}｜{esc(label)}</title>"
+           f"<style>{CSS}</style><script>{SCRIPT}</script></head>"
            "<body><div class='wrap'>"
            + nav(prefix, base)
            + f"<div class='head'><h1>{esc(title)}<span class='mtag'>{esc(label)}</span></h1>"
