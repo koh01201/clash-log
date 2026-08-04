@@ -128,31 +128,35 @@ html[data-layout="narrow"] .lead{display:none}
   font-family:inherit}
 .lyt:hover{border-color:var(--link);color:var(--link)}
 @media print{.navwrap{display:none}}
-.season{fill:#F4F6F8}
-.grid{stroke:var(--line);stroke-width:1}
-.grid.half{stroke:#B6BDC4;stroke-dasharray:3 3}
+.plot{fill:#FCFCFD;stroke:#C3CAD1;stroke-width:1}
+.grid{stroke:#E9ECEF;stroke-width:1}
+.monthsep{stroke:#C3CAD1;stroke-width:1}
+.fifty{stroke:#E4A6AE;stroke-width:1;stroke-dasharray:4 3}
 .tick{font-size:9.5px;fill:var(--label)}
-.ciband{fill:#C8102E;opacity:.10}
-.rate{fill:none;stroke:var(--up);stroke-width:1.6;stroke-linejoin:round}
-.ma{fill:none;stroke:var(--down);stroke-width:2.4;stroke-linejoin:round;opacity:.85}
-.pt{stroke:#fff;stroke-width:1.4}
-.pt.up{fill:var(--up)}.pt.down{fill:var(--down)}.pt.na{fill:var(--na)}
-.patch{stroke:#8A939C;stroke-width:1.4;stroke-dasharray:4 3}
-.mask{fill:#fff;opacity:.62}
-.vol{margin-top:2px}
-.volbar{fill:#4E7CB8;opacity:.85}
-.volbar.out{fill:#C7CDD4;opacity:.7}
+.tick.mon{fill:var(--ink);font-weight:700}
+.tick.vlab{font-size:9px}
+.ciband{fill:#8A939C;opacity:.13}
+.cistick{stroke:#8A939C;stroke-width:6;opacity:.28}
+.rate{fill:none;stroke:#3A424B;stroke-width:1.1;stroke-linejoin:round}
+.pt{fill:#3A424B}
+.ma{fill:none;stroke:var(--up);stroke-width:2.2;stroke-linejoin:round}
+.patch{stroke:#0B57A4;stroke-width:1.2;stroke-dasharray:3 3}
+.mask{fill:#FFFFFF;opacity:.66}
+.volbar{fill:#7B8FA8}
 .ubtn{font-size:12px;padding:5px 14px;border:1px solid var(--line);border-radius:4px;
-  background:var(--panel);color:var(--ink);cursor:pointer;font-family:inherit;margin-right:5px}
+  background:var(--panel);color:var(--ink);cursor:pointer;font-family:inherit}
 .ubtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
-.ctrl{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 12px}
-.rng{margin:8px 0 0}
-.rng input{width:100%;margin:2px 0;accent-color:var(--accent)}
-.rlab{font-size:12px;color:var(--label);display:flex;justify-content:space-between;
-  align-items:center;gap:10px}
-.legend2{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--label);margin-top:8px}
-.legend2 i{display:inline-block;width:20px;height:0;border-top-width:3px;border-top-style:solid;
-  vertical-align:middle;margin-right:6px}
+.ctrl{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.ctrl.foot{margin:10px 0 0;justify-content:center}
+.rng{margin:10px 0 0;padding-top:10px;border-top:1px solid var(--line)}
+.rng input{width:100%;margin:1px 0;accent-color:var(--ink)}
+.rlab{font-size:12px;color:var(--label);margin-bottom:2px}
+.rlab b{color:var(--ink)}
+.legend2{display:flex;flex-wrap:wrap;gap:18px;font-size:12px;color:var(--label);
+  margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
+.legend2 span{display:inline-flex;align-items:center;gap:7px}
+.lgline{display:inline-block;width:22px;height:0;border-top-width:2px;border-top-style:solid}
+.lgbox{display:inline-block;width:20px;height:11px;border-radius:2px}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
   nav a{font-size:12px;padding:6px 11px}
@@ -183,7 +187,7 @@ function crToggle(){
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
 });
-</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="log.html">伝説の道</a><a href="cw-log.html">クラン戦</a><a href="etc-log.html" class='on'>その他</a><a href="all-log.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="etc-index.html">概要</a><a href="etc-chosi.html">調子</a><a href="etc-mydeck.html">使用デッキ</a><a href="etc-enemy.html">対戦相手</a><a href="etc-chart.html">推移</a><a href="etc-log.html" class='on'>対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦記録<span class='mtag'>その他</span></h1><p>対象期間 2026/08/04 〜 2026/08/04　更新 2026/08/04 18:59 JST</p></div>
+</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="log.html">伝説の道</a><a href="cw-log.html">クラン戦</a><a href="etc-log.html" class='on'>その他</a><a href="all-log.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="etc-index.html">概要</a><a href="etc-chart.html">推移</a><a href="etc-chosi.html">調子</a><a href="etc-mydeck.html">使用デッキ</a><a href="etc-enemy.html">対戦相手</a><a href="etc-log.html" class='on'>対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦記録<span class='mtag'>その他</span></h1><p>対象期間 2026/08/04 〜 2026/08/04　更新 2026/08/04 19:22 JST</p></div>
   <section class="panel"><h2>直近100試合</h2><p class="lead">左が自分、右が相手の編成。数字は残ったタワーのHP。</p><article class="log lose">
   <header>
     <span class="when">08-04 10:08</span>

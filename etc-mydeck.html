@@ -128,31 +128,35 @@ html[data-layout="narrow"] .lead{display:none}
   font-family:inherit}
 .lyt:hover{border-color:var(--link);color:var(--link)}
 @media print{.navwrap{display:none}}
-.season{fill:#F4F6F8}
-.grid{stroke:var(--line);stroke-width:1}
-.grid.half{stroke:#B6BDC4;stroke-dasharray:3 3}
+.plot{fill:#FCFCFD;stroke:#C3CAD1;stroke-width:1}
+.grid{stroke:#E9ECEF;stroke-width:1}
+.monthsep{stroke:#C3CAD1;stroke-width:1}
+.fifty{stroke:#E4A6AE;stroke-width:1;stroke-dasharray:4 3}
 .tick{font-size:9.5px;fill:var(--label)}
-.ciband{fill:#C8102E;opacity:.10}
-.rate{fill:none;stroke:var(--up);stroke-width:1.6;stroke-linejoin:round}
-.ma{fill:none;stroke:var(--down);stroke-width:2.4;stroke-linejoin:round;opacity:.85}
-.pt{stroke:#fff;stroke-width:1.4}
-.pt.up{fill:var(--up)}.pt.down{fill:var(--down)}.pt.na{fill:var(--na)}
-.patch{stroke:#8A939C;stroke-width:1.4;stroke-dasharray:4 3}
-.mask{fill:#fff;opacity:.62}
-.vol{margin-top:2px}
-.volbar{fill:#4E7CB8;opacity:.85}
-.volbar.out{fill:#C7CDD4;opacity:.7}
+.tick.mon{fill:var(--ink);font-weight:700}
+.tick.vlab{font-size:9px}
+.ciband{fill:#8A939C;opacity:.13}
+.cistick{stroke:#8A939C;stroke-width:6;opacity:.28}
+.rate{fill:none;stroke:#3A424B;stroke-width:1.1;stroke-linejoin:round}
+.pt{fill:#3A424B}
+.ma{fill:none;stroke:var(--up);stroke-width:2.2;stroke-linejoin:round}
+.patch{stroke:#0B57A4;stroke-width:1.2;stroke-dasharray:3 3}
+.mask{fill:#FFFFFF;opacity:.66}
+.volbar{fill:#7B8FA8}
 .ubtn{font-size:12px;padding:5px 14px;border:1px solid var(--line);border-radius:4px;
-  background:var(--panel);color:var(--ink);cursor:pointer;font-family:inherit;margin-right:5px}
+  background:var(--panel);color:var(--ink);cursor:pointer;font-family:inherit}
 .ubtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
-.ctrl{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 12px}
-.rng{margin:8px 0 0}
-.rng input{width:100%;margin:2px 0;accent-color:var(--accent)}
-.rlab{font-size:12px;color:var(--label);display:flex;justify-content:space-between;
-  align-items:center;gap:10px}
-.legend2{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--label);margin-top:8px}
-.legend2 i{display:inline-block;width:20px;height:0;border-top-width:3px;border-top-style:solid;
-  vertical-align:middle;margin-right:6px}
+.ctrl{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.ctrl.foot{margin:10px 0 0;justify-content:center}
+.rng{margin:10px 0 0;padding-top:10px;border-top:1px solid var(--line)}
+.rng input{width:100%;margin:1px 0;accent-color:var(--ink)}
+.rlab{font-size:12px;color:var(--label);margin-bottom:2px}
+.rlab b{color:var(--ink)}
+.legend2{display:flex;flex-wrap:wrap;gap:18px;font-size:12px;color:var(--label);
+  margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
+.legend2 span{display:inline-flex;align-items:center;gap:7px}
+.lgline{display:inline-block;width:22px;height:0;border-top-width:2px;border-top-style:solid}
+.lgbox{display:inline-block;width:20px;height:11px;border-radius:2px}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
   nav a{font-size:12px;padding:6px 11px}
@@ -183,7 +187,7 @@ function crToggle(){
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
 });
-</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="mydeck.html">伝説の道</a><a href="cw-mydeck.html">クラン戦</a><a href="etc-mydeck.html" class='on'>その他</a><a href="all-mydeck.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="etc-index.html">概要</a><a href="etc-chosi.html">調子</a><a href="etc-mydeck.html" class='on'>使用デッキ</a><a href="etc-enemy.html">対戦相手</a><a href="etc-chart.html">推移</a><a href="etc-log.html">対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>使用デッキ別の勝率<span class='mtag'>その他</span></h1><p>対象期間 2026/08/04 〜 2026/08/04　更新 2026/08/04 18:59 JST</p></div>
+</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="mydeck.html">伝説の道</a><a href="cw-mydeck.html">クラン戦</a><a href="etc-mydeck.html" class='on'>その他</a><a href="all-mydeck.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="etc-index.html">概要</a><a href="etc-chart.html">推移</a><a href="etc-chosi.html">調子</a><a href="etc-mydeck.html" class='on'>使用デッキ</a><a href="etc-enemy.html">対戦相手</a><a href="etc-log.html">対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>使用デッキ別の勝率<span class='mtag'>その他</span></h1><p>対象期間 2026/08/04 〜 2026/08/04　更新 2026/08/04 19:22 JST</p></div>
   <section class="panel"><h2>デッキ構成別の勝率</h2><p class="lead">左に並ぶ8枚がその構成。基準線は全体平均で、デッキ変更の効果はここに現れる。</p><div class="wideonly"><svg viewBox="0 0 720 76" class="chart"><line class="base" x1="216.0" y1="14" x2="216.0" y2="72"/><text class="baselab" x="216.0" y="10" text-anchor="middle">平均 0%</text><line class="hair" x1="0" y1="72.0" x2="720" y2="72.0"/><image href="https://api-assets.clashroyale.com/cards/300/UogMnGHQXT-TOVXRxslKdAKXUPhqUvrD_hV9x8lbzdE.png" x="0.0" y="35.0" width="22.0" height="27.0" preserveAspectRatio="xMidYMid meet"><title>Rune Giant</title></image><image href="https://api-assets.clashroyale.com/cards/300/y5HDbKtTbWG6En6TGWU0xoVIGs1-iQpIP4HC-VM7u8A.png" x="25.0" y="35.0" width="22.0" height="27.0" preserveAspectRatio="xMidYMid meet"><title>Inferno Dragon</title></image><image href="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" x="50.0" y="35.0" width="22.0" height="27.0" preserveAspectRatio="xMidYMid meet"><title>Bandit</title></image><image href="https://api-assets.clashroyale.com/cards/300/7MaJLa6hK9WN2_VIshuh5DIDfGwm0wEv98gXtAxLDPs.png" x="75.0" y="35.0" width="22.0" height="27.0" preserveAspectRatio="xMidYMid meet"><title>Giant Snowball</title></image><image href="https://api-assets.clashroyale.com/cards/300/CoZdp5PpsTH858l212lAMeJxVJ0zxv9V-f5xC8Bvj5g.png" x="100.0" y="35.0" width="22.0" height="27.0" preserveAspectRatio="xMidYMid meet"><title>Goblin Barrel</title></image><image href="https://api-assets.clashroyale.com/cards/300/lv1budiafU9XmSdrDkk0NYyqASAFYyZ06CPysXKZXlA.png" x="125.0" y="35.0" width="22.0" height="27.0" preserveAspectRatio="xMidYMid meet"><title>Ice Spirit</title></image><image href="https://api-assets.clashroyale.com/cards/300/mnlRaNtmfpQx2e6mp70sLd0ND-pKPF70Cf87_agEKg4.png" x="150.0" y="35.0" width="22.0" height="27.0" preserveAspectRatio="xMidYMid meet"><title>Royal Giant</title></image><image href="https://api-assets.clashroyale.com/cards/300/l8ZdzzNLcwB4u7ihGgxNFQOjCT_njFuAhZr7D6PRF7E.png" x="175.0" y="35.0" width="22.0" height="27.0" preserveAspectRatio="xMidYMid meet"><title>Goblin Hut</title></image><rect class="band na" x="216.0" y="41.0" width="241.2" height="16" rx="2"/><rect class="mark na" x="214.5" y="36.0" width="3" height="26"/><text class="val na" x="600" y="56.0" text-anchor="end">0.0<tspan class="unit">%</tspan></text><text class="n" x="720" y="54.0" text-anchor="end">0勝1敗</text></svg></div><div class="narrowonly"><svg viewBox="0 0 380 140" class="chart"><text class="baselab" x="72.0" y="16" text-anchor="middle">平均 0%</text><image href="https://api-assets.clashroyale.com/cards/300/UogMnGHQXT-TOVXRxslKdAKXUPhqUvrD_hV9x8lbzdE.png" x="32.0" y="44.0" width="36.0" height="43.2" preserveAspectRatio="xMidYMid meet"><title>Rune Giant</title></image><image href="https://api-assets.clashroyale.com/cards/300/y5HDbKtTbWG6En6TGWU0xoVIGs1-iQpIP4HC-VM7u8A.png" x="72.0" y="44.0" width="36.0" height="43.2" preserveAspectRatio="xMidYMid meet"><title>Inferno Dragon</title></image><image href="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" x="112.0" y="44.0" width="36.0" height="43.2" preserveAspectRatio="xMidYMid meet"><title>Bandit</title></image><image href="https://api-assets.clashroyale.com/cards/300/7MaJLa6hK9WN2_VIshuh5DIDfGwm0wEv98gXtAxLDPs.png" x="152.0" y="44.0" width="36.0" height="43.2" preserveAspectRatio="xMidYMid meet"><title>Giant Snowball</title></image><image href="https://api-assets.clashroyale.com/cards/300/CoZdp5PpsTH858l212lAMeJxVJ0zxv9V-f5xC8Bvj5g.png" x="192.0" y="44.0" width="36.0" height="43.2" preserveAspectRatio="xMidYMid meet"><title>Goblin Barrel</title></image><image href="https://api-assets.clashroyale.com/cards/300/lv1budiafU9XmSdrDkk0NYyqASAFYyZ06CPysXKZXlA.png" x="232.0" y="44.0" width="36.0" height="43.2" preserveAspectRatio="xMidYMid meet"><title>Ice Spirit</title></image><image href="https://api-assets.clashroyale.com/cards/300/mnlRaNtmfpQx2e6mp70sLd0ND-pKPF70Cf87_agEKg4.png" x="272.0" y="44.0" width="36.0" height="43.2" preserveAspectRatio="xMidYMid meet"><title>Royal Giant</title></image><image href="https://api-assets.clashroyale.com/cards/300/l8ZdzzNLcwB4u7ihGgxNFQOjCT_njFuAhZr7D6PRF7E.png" x="312.0" y="44.0" width="36.0" height="43.2" preserveAspectRatio="xMidYMid meet"><title>Goblin Hut</title></image><text class="n" x="0" y="114.2">0勝1敗</text><line class="base" x1="72.0" y1="94.2" x2="72.0" y2="124.2"/><rect class="band na" x="72.0" y="101.2" width="169.8" height="16" rx="2"/><rect class="mark na" x="70.5" y="97.2" width="3" height="24"/><text class="val na" x="380" y="116.2" text-anchor="end">0.0<tspan class="unit">%</tspan></text><line class="hair" x1="0" y1="126.0" x2="380" y2="126.0"/></svg></div><p class="note">使用したデッキ構成は1種類。試合数の多い順に上位8件を表示する。</p></section>
   <section class="panel"><h2>入れ替えのあったカード</h2><p class="lead">全試合に含まれる固定枠は差が生じないため除外している。</p><p class="empty">入れ替えの記録がまだない。</p><p class="note">常時採用のカード8枚を表から除外した。</p></section>
   <section class="panel"><h2>凡例と注意</h2><div class="keys"><span><i class="sw sw-up"></i>基準を上回る</span><span><i class="sw sw-down"></i>基準を下回る</span><span><i class="sw sw-na"></i>判定不可（20試合未満）</span></div><p class="note">縦線が推定値、帯が95%信頼区間。帯が長いほど推定の幅が大きい。帯どうしが重なる範囲では、差があるとは言えない。</p></section>
