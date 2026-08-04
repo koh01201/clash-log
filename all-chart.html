@@ -41,6 +41,8 @@ nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
 .empty{color:var(--label);font-size:13px;margin:4px 0}
 .chart{width:100%;height:auto;display:block;overflow:visible}
 .hair{stroke:var(--line);stroke-width:1}
+.gridv{stroke:#EDF0F2;stroke-width:1}
+.gtick{font-size:9px;fill:#9AA4AE}
 .base{stroke:#B6BDC4;stroke-width:1;stroke-dasharray:3 3}
 .baselab{font-size:10px;fill:var(--label)}
 .lab{font-size:12.5px;fill:var(--ink)}
@@ -121,7 +123,6 @@ html[data-layout="wide"] .log .deck{grid-template-columns:repeat(8,1fr);gap:2px}
 .narrowonly{display:none}
 html[data-layout="narrow"] .wideonly{display:none}
 html[data-layout="narrow"] .narrowonly{display:block}
-html[data-layout="narrow"] .lead{display:none}
 .basenote{margin:0 0 6px;font-size:11px;color:var(--label)}
 .lyt{margin-left:auto;font-size:11.5px;color:var(--label);background:var(--panel);
   border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;
@@ -187,7 +188,7 @@ function crToggle(){
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
 });
-</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="chart.html">伝説の道</a><a href="cw-chart.html">クラン戦</a><a href="etc-chart.html">その他</a><a href="all-chart.html" class='on'>すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="all-index.html">概要</a><a href="all-chart.html" class='on'>推移</a><a href="all-mydeck.html">使用デッキ</a><a href="all-enemy.html">対戦相手</a><a href="all-chosi.html">調子</a><a href="all-log.html">対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>勝率の推移<span class='mtag'>すべて</span></h1><p>対象期間 2026/07/31 〜 2026/08/04　更新 2026/08/04 20:11 JST</p></div>
+</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="chart.html">伝説の道</a><a href="cw-chart.html">クラン戦</a><a href="etc-chart.html">その他</a><a href="all-chart.html" class='on'>すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="all-index.html">概要</a><a href="all-chart.html" class='on'>推移</a><a href="all-mydeck.html">使用デッキ</a><a href="all-enemy.html">対戦相手</a><a href="all-chosi.html">調子</a><a href="all-log.html">対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>勝率の推移<span class='mtag'>すべて</span></h1><p>対象期間 2026/07/31 〜 2026/08/04　更新 2026/08/04 20:25 JST</p></div>
   <section class="panel"><h2>勝率の推移</h2>
     <div class="ctrl">
       <span class="navlab" style="width:auto">粒度</span>

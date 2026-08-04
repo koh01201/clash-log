@@ -41,6 +41,8 @@ nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
 .empty{color:var(--label);font-size:13px;margin:4px 0}
 .chart{width:100%;height:auto;display:block;overflow:visible}
 .hair{stroke:var(--line);stroke-width:1}
+.gridv{stroke:#EDF0F2;stroke-width:1}
+.gtick{font-size:9px;fill:#9AA4AE}
 .base{stroke:#B6BDC4;stroke-width:1;stroke-dasharray:3 3}
 .baselab{font-size:10px;fill:var(--label)}
 .lab{font-size:12.5px;fill:var(--ink)}
@@ -121,7 +123,6 @@ html[data-layout="wide"] .log .deck{grid-template-columns:repeat(8,1fr);gap:2px}
 .narrowonly{display:none}
 html[data-layout="narrow"] .wideonly{display:none}
 html[data-layout="narrow"] .narrowonly{display:block}
-html[data-layout="narrow"] .lead{display:none}
 .basenote{margin:0 0 6px;font-size:11px;color:var(--label)}
 .lyt{margin-left:auto;font-size:11.5px;color:var(--label);background:var(--panel);
   border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;
@@ -187,7 +188,7 @@ function crToggle(){
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
 });
-</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="enemy.html">伝説の道</a><a href="cw-enemy.html">クラン戦</a><a href="etc-enemy.html">その他</a><a href="all-enemy.html" class='on'>すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="all-index.html">概要</a><a href="all-chart.html">推移</a><a href="all-mydeck.html">使用デッキ</a><a href="all-enemy.html" class='on'>対戦相手</a><a href="all-chosi.html">調子</a><a href="all-log.html">対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦相手のカード別の勝率<span class='mtag'>すべて</span></h1><p>対象期間 2026/07/31 〜 2026/08/04　更新 2026/08/04 20:11 JST</p></div>
+</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="enemy.html">伝説の道</a><a href="cw-enemy.html">クラン戦</a><a href="etc-enemy.html">その他</a><a href="all-enemy.html" class='on'>すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="all-index.html">概要</a><a href="all-chart.html">推移</a><a href="all-mydeck.html">使用デッキ</a><a href="all-enemy.html" class='on'>対戦相手</a><a href="all-chosi.html">調子</a><a href="all-log.html">対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦相手のカード別の勝率<span class='mtag'>すべて</span></h1><p>対象期間 2026/07/31 〜 2026/08/04　更新 2026/08/04 20:25 JST</p></div>
   <section class="panel"><h2>期間の指定</h2>
     <div class="ctrl">
       <span class="navlab" style="width:auto">期間</span>
@@ -270,14 +271,21 @@ document.addEventListener('DOMContentLoaded', function(){
   /* ---------- 図 ---------- */
   function wideRows(items, base, mode, blab) {
     var rh = mode === "none" ? 42 : mode === "deck" ? 46 : 54;
-    var top = 26, W = 720, H = top + rh * items.length + 4;
+    var top = 36, W = 720, H = top + rh * items.length + 4;
     var x0 = mode === "deck" ? 216 : 210, x1 = 520, sp = x1 - x0;
     var px = function (v) { return x0 + sp * v; };
     var o = ['<svg viewBox="0 0 ' + W + ' ' + H + '" class="chart">'];
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (g) {
+      var gx = px(g);
+      o.push('<line class="gridv" x1="' + gx.toFixed(1) + '" y1="' + (top - 10) + '" x2="' +
+        gx.toFixed(1) + '" y2="' + (H - 4) + '"/>');
+      o.push('<text class="gtick" x="' + gx.toFixed(1) + '" y="' + (top - 14) +
+        '" text-anchor="middle">' + (g * 100) + "</text>");
+    });
     var bx = px(base);
-    o.push('<line class="base" x1="' + bx.toFixed(1) + '" y1="' + (top - 12) + '" x2="' +
+    o.push('<line class="base" x1="' + bx.toFixed(1) + '" y1="' + (top - 10) + '" x2="' +
       bx.toFixed(1) + '" y2="' + (H - 4) + '"/>');
-    o.push('<text class="baselab" x="' + bx.toFixed(1) + '" y="' + (top - 16) +
+    o.push('<text class="baselab" x="' + bx.toFixed(1) + '" y="' + (top - 26) +
       '" text-anchor="middle">' + esc(blab) + "</text>");
     items.forEach(function (it, i) {
       var y = top + rh * i + rh / 2, r = wilson(it.w, it.n), cls = tone(r[0], base, it.n);
@@ -307,16 +315,21 @@ document.addEventListener('DOMContentLoaded', function(){
   function narrowRows(items, base, mode, blab) {
     var W = 380;
     var rh = mode === "deck" ? 106 : mode === "single" ? 90 : 64;
-    var top = mode === "deck" ? 16 : 34, H = top + rh * items.length + 6;
+    var top = mode === "deck" ? 34 : 44, H = top + rh * items.length + 6;
     var x0 = mode === "deck" ? 162 : 24, x1 = mode === "deck" ? 372 : 286, sp = x1 - x0;
     var px = function (v) { return x0 + sp * v; };
     var o = ['<svg viewBox="0 0 ' + W + ' ' + H + '" class="chart">'];
-    if (mode !== "deck") {
-      o.push('<line class="base" x1="' + px(base).toFixed(1) + '" y1="' + (top - 14) + '" x2="' +
-        px(base).toFixed(1) + '" y2="' + (H - 6) + '"/>');
-      o.push('<text class="baselab" x="' + px(base).toFixed(1) + '" y="' + (top - 18) +
-        '" text-anchor="middle">' + esc(blab) + "</text>");
-    }
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (g) {
+      var gx = px(g);
+      o.push('<line class="gridv" x1="' + gx.toFixed(1) + '" y1="' + (top - 12) + '" x2="' +
+        gx.toFixed(1) + '" y2="' + (H - 6) + '"/>');
+      o.push('<text class="gtick" x="' + gx.toFixed(1) + '" y="' + (top - 16) +
+        '" text-anchor="middle">' + (g * 100) + "</text>");
+    });
+    o.push('<line class="base" x1="' + px(base).toFixed(1) + '" y1="' + (top - 12) + '" x2="' +
+      px(base).toFixed(1) + '" y2="' + (H - 6) + '"/>');
+    o.push('<text class="baselab" x="' + px(base).toFixed(1) + '" y="' + (top - 28) +
+      '" text-anchor="middle">' + esc(blab) + "</text>");
     items.forEach(function (it, i) {
       var by0 = top + rh * i + 4, r = wilson(it.w, it.n), cls = tone(r[0], base, it.n), by;
       var rec = it.w + "勝" + (it.n - it.w) + "敗";
@@ -329,8 +342,6 @@ document.addEventListener('DOMContentLoaded', function(){
           '" text-anchor="end">' + (r[0] * 100).toFixed(1) + '<tspan class="unit">%</tspan></text>');
         o.push('<text class="n" x="' + W + '" y="' + (by0 + 44) + '" text-anchor="end">' + rec + "</text>");
         by = by0 + 70;
-        o.push('<line class="base" x1="' + px(base).toFixed(1) + '" y1="' + (by - 14) + '" x2="' +
-          px(base).toFixed(1) + '" y2="' + (by + 14) + '"/>');
       } else {
         o.push('<text class="n" x="' + W + '" y="' + (by0 + 13) + '" text-anchor="end">' + rec + "</text>");
         if (mode === "single") {
