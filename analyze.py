@@ -142,9 +142,9 @@ TOP_CARDS = 10
 PAGES = [
     ("index.html", "概要"),
     ("chart.html", "推移"),
-    ("chosi.html", "調子"),
     ("mydeck.html", "使用デッキ"),
     ("enemy.html", "対戦相手"),
+    ("chosi.html", "調子"),
     ("log.html", "対戦記録"),
 ]
 
@@ -681,6 +681,284 @@ CHART_JS = """(function () {
 })();
 """
 
+RANK_JS = """(function () {
+  var MODE = "__MODE__";
+  var PAGE = "__PAGE__";          // deck / enemy
+  var RELIABLE_N = 20, MIN_CARD_N = 5, TOP_CARDS = 10;
+  var S = { rows: [], days: [], lo: 0, hi: 0, icons: {} };
+
+  function narrow() {
+    return document.documentElement.getAttribute("data-layout") === "narrow";
+  }
+  function esc(t) {
+    return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function parseCSV(text) {
+    var rows = [], row = [], cell = "", q = false, i, c;
+    for (i = 0; i < text.length; i++) {
+      c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else { q = false; } }
+        else { cell += c; }
+      } else if (c === '"') { q = true; }
+      else if (c === ",") { row.push(cell); cell = ""; }
+      else if (c === "\\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
+      else if (c !== "\\r") { cell += c; }
+    }
+    if (cell.length || row.length) { row.push(cell); rows.push(row); }
+    if (!rows.length) return [];
+    var head = rows.shift().map(function (h) { return h.replace(/^\\uFEFF/, "").trim(); });
+    return rows.filter(function (r) { return r.length === head.length; }).map(function (r) {
+      var o = {}, k;
+      for (k = 0; k < head.length; k++) o[head[k]] = r[k];
+      return o;
+    });
+  }
+  function classify(r) {
+    var t = (r.battle_type || "").toLowerCase();
+    if (t.indexOf("pathoflegend") >= 0) return "pol";
+    if (t.indexOf("riverrace") >= 0 || t.indexOf("clanwar") >= 0) return "cw";
+    return "etc";
+  }
+  function wilson(w, n) {
+    if (!n) return [0, 0, 0];
+    var z = 1.96, p = w / n, d = 1 + z * z / n;
+    var c = (p + z * z / (2 * n)) / d;
+    var m = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d;
+    return [p, Math.max(0, c - m), Math.min(1, c + m)];
+  }
+  function tone(p, base, n) {
+    if (n < RELIABLE_N) return "na";
+    return p > base ? "up" : p < base ? "down" : "na";
+  }
+  function icon(c, x, y, w, h) {
+    var u = S.icons[c];
+    if (!u) return '<rect class="noicon" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) +
+      '" width="' + w + '" height="' + h + '" rx="2"/>';
+    return '<image href="' + esc(u) + '" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) +
+      '" width="' + w + '" height="' + h + '" preserveAspectRatio="xMidYMid meet"><title>' +
+      esc(c) + "</title></image>";
+  }
+
+  /* ---------- 図 ---------- */
+  function wideRows(items, base, mode, blab) {
+    var rh = mode === "none" ? 42 : mode === "deck" ? 46 : 54;
+    var top = 26, W = 720, H = top + rh * items.length + 4;
+    var x0 = mode === "deck" ? 216 : 210, x1 = 520, sp = x1 - x0;
+    var px = function (v) { return x0 + sp * v; };
+    var o = ['<svg viewBox="0 0 ' + W + ' ' + H + '" class="chart">'];
+    var bx = px(base);
+    o.push('<line class="base" x1="' + bx.toFixed(1) + '" y1="' + (top - 12) + '" x2="' +
+      bx.toFixed(1) + '" y2="' + (H - 4) + '"/>');
+    o.push('<text class="baselab" x="' + bx.toFixed(1) + '" y="' + (top - 16) +
+      '" text-anchor="middle">' + esc(blab) + "</text>");
+    items.forEach(function (it, i) {
+      var y = top + rh * i + rh / 2, r = wilson(it.w, it.n), cls = tone(r[0], base, it.n);
+      o.push('<line class="hair" x1="0" y1="' + (y + rh / 2).toFixed(1) + '" x2="' + W +
+        '" y2="' + (y + rh / 2).toFixed(1) + '"/>');
+      if (mode === "deck") {
+        it.cards.slice(0, 8).forEach(function (c, j) { o.push(icon(c, j * 25, y - 14, 22, 27)); });
+      } else if (mode === "single") {
+        o.push(icon(it.cards[0], 0, y - 19, 32, 38));
+        o.push('<text class="lab" x="40" y="' + (y + 5).toFixed(1) + '">' + esc(it.label) + "</text>");
+      } else {
+        o.push('<text class="lab" x="0" y="' + (y + 5).toFixed(1) + '">' + esc(it.label) + "</text>");
+      }
+      o.push('<rect class="band ' + cls + '" x="' + px(r[1]).toFixed(1) + '" y="' + (y - 8).toFixed(1) +
+        '" width="' + Math.max(10, px(r[2]) - px(r[1])).toFixed(1) + '" height="16" rx="2"/>');
+      o.push('<rect class="mark ' + cls + '" x="' + (px(r[0]) - 1.5).toFixed(1) + '" y="' +
+        (y - 13).toFixed(1) + '" width="3" height="26"/>');
+      o.push('<text class="val ' + cls + '" x="600" y="' + (y + 7).toFixed(1) +
+        '" text-anchor="end">' + (r[0] * 100).toFixed(1) + '<tspan class="unit">%</tspan></text>');
+      o.push('<text class="n" x="' + W + '" y="' + (y + 5).toFixed(1) + '" text-anchor="end">' +
+        it.w + "勝" + (it.n - it.w) + "敗</text>");
+    });
+    o.push("</svg>");
+    return o.join("");
+  }
+
+  function narrowRows(items, base, mode, blab) {
+    var W = 380;
+    var rh = mode === "deck" ? 106 : mode === "single" ? 90 : 64;
+    var top = mode === "deck" ? 16 : 34, H = top + rh * items.length + 6;
+    var x0 = mode === "deck" ? 162 : 24, x1 = mode === "deck" ? 372 : 286, sp = x1 - x0;
+    var px = function (v) { return x0 + sp * v; };
+    var o = ['<svg viewBox="0 0 ' + W + ' ' + H + '" class="chart">'];
+    if (mode !== "deck") {
+      o.push('<line class="base" x1="' + px(base).toFixed(1) + '" y1="' + (top - 14) + '" x2="' +
+        px(base).toFixed(1) + '" y2="' + (H - 6) + '"/>');
+      o.push('<text class="baselab" x="' + px(base).toFixed(1) + '" y="' + (top - 18) +
+        '" text-anchor="middle">' + esc(blab) + "</text>");
+    }
+    items.forEach(function (it, i) {
+      var by0 = top + rh * i + 4, r = wilson(it.w, it.n), cls = tone(r[0], base, it.n), by;
+      var rec = it.w + "勝" + (it.n - it.w) + "敗";
+      if (mode === "deck") {
+        var iw = 34, ih = 41, g = 3;
+        it.cards.slice(0, 8).forEach(function (c, j) {
+          o.push(icon(c, (j % 4) * (iw + g), by0 + Math.floor(j / 4) * (ih + g), iw, ih));
+        });
+        o.push('<text class="val ' + cls + '" x="' + W + '" y="' + (by0 + 26) +
+          '" text-anchor="end">' + (r[0] * 100).toFixed(1) + '<tspan class="unit">%</tspan></text>');
+        o.push('<text class="n" x="' + W + '" y="' + (by0 + 44) + '" text-anchor="end">' + rec + "</text>");
+        by = by0 + 70;
+        o.push('<line class="base" x1="' + px(base).toFixed(1) + '" y1="' + (by - 14) + '" x2="' +
+          px(base).toFixed(1) + '" y2="' + (by + 14) + '"/>');
+      } else {
+        o.push('<text class="n" x="' + W + '" y="' + (by0 + 13) + '" text-anchor="end">' + rec + "</text>");
+        if (mode === "single") {
+          o.push(icon(it.cards[0], 0, by0, 38, 46));
+          o.push('<text class="lab" x="46" y="' + (by0 + 28) + '">' + esc(it.label) + "</text>");
+          by = by0 + 64;
+        } else {
+          o.push('<text class="lab" x="0" y="' + (by0 + 13) + '">' + esc(it.label) + "</text>");
+          by = by0 + 38;
+        }
+        o.push('<text class="val ' + cls + '" x="' + W + '" y="' + (by + 7) +
+          '" text-anchor="end">' + (r[0] * 100).toFixed(1) + '<tspan class="unit">%</tspan></text>');
+      }
+      o.push('<rect class="band ' + cls + '" x="' + px(r[1]).toFixed(1) + '" y="' + (by - 8) +
+        '" width="' + Math.max(8, px(r[2]) - px(r[1])).toFixed(1) + '" height="16" rx="2"/>');
+      o.push('<rect class="mark ' + cls + '" x="' + (px(r[0]) - 1.5).toFixed(1) + '" y="' +
+        (by - 12) + '" width="3" height="24"/>');
+      o.push('<line class="hair" x1="0" y1="' + (by0 + rh - 14) + '" x2="' + W +
+        '" y2="' + (by0 + rh - 14) + '"/>');
+    });
+    o.push("</svg>");
+    return o.join("");
+  }
+
+  function rows(items, base, mode, blab) {
+    if (!items.length) return '<p class="empty">該当するデータがない。</p>';
+    return '<div class="wideonly">' + wideRows(items, base, mode, blab) + "</div>" +
+      '<div class="narrowonly">' + narrowRows(items, base, mode, blab) + "</div>";
+  }
+
+  /* ---------- 集計と描画 ---------- */
+  function render() {
+    var from = S.days[S.lo], to = S.days[S.hi];
+    var rs = S.rows.filter(function (r) {
+      var d = r.battle_time_jst.slice(0, 10);
+      return d >= from && d <= to;
+    });
+    var wins = 0, dec = 0;
+    rs.forEach(function (r) { if (r.result !== "draw") { dec++; if (r.result === "win") wins++; } });
+    var base = dec ? wins / dec : 0.5;
+    var blab = "平均 " + (base * 100).toFixed(0) + "%";
+    document.getElementById("rlab").textContent = from + " 〜 " + to +
+      "（" + rs.length + "試合・勝率 " + (base * 100).toFixed(1) + "%）";
+
+    if (PAGE === "deck") {
+      var decks = {}, faces = {}, mine = {};
+      rs.forEach(function (r) {
+        if (r.result === "draw") return;
+        var cs = (r.my_deck || "").split("|").filter(Boolean);
+        var k = cs.slice().sort().join("|");
+        if (!decks[k]) { decks[k] = [0, 0]; faces[k] = cs.slice(0, 8); }
+        decks[k][1]++; if (r.result === "win") decks[k][0]++;
+        var seen = {};
+        cs.forEach(function (c) {
+          if (seen[c]) return; seen[c] = 1;
+          if (!mine[c]) mine[c] = [0, 0];
+          mine[c][1]++; if (r.result === "win") mine[c][0]++;
+        });
+      });
+      var dl = Object.keys(decks).map(function (k) {
+        return { label: "", cards: faces[k], w: decks[k][0], n: decks[k][1] };
+      }).sort(function (a, b) { return b.n - a.n; }).slice(0, 8);
+      var vary = Object.keys(mine).filter(function (c) { return mine[c][1] < dec; });
+      var ml = vary.map(function (c) {
+        return { label: c, cards: [c], w: mine[c][0], n: mine[c][1] };
+      }).sort(function (a, b) { return b.n - a.n; }).slice(0, TOP_CARDS);
+      document.getElementById("s1").innerHTML = rows(dl, base, "deck", blab);
+      document.getElementById("s2").innerHTML = rows(ml, base, "single", blab);
+      document.getElementById("n1").textContent =
+        "使用したデッキ構成は" + Object.keys(decks).length + "種類。試合数の多い順に上位8件。";
+      document.getElementById("n2").textContent =
+        "全試合に含まれる固定枠" + (Object.keys(mine).length - vary.length) + "枚は除外している。";
+    } else {
+      var opp = {};
+      rs.forEach(function (r) {
+        if (r.result === "draw") return;
+        var seen = {};
+        (r.opp_deck || "").split("|").filter(Boolean).forEach(function (c) {
+          if (seen[c]) return; seen[c] = 1;
+          if (!opp[c]) opp[c] = [0, 0];
+          opp[c][1]++; if (r.result === "win") opp[c][0]++;
+        });
+      });
+      var ok = Object.keys(opp).filter(function (c) { return opp[c][1] >= MIN_CARD_N; })
+        .sort(function (a, b) { return opp[a][0] / opp[a][1] - opp[b][0] / opp[b][1]; });
+      var mk = function (c) { return { label: c, cards: [c], w: opp[c][0], n: opp[c][1] }; };
+      document.getElementById("s1").innerHTML = rows(ok.slice(0, TOP_CARDS).map(mk), base, "single", blab);
+      document.getElementById("s2").innerHTML =
+        rows(ok.slice().reverse().slice(0, TOP_CARDS).map(mk), base, "single", blab);
+      document.getElementById("n1").textContent = MIN_CARD_N + "試合以上対戦したカードのみ（全" +
+        Object.keys(opp).length + "種類のうち" + ok.length + "種類）。";
+    }
+  }
+
+  function refresh() {
+    var a = document.getElementById("r1"), z = document.getElementById("r2");
+    a.max = z.max = Math.max(0, S.days.length - 1);
+    a.value = S.lo; z.value = S.hi;
+    render();
+  }
+
+  function bind() {
+    var a = document.getElementById("r1"), z = document.getElementById("r2");
+    a.oninput = function () {
+      S.lo = Math.min(+a.value, +z.value); S.hi = Math.max(+a.value, +z.value);
+      refresh();
+    };
+    z.oninput = a.oninput;
+    [["p-all", 0], ["p-90", 90], ["p-30", 30], ["p-7", 7]].forEach(function (q) {
+      var el = document.getElementById(q[0]);
+      if (!el) return;
+      el.onclick = function () {
+        S.hi = S.days.length - 1;
+        if (!q[1]) { S.lo = 0; }
+        else {
+          var d = new Date(); d.setDate(d.getDate() - q[1]);
+          var cut = d.toISOString().slice(0, 10), j;
+          S.lo = 0;
+          for (j = 0; j < S.days.length; j++) if (S.days[j] >= cut) { S.lo = j; break; }
+        }
+        refresh();
+      };
+    });
+    var btn = document.getElementById("lytbtn");
+    if (btn) btn.addEventListener("click", function () { setTimeout(render, 0); });
+  }
+
+  function boot() {
+    fetch("battles.csv", { cache: "no-store" }).then(function (r) { return r.text(); })
+      .then(function (t) {
+        S.rows = parseCSV(t).filter(function (r) { return r.battle_time_jst; })
+          .filter(function (r) { return MODE === "all" || classify(r) === MODE; })
+          .sort(function (x, y) { return x.battle_time_jst < y.battle_time_jst ? -1 : 1; });
+        var seen = {};
+        S.rows.forEach(function (r) {
+          var d = r.battle_time_jst.slice(0, 10);
+          if (!seen[d]) { seen[d] = 1; S.days.push(d); }
+        });
+        S.days.sort();
+        S.lo = 0; S.hi = Math.max(0, S.days.length - 1);
+        return fetch("cards.json", { cache: "no-store" }).then(function (r) { return r.json(); })
+          .catch(function () { return { cards: {} }; });
+      })
+      .then(function (c) { S.icons = (c && c.cards) || {}; bind(); refresh(); })
+      .catch(function (e) {
+        document.getElementById("s1").innerHTML =
+          '<p class="empty">データを読み込めなかった。' + esc(e) + "</p>";
+      });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+"""
+
 SCRIPT = """
 function crLayout(m){
   document.documentElement.setAttribute('data-layout', m);
@@ -927,6 +1205,22 @@ def page(prefix, base, label, title, subtitle, body):
         f.write(doc)
 
 
+def range_ui():
+    return """
+    <div class="ctrl">
+      <span class="navlab" style="width:auto">期間</span>
+      <button id="p-7" class="ubtn">7日</button>
+      <button id="p-30" class="ubtn">30日</button>
+      <button id="p-90" class="ubtn">90日</button>
+      <button id="p-all" class="ubtn on">全期間</button>
+    </div>
+    <div class="rng" style="border:0;padding-top:0;margin-top:0">
+      <div class="rlab"><b id="rlab">-</b></div>
+      <input id="r1" type="range" min="0" max="0" value="0">
+      <input id="r2" type="range" min="0" max="0" value="0">
+    </div>"""
+
+
 def legend_panel(extra=""):
     keys = ('<div class="keys">'
             '<span><i class="sw sw-up"></i>基準を上回る</span>'
@@ -1101,7 +1395,6 @@ def build(mode_key, prefix, label, rows, total_records):
 
     need = needed_n()
     goal = need * 2
-    strip, day_count, empty_days = coverage_strip(rows)
 
     page(prefix, "chosi.html", label, "調子の分析", stamp, f"""
   {panel("検証課題：連敗後に勝率は低下するか",
@@ -1121,11 +1414,6 @@ def build(mode_key, prefix, label, rows, total_records):
       f"前の試合から{SESSION_GAP_MINUTES}分以上の間隔があいた場合、別セッションとして数える。")}
   {panel("時間帯別の勝率", rate_rows(hour_items))}
   {panel("曜日別の勝率", rate_rows(wd_items))}
-  {panel("データ取得状況", strip + table([
-      ("このモードの試合", f"{len(rows)} 試合"),
-      ("記録総数（全モード）", f"{total_records} 試合"),
-      ("取得のない日", f"{empty_days} 日"),
-  ]), "棒のない日は、未プレイまたは取得漏れ。")}
   {legend_panel()}
 """)
 
@@ -1156,42 +1444,28 @@ def build(mode_key, prefix, label, rows, total_records):
                 sorted(varying.items(), key=lambda kv: -kv[1][1])[:TOP_CARDS]]
     fixed_n = len(my_cards) - len(varying)
 
-    page(prefix, "mydeck.html", label, "使用デッキ別の勝率", stamp, f"""
-  {panel("デッキ構成別の勝率", rate_rows(deck_items, p, f"平均 {p*100:.0f}%", "deck"),
-      "左に並ぶ8枚がその構成。基準線は全体平均で、デッキ変更の効果はここに現れる。",
-      f"使用したデッキ構成は{len(by_deck)}種類。試合数の多い順に上位8件を表示する。")}
-  {panel("入れ替えのあったカード",
-      rate_rows(my_items, p, f"平均 {p*100:.0f}%", "single") if my_items
-      else '<p class="empty">入れ替えの記録がまだない。</p>',
-      "全試合に含まれる固定枠は差が生じないため除外している。",
-      f"常時採用のカード{fixed_n}枚を表から除外した。")}
-  {legend_panel()}
+    page(prefix, "mydeck.html", label, "使用デッキ別の勝率", stamp, """
+  <section class="panel"><h2>期間の指定</h2>""" + range_ui() + """</section>
+  <section class="panel"><h2>デッキ構成別の勝率</h2>
+    <p class="lead">左に並ぶ8枚がその構成。基準線は指定期間の平均。</p>
+    <div id="s1"></div><p class="note" id="n1"></p></section>
+  <section class="panel"><h2>入れ替えのあったカード</h2>
+    <p class="lead">全期間の全試合に含まれる固定枠は差が生じないため除外している。</p>
+    <div id="s2"></div><p class="note" id="n2"></p></section>
+  """ + legend_panel() + """
+  <script>""" + RANK_JS.replace("__MODE__", mode_key).replace("__PAGE__", "deck") + """</script>
 """)
 
     # 対戦相手
-    opp_cards = defaultdict(lambda: [0, 0])
-    for r in rows:
-        if r["result"] == "draw":
-            continue
-        for c in set(x for x in r["opp_deck"].split("|") if x):
-            opp_cards[c][1] += 1
-            if r["result"] == "win":
-                opp_cards[c][0] += 1
-    enough = {c: v for c, v in opp_cards.items() if v[1] >= MIN_CARD_N}
-    ranked = sorted(enough.items(), key=lambda kv: kv[1][0] / kv[1][1])
-    worst = [(c, w, t, [c]) for c, (w, t) in ranked[:TOP_CARDS]]
-    best = [(c, w, t, [c]) for c, (w, t) in ranked[::-1][:TOP_CARDS]]
-
-    page(prefix, "enemy.html", label, "対戦相手のカード別の勝率", stamp, f"""
-  {panel("勝率の低いカード",
-      rate_rows(worst, p, f"平均 {p*100:.0f}%", "single") if worst
-      else '<p class="empty">判定できるカードがまだない。</p>',
-      "相手の編成に当該カードが含まれていた試合における、自分の勝率。",
-      f"{MIN_CARD_N}試合以上対戦したカードのみを対象とする"
-      f"（全{len(opp_cards)}種類のうち{len(enough)}種類）。")}
-  {panel("勝率の高いカード",
-      rate_rows(best, p, f"平均 {p*100:.0f}%", "single") if best else "")}
-  {legend_panel("　カードの種類が多いため、偶然により極端な値が生じやすい。")}
+    page(prefix, "enemy.html", label, "対戦相手のカード別の勝率", stamp, """
+  <section class="panel"><h2>期間の指定</h2>""" + range_ui() + """</section>
+  <section class="panel"><h2>勝率の低いカード</h2>
+    <p class="lead">相手の編成に当該カードが含まれていた試合における、自分の勝率。</p>
+    <div id="s1"></div><p class="note" id="n1"></p></section>
+  <section class="panel"><h2>勝率の高いカード</h2>
+    <div id="s2"></div></section>
+  """ + legend_panel("　カードの種類が多いため、偶然により極端な値が生じやすい。") + """
+  <script>""" + RANK_JS.replace("__MODE__", mode_key).replace("__PAGE__", "enemy") + """</script>
 """)
 
     # 推移
@@ -1239,6 +1513,17 @@ def build(mode_key, prefix, label, rows, total_records):
 """)
 
     # 概要
+    opp_cards = defaultdict(lambda: [0, 0])
+    for r in rows:
+        if r["result"] == "draw":
+            continue
+        for c in set(x for x in r["opp_deck"].split("|") if x):
+            opp_cards[c][1] += 1
+            if r["result"] == "win":
+                opp_cards[c][0] += 1
+    enough = {c: v for c, v in opp_cards.items() if v[1] >= MIN_CARD_N}
+    ranked = sorted(enough.items(), key=lambda kv: kv[1][0] / kv[1][1])
+
     MIN_HL = 5
     boxes = []
     good_decks = [(k, w, t) for k, (w, t) in by_deck.items() if t >= MIN_HL]
