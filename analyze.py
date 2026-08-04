@@ -180,60 +180,106 @@ def icon_tag(name, x, y, w, h):
             f'<title>{esc(name)}</title></image>')
 
 
-def rate_rows(items, baseline=0.5, baseline_label="50%", icon_mode="none"):
-    """items: [(ラベル, 勝ち, 全体)] または [(ラベル, 勝ち, 全体, カード名リスト)]。
-    基準より上は赤、下は青、試合数不足は灰。
-    icon_mode: none=文字のみ / single=絵＋名前 / deck=絵8枚のみ"""
-    if not items:
-        return '<p class="empty">該当するデータがない。</p>'
-
+def _chart_wide(items, baseline, baseline_label, icon_mode):
     row_h = 42 if icon_mode == "none" else 46
-    top = 26
+    top, W = 26, 720
     height = top + row_h * len(items) + 4
     x0 = {"none": 210, "single": 210, "deck": 216}[icon_mode]
     x1 = 520
     span = x1 - x0
 
-    def px(p):
-        return x0 + span * p
+    def px(v):
+        return x0 + span * v
 
-    out = [f'<svg viewBox="0 0 720 {height}" class="chart">']
+    out = [f'<svg viewBox="0 0 {W} {height}" class="chart">']
     bx = px(baseline)
-    out.append(f'<line class="base" x1="{bx:.1f}" y1="{top - 12}" x2="{bx:.1f}" y2="{height - 4}"/>')
-    out.append(f'<text class="baselab" x="{bx:.1f}" y="{top - 16}" text-anchor="middle">{esc(baseline_label)}</text>')
+    out.append(f'<line class="base" x1="{bx:.1f}" y1="{top-12}" x2="{bx:.1f}" y2="{height-4}"/>')
+    out.append(f'<text class="baselab" x="{bx:.1f}" y="{top-16}" text-anchor="middle">{esc(baseline_label)}</text>')
 
     for i, item in enumerate(items):
         label, wins, total = item[0], item[1], item[2]
         cards = item[3] if len(item) > 3 else []
         y = top + row_h * i + row_h / 2
         p, lo, hi = wilson(wins, total)
-        if total < RELIABLE_N:
-            cls = "na"
-        elif p > baseline:
-            cls = "up"
-        elif p < baseline:
-            cls = "down"
-        else:
-            cls = "na"
+        cls = tone_class(p, baseline, total)
         w = max(10.0, px(hi) - px(lo))
-
-        out.append(f'<line class="hair" x1="0" y1="{y + row_h / 2:.1f}" x2="720" y2="{y + row_h / 2:.1f}"/>')
+        out.append(f'<line class="hair" x1="0" y1="{y+row_h/2:.1f}" x2="{W}" y2="{y+row_h/2:.1f}"/>')
         if icon_mode == "deck":
-            for j, cname in enumerate(cards[:8]):
-                out.append(icon_tag(cname, j * 25, y - 14, 22, 27))
+            for j, c in enumerate(cards[:8]):
+                out.append(icon_tag(c, j * 25, y - 14, 22, 27))
         elif icon_mode == "single":
             if cards:
                 out.append(icon_tag(cards[0], 0, y - 14, 22, 27))
-            out.append(f'<text class="lab small" x="28" y="{y + 5:.1f}">{esc(label)}</text>')
+            out.append(f'<text class="lab small" x="28" y="{y+5:.1f}">{esc(label)}</text>')
         else:
-            out.append(f'<text class="lab" x="0" y="{y + 5:.1f}">{esc(label)}</text>')
-        out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{y - 8:.1f}" width="{w:.1f}" height="16" rx="2"/>')
-        out.append(f'<rect class="mark {cls}" x="{px(p) - 1.5:.1f}" y="{y - 13:.1f}" width="3" height="26"/>')
-        out.append(f'<text class="val {cls}" x="600" y="{y + 7:.1f}" text-anchor="end">'
-                   f'{p * 100:.1f}<tspan class="unit">%</tspan></text>')
-        out.append(f'<text class="n" x="720" y="{y + 5:.1f}" text-anchor="end">{wins}勝{total - wins}敗</text>')
+            out.append(f'<text class="lab" x="0" y="{y+5:.1f}">{esc(label)}</text>')
+        out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{y-8:.1f}" width="{w:.1f}" height="16" rx="2"/>')
+        out.append(f'<rect class="mark {cls}" x="{px(p)-1.5:.1f}" y="{y-13:.1f}" width="3" height="26"/>')
+        out.append(f'<text class="val {cls}" x="600" y="{y+7:.1f}" text-anchor="end">{p*100:.1f}<tspan class="unit">%</tspan></text>')
+        out.append(f'<text class="n" x="{W}" y="{y+5:.1f}" text-anchor="end">{wins}勝{total-wins}敗</text>')
     out.append("</svg>")
     return "".join(out)
+
+
+def _chart_narrow(items, baseline, baseline_label, icon_mode):
+    """スマホ用。1件を2段に分け、絵と数字を大きく出す。"""
+    row_h = 58 if icon_mode == "none" else 78
+    top, W = 22, 380
+    height = top + row_h * len(items) + 4
+    x0, x1 = 0, 268
+    span = x1 - x0
+
+    def px(v):
+        return x0 + span * v
+
+    out = [f'<svg viewBox="0 0 {W} {height}" class="chart">']
+    for i, item in enumerate(items):
+        label, wins, total = item[0], item[1], item[2]
+        cards = item[3] if len(item) > 3 else []
+        base_y = top + row_h * i
+        p, lo, hi = wilson(wins, total)
+        cls = tone_class(p, baseline, total)
+
+        out.append(f'<line class="hair" x1="0" y1="{base_y+row_h-8:.1f}" x2="{W}" y2="{base_y+row_h-8:.1f}"/>')
+
+        if icon_mode == "deck":
+            for j, c in enumerate(cards[:8]):
+                out.append(icon_tag(c, j * 43, base_y, 40, 48))
+            ident_h = 48
+        elif icon_mode == "single":
+            if cards:
+                out.append(icon_tag(cards[0], 0, base_y, 38, 46))
+            out.append(f'<text class="lab" x="46" y="{base_y+28:.1f}">{esc(label)}</text>')
+            ident_h = 46
+        else:
+            out.append(f'<text class="lab" x="0" y="{base_y+16:.1f}">{esc(label)}</text>')
+            ident_h = 20
+
+        by = base_y + ident_h + 16
+        out.append(f'<line class="base" x1="{px(baseline):.1f}" y1="{by-11:.1f}" x2="{px(baseline):.1f}" y2="{by+11:.1f}"/>')
+        w = max(8.0, px(hi) - px(lo))
+        out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{by-8:.1f}" width="{w:.1f}" height="16" rx="2"/>')
+        out.append(f'<rect class="mark {cls}" x="{px(p)-1.5:.1f}" y="{by-12:.1f}" width="3" height="24"/>')
+        out.append(f'<text class="val {cls}" x="{W}" y="{by+7:.1f}" text-anchor="end">{p*100:.1f}<tspan class="unit">%</tspan></text>')
+        out.append(f'<text class="n" x="{W}" y="{base_y+16:.1f}" text-anchor="end">{wins}勝{total-wins}敗</text>')
+    out.append("</svg>")
+    return "".join(out)
+
+
+def tone_class(p, baseline, total):
+    if total < RELIABLE_N:
+        return "na"
+    return "up" if p > baseline else "down" if p < baseline else "na"
+
+
+def rate_rows(items, baseline=0.5, baseline_label="50%", icon_mode="none"):
+    """画面幅に応じて2種類のレイアウトを出し分ける。"""
+    if not items:
+        return '<p class="empty">該当するデータがない。</p>'
+    return ('<div class="wideonly">' + _chart_wide(items, baseline, baseline_label, icon_mode) + "</div>"
+            + '<div class="narrowonly">'
+            + f'<p class="basenote">破線・縦線の基準：{esc(baseline_label)}</p>'
+            + _chart_narrow(items, baseline, baseline_label, icon_mode) + "</div>")
 
 
 def table(pairs):
@@ -265,14 +311,15 @@ body{margin:0;padding:20px 16px 64px;background:var(--bg);color:var(--ink);
   font-family:"Yu Gothic","Hiragino Kaku Gothic ProN","Noto Sans JP","Meiryo",sans-serif;
   font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
 .wrap{max-width:900px;margin:0 auto}
-nav{display:flex;gap:6px;flex-wrap:wrap}
-nav.modes{position:sticky;top:0;z-index:21;background:var(--bg);padding:10px 0 4px;margin:-10px 0 0}
-nav.pages{position:sticky;top:42px;z-index:20;background:var(--bg);padding:0 0 8px;
-  margin:0 0 12px;box-shadow:0 6px 8px -8px rgba(0,0,0,.28)}
+.navwrap{position:sticky;top:0;z-index:20;background:var(--bg);
+  padding:8px 0 6px;margin:-8px 0 12px;box-shadow:0 6px 8px -8px rgba(0,0,0,.28)}
+nav{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+nav.modes{margin-bottom:5px;padding-bottom:5px;border-bottom:1px dashed var(--line)}
+.navlab{font-size:10px;color:var(--label);width:34px;flex:none;letter-spacing:.08em}
 nav.modes a{background:var(--labelbg);font-weight:700}
 nav.modes a.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 nav a{text-decoration:none;background:var(--panel);color:var(--ink);font-size:13px;
-  padding:7px 18px;border:1px solid var(--line);border-radius:4px}
+  padding:6px 14px;border:1px solid var(--line);border-radius:4px}
 nav a.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
 nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
 .head{background:var(--panel);border:1px solid var(--line);border-radius:4px;
@@ -373,6 +420,9 @@ table.kv td.down{background:var(--downbg);color:var(--down)}
 .crowns{display:block;font-size:15px;font-weight:700;margin-top:4px}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
+  .wideonly{display:none}.narrowonly{display:block}
+  nav a{font-size:12px;padding:6px 11px}
+  .navlab{width:100%;margin-bottom:2px}
   table.kv th{width:130px}
   .hl-grid{grid-template-columns:1fr 1fr}
   .duel{grid-template-columns:1fr auto 1fr;gap:8px}
@@ -409,7 +459,10 @@ def nav(prefix, base):
         f'<a href="{prefix}{f}"{" class=\'on\'" if f == base else ""}>{esc(l)}</a>'
         for f, l in PAGES
     )
-    return f'<nav class="modes">{modes}</nav><nav class="pages">{pages}</nav>'
+    return ('<div class="navwrap">'
+            f'<nav class="modes"><span class="navlab">モード</span>{modes}</nav>'
+            f'<nav class="pages"><span class="navlab">表示</span>{pages}</nav>'
+            "</div>")
 
 
 def page(prefix, base, label, title, subtitle, body):
