@@ -144,6 +144,7 @@ PAGES = [
     ("chosi.html", "調子"),
     ("mydeck.html", "使用デッキ"),
     ("enemy.html", "対戦相手"),
+    ("log.html", "対戦記録"),
 ]
 
 
@@ -332,9 +333,30 @@ table.kv td.down{background:var(--downbg);color:var(--down)}
 .sw-up{background:#F7D9DE;border-left:3px solid var(--up)}
 .sw-down{background:#D6E3F3;border-left:3px solid var(--down)}
 .sw-na{background:#E7EAED;border-left:3px solid var(--na)}
+.log{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+  margin-bottom:8px;padding:10px 14px 12px;border-left:4px solid var(--na)}
+.log.win{border-left-color:var(--up)}
+.log.lose{border-left-color:var(--down)}
+.log header{display:flex;align-items:center;gap:12px;font-size:11.5px;color:var(--label);
+  margin-bottom:8px}
+.log header .mode{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log header .tro{font-weight:700}
+.duel{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.deck{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.deck img,.deck .noimg{width:100%;aspect-ratio:5/6;display:block;border-radius:3px}
+.deck .noimg{background:#E7EAED;border:1px solid var(--line)}
+.hp{margin:6px 0 0;font-size:10.5px;color:var(--label);text-align:center}
+.mid{text-align:center;min-width:74px}
+.badge{display:block;font-size:19px;font-weight:700;color:#fff;border-radius:3px;
+  padding:2px 0;background:var(--na)}
+.badge.win{background:var(--up)}.badge.lose{background:var(--down)}
+.crowns{display:block;font-size:15px;font-weight:700;margin-top:4px}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
-  table.kv th{width:130px}}
+  table.kv th{width:130px}
+  .duel{grid-template-columns:1fr auto 1fr;gap:8px}
+  .mid{min-width:52px}.badge{font-size:15px}.crowns{font-size:13px}
+  .hp{font-size:9px}}
 """
 
 
@@ -364,6 +386,65 @@ def legend_panel(extra=""):
     note = ("縦線が推定値、帯が95%信頼区間。帯が長いほど推定の幅が大きい。"
             "帯どうしが重なる範囲では、差があるとは言えない。" + extra)
     return panel("凡例と注意", keys, "", note)
+
+
+def deck_grid(cards):
+    """カード8枚を横4×縦2で並べる。"""
+    cells = "".join(
+        f'<img src="{esc(ICONS[c])}" alt="{esc(c)}" title="{esc(c)}">' if ICONS.get(c)
+        else f'<span class="noimg" title="{esc(c)}"></span>'
+        for c in cards[:8]
+    )
+    return f'<div class="deck">{cells}</div>'
+
+
+def hp_text(king, princess):
+    """残HPを短く。0や欠損は陥落扱い。"""
+    k = str(king or "0")
+    king_txt = "王 陥落" if k in ("0", "") else f"王 {int(float(k)):,}"
+    towers = [f"{int(float(t)):,}" for t in str(princess or "").split("|") if t]
+    towers += ["陥落"] * (2 - len(towers))
+    return f"{king_txt}　姫 {towers[0]}/{towers[1]}"
+
+
+def battle_log(rows, limit=100):
+    """直近の対戦を1件1ブロックで並べる。"""
+    recent = rows[-limit:][::-1]
+    blocks = []
+    for r in recent:
+        won = r["result"] == "win"
+        cls = "win" if won else "lose" if r["result"] == "loss" else "draw"
+        badge = "勝" if won else "敗" if r["result"] == "loss" else "分"
+        change = r.get("trophy_change") or ""
+        try:
+            ch = int(float(change))
+            chtxt = f'<span class="{"up-t" if ch > 0 else "down-t" if ch < 0 else ""}">{ch:+d}</span>'
+        except (TypeError, ValueError):
+            chtxt = ""
+        mine = [c for c in r["my_deck"].split("|") if c]
+        opp = [c for c in r["opp_deck"].split("|") if c]
+        blocks.append(f"""<article class="log {cls}">
+  <header>
+    <span class="when">{esc(r["battle_time_jst"][5:16])}</span>
+    <span class="mode">{esc(r.get("game_mode") or r.get("battle_type") or "")}</span>
+    <span class="tro">{chtxt}</span>
+  </header>
+  <div class="duel">
+    <div class="side">
+      {deck_grid(mine)}
+      <p class="hp">{esc(hp_text(r.get("my_king_hp"), r.get("my_princess_hp")))}</p>
+    </div>
+    <div class="mid">
+      <span class="badge {cls}">{badge}</span>
+      <span class="crowns">{esc(r.get("my_crowns", ""))} - {esc(r.get("opp_crowns", ""))}</span>
+    </div>
+    <div class="side">
+      {deck_grid(opp)}
+      <p class="hp">{esc(hp_text(r.get("opp_king_hp"), r.get("opp_princess_hp")))}</p>
+    </div>
+  </div>
+</article>""")
+    return "".join(blocks)
 
 
 def coverage_strip(rows):
@@ -569,7 +650,14 @@ def main():
                 "個別のカードで判断せず、同種の役割を持つカードが揃って下振れしているかを確認するのが妥当。")}
 """)
 
-    print(f"4ページを出力（対象 {len(rows)} 試合 / 除外 {excluded} 件）")
+    # ---- 対戦記録 ----
+    page("log.html", "対戦記録", stamp, f"""
+  {panel("直近100試合", battle_log(all_rows, 100),
+      "左が自分、右が相手の編成。数字は残ったタワーのHP。ランク戦以外も含む。",
+      "画像にマウスを乗せるとカード名が出る。")}
+""")
+
+    print(f"5ページを出力（対象 {len(rows)} 試合 / 除外 {excluded} 件）")
     print(f"全体勝率 {p*100:.1f}%（95%CI {lo*100:.1f}〜{hi*100:.1f}%） / 相手カード判定可能 {len(enough)}種類")
 
 
