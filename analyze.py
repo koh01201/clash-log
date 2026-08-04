@@ -1391,14 +1391,15 @@ def build(mode_key, prefix, label, rows, total_records):
     by_wd = tally(rows, lambda r: r["_wd"])
     wd_items = [(WEEKDAY_JA[k] + "曜", w, t) for k, (w, t) in sorted(by_wd.items())]
 
-    aft_l, aft_w = [0, 0], [0, 0]
+    aft_l, aft_w, aft_f = [0, 0], [0, 0], [0, 0]
     for r in rows:
-        if r["result"] == "draw" or r["_prev_streak"] == 0:
+        if r["result"] == "draw":
             continue
-        box = aft_l if r["_prev_streak"] < 0 else aft_w
+        box = aft_f if r["_prev_streak"] == 0 else (aft_l if r["_prev_streak"] < 0 else aft_w)
         box[1] += 1
         if r["result"] == "win":
             box[0] += 1
+    pf = wilson(*aft_f)[0]
     pl, ll, hl_ = wilson(*aft_l)
     pw, lw, hw = wilson(*aft_w)
     conclusive = min(aft_l[1], aft_w[1]) >= RELIABLE_N and (hl_ < lw or hw < ll)
@@ -1423,11 +1424,15 @@ def build(mode_key, prefix, label, rows, total_records):
            "up" if aft_l[1] >= RELIABLE_N and pl > p else "down" if aft_l[1] >= RELIABLE_N and pl < p else ""),
           ("勝利後の勝率", f"{pw*100:.1f}%（{aft_w[0]}勝{aft_w[1]-aft_w[0]}敗）",
            "up" if aft_w[1] >= RELIABLE_N and pw > p else "down" if aft_w[1] >= RELIABLE_N and pw < p else ""),
+          ("セッション初戦（比較から除外）", f"{pf*100:.1f}%（{aft_f[0]}勝{aft_f[1]-aft_f[0]}敗）"),
+          ("合計", f"{aft_l[1] + aft_w[1]} + {aft_f[1]} = {decided} 試合"),
       ])
       + f'<div class="bar"><i style="width:{min(100, decided/goal*100):.1f}%"></i></div>'
         f'<div class="barlab"><span>必要試合数に対する進捗 {decided} / {goal}</span>'
         f'<span>残り {max(0, goal-decided)} 試合</span></div>',
-      "", judge_note + f" 勝率50%と60%の差を有意水準5%・検出力80%で検出するには、各群{need}試合を要する。")}
+      "", "セッションの初戦は直前の結果が存在しないため、両群のどちらにも含めない。"
+          f"そのため2群の合計は全{decided}試合より少なくなる。" + judge_note +
+          f" 勝率50%と60%の差を有意水準5%・検出力80%で検出するには、各群{need}試合を要する。")}
   {panel("直前の結果別の勝率", rate_rows(streak_items), "縦線が左にあるほど勝率が低い。")}
   {panel("連続対戦数と勝率", rate_rows(pos_items), "",
       f"前の試合から{SESSION_GAP_MINUTES}分以上の間隔があいた場合、別セッションとして数える。")}
@@ -1584,6 +1589,7 @@ def build(mode_key, prefix, label, rows, total_records):
       ("現時点の判定", f'<span class="big {judge_cls}">{judge}</span>'),
       ("敗戦後の勝率", f"{pl*100:.1f}%（{aft_l[0]}勝{aft_l[1]-aft_l[0]}敗）"),
       ("勝利後の勝率", f"{pw*100:.1f}%（{aft_w[0]}勝{aft_w[1]-aft_w[0]}敗）"),
+      ("セッション初戦（比較から除外）", f"{pf*100:.1f}%（{aft_f[0]}勝{aft_f[1]-aft_f[0]}敗）"),
   ]) + f'<div class="bar"><i style="width:{min(100, decided/goal*100):.1f}%"></i></div>'
      f'<div class="barlab"><span>必要試合数に対する進捗 {decided} / {goal}</span>'
      f'<span>残り {max(0, goal-decided)} 試合</span></div>')}
