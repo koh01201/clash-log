@@ -144,6 +144,7 @@ PAGES = [
     ("chosi.html", "調子"),
     ("mydeck.html", "使用デッキ"),
     ("enemy.html", "対戦相手"),
+    ("chart.html", "推移"),
     ("log.html", "対戦記録"),
 ]
 
@@ -310,6 +311,344 @@ def panel(title, inner, lead="", note=""):
     return f'<section class="panel"><h2>{esc(title)}</h2>{lead_html}{inner}{note_html}</section>'
 
 
+CHART_JS = """(function () {
+  var MODE = "__MODE__";
+  var PATCHES = [];          // 例: ["2026-08-15"] を足すと縦線が入る
+  var MA_WIN = 4;            // 移動平均の窓（バケット数）
+  var RELIABLE_N = 20;
+  var S = { unit: "week", lo: 0, hi: 0, rows: [], buckets: [], icons: {} };
+
+  function narrow() {
+    return document.documentElement.getAttribute("data-layout") === "narrow";
+  }
+  function esc(t) {
+    return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function parseCSV(text) {
+    var rows = [], row = [], cell = "", q = false, i, c;
+    for (i = 0; i < text.length; i++) {
+      c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else { q = false; } }
+        else { cell += c; }
+      } else if (c === '"') { q = true; }
+      else if (c === ",") { row.push(cell); cell = ""; }
+      else if (c === "\\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
+      else if (c !== "\\r") { cell += c; }
+    }
+    if (cell.length || row.length) { row.push(cell); rows.push(row); }
+    if (!rows.length) return [];
+    var head = rows.shift().map(function (h) { return h.replace(/^\\uFEFF/, "").trim(); });
+    return rows.filter(function (r) { return r.length === head.length; }).map(function (r) {
+      var o = {}, k;
+      for (k = 0; k < head.length; k++) o[head[k]] = r[k];
+      return o;
+    });
+  }
+  function classify(r) {
+    var t = (r.battle_type || "").toLowerCase();
+    if (t.indexOf("pathoflegend") >= 0) return "pol";
+    if (t.indexOf("riverrace") >= 0 || t.indexOf("clanwar") >= 0) return "cw";
+    return "etc";
+  }
+  function wilson(w, n) {
+    if (!n) return [0, 0, 0];
+    var z = 1.96, p = w / n, d = 1 + z * z / n;
+    var c = (p + z * z / (2 * n)) / d;
+    var m = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d;
+    return [p, Math.max(0, c - m), Math.min(1, c + m)];
+  }
+  function weekKey(s) {
+    var d = new Date(s.slice(0, 10) + "T00:00:00");
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    var mm = ("0" + (d.getMonth() + 1)).slice(-2), dd = ("0" + d.getDate()).slice(-2);
+    return d.getFullYear() + "-" + mm + "-" + dd;
+  }
+  function keyOf(s, unit) {
+    if (unit === "day") return s.slice(0, 10);
+    if (unit === "month") return s.slice(0, 7) + "-01";
+    return weekKey(s);
+  }
+  function bucketize(rows, unit) {
+    var map = {}, order = [], i, k, r;
+    for (i = 0; i < rows.length; i++) {
+      r = rows[i];
+      k = keyOf(r.battle_time_jst, unit);
+      if (!map[k]) { map[k] = { key: k, w: 0, n: 0, games: 0 }; order.push(k); }
+      map[k].games++;
+      if (r.result === "draw") continue;
+      map[k].n++;
+      if (r.result === "win") map[k].w++;
+    }
+    order.sort();
+    return order.map(function (k) { return map[k]; });
+  }
+  function movingAvg(b, win) {
+    return b.map(function (_, i) {
+      var w = 0, n = 0, j;
+      for (j = Math.max(0, i - win + 1); j <= i; j++) { w += b[j].w; n += b[j].n; }
+      return n ? w / n : null;
+    });
+  }
+  function fmtDate(k, unit) {
+    var p = k.split("-");
+    return unit === "month" ? p[0].slice(2) + "/" + p[1] : p[1] + "/" + p[2];
+  }
+  function tone(p, base, n) {
+    if (n < RELIABLE_N) return "na";
+    return p > base ? "up" : p < base ? "down" : "na";
+  }
+
+  /* ---------- 描画 ---------- */
+  function draw() {
+    var b = S.buckets, nb = b.length;
+    if (!nb) { document.getElementById("chart").innerHTML =
+      '<p class="empty">この期間のデータがない。</p>'; return; }
+
+    var nw = narrow();
+    var W = nw ? 380 : 720, H = nw ? 210 : 250, VH = nw ? 56 : 74;
+    var padL = 32, padR = 10, padT = 16, padB = 20;
+    var pw = W - padL - padR, ph = H - padT - padB;
+    var step = pw / nb;
+    var x = function (i) { return padL + (i + 0.5) * step; };
+    var y = function (v) { return padT + ph * (1 - v); };
+    var o = [];
+
+    o.push('<svg viewBox="0 0 ' + W + ' ' + H + '" class="chart">');
+
+    // 月ごとの背景（シーズンの目安）
+    var mstart = 0, mi = 0, k;
+    for (k = 1; k <= nb; k++) {
+      if (k === nb || b[k].key.slice(0, 7) !== b[mstart].key.slice(0, 7)) {
+        if (mi % 2 === 1) {
+          o.push('<rect class="season" x="' + (padL + mstart * step).toFixed(1) + '" y="' + padT +
+            '" width="' + ((k - mstart) * step).toFixed(1) + '" height="' + ph + '"/>');
+        }
+        mstart = k; mi++;
+      }
+    }
+
+    // 目盛り
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (v) {
+      o.push('<line class="grid' + (v === 0.5 ? " half" : "") + '" x1="' + padL + '" y1="' +
+        y(v).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y(v).toFixed(1) + '"/>');
+      o.push('<text class="tick" x="' + (padL - 5) + '" y="' + (y(v) + 3.5).toFixed(1) +
+        '" text-anchor="end">' + (v * 100) + '</text>');
+    });
+
+    // 信頼区間の帯
+    var up = [], dn = [], i, r;
+    for (i = 0; i < nb; i++) {
+      r = wilson(b[i].w, b[i].n);
+      up.push(x(i).toFixed(1) + "," + y(r[2]).toFixed(1));
+      dn.unshift(x(i).toFixed(1) + "," + y(r[1]).toFixed(1));
+    }
+    if (nb > 1) o.push('<polygon class="ciband" points="' + up.concat(dn).join(" ") + '"/>');
+
+    // 実測の折れ線と点
+    var pts = b.map(function (d, j) {
+      return x(j).toFixed(1) + "," + y(d.n ? d.w / d.n : 0).toFixed(1);
+    });
+    if (nb > 1) o.push('<polyline class="rate" points="' + pts.join(" ") + '"/>');
+
+    // 移動平均
+    var ma = movingAvg(b, MA_WIN);
+    var mp = [];
+    for (i = 0; i < nb; i++) if (ma[i] !== null) mp.push(x(i).toFixed(1) + "," + y(ma[i]).toFixed(1));
+    if (mp.length > 1) o.push('<polyline class="ma" points="' + mp.join(" ") + '"/>');
+
+    // 点と日付
+    var base = S.overall;
+    for (i = 0; i < nb; i++) {
+      var p = b[i].n ? b[i].w / b[i].n : 0;
+      o.push('<circle class="pt ' + tone(p, base, b[i].n) + '" cx="' + x(i).toFixed(1) +
+        '" cy="' + y(p).toFixed(1) + '" r="' + (nw ? 3.2 : 4) + '"><title>' +
+        esc(b[i].key) + " " + b[i].w + "勝" + (b[i].n - b[i].w) + "敗</title></circle>");
+    }
+    var everyN = Math.ceil(nb / (nw ? 5 : 10));
+    for (i = 0; i < nb; i += everyN) {
+      o.push('<text class="tick" x="' + x(i).toFixed(1) + '" y="' + (H - 5) +
+        '" text-anchor="middle">' + esc(fmtDate(b[i].key, S.unit)) + "</text>");
+    }
+
+    // バランス調整日
+    PATCHES.forEach(function (d) {
+      for (i = 0; i < nb; i++) {
+        if (b[i].key >= d) {
+          o.push('<line class="patch" x1="' + (padL + i * step).toFixed(1) + '" y1="' + padT +
+            '" x2="' + (padL + i * step).toFixed(1) + '" y2="' + (padT + ph) + '"/>');
+          break;
+        }
+      }
+    });
+
+    // 範囲外を暗く
+    if (S.lo > 0) o.push('<rect class="mask" x="' + padL + '" y="' + padT + '" width="' +
+      (S.lo * step).toFixed(1) + '" height="' + ph + '"/>');
+    if (S.hi < nb - 1) o.push('<rect class="mask" x="' + (padL + (S.hi + 1) * step).toFixed(1) +
+      '" y="' + padT + '" width="' + ((nb - 1 - S.hi) * step).toFixed(1) + '" height="' + ph + '"/>');
+    o.push("</svg>");
+
+    // 出来高（プレイ回数）
+    var maxg = Math.max.apply(null, b.map(function (d) { return d.games; })) || 1;
+    o.push('<svg viewBox="0 0 ' + W + ' ' + VH + '" class="chart vol">');
+    o.push('<text class="tick" x="' + (padL - 5) + '" y="12" text-anchor="end">' + maxg + "</text>");
+    for (i = 0; i < nb; i++) {
+      var bh = (VH - 18) * (b[i].games / maxg);
+      var inr = i >= S.lo && i <= S.hi;
+      o.push('<rect class="volbar' + (inr ? "" : " out") + '" x="' +
+        (padL + i * step + step * 0.15).toFixed(1) + '" y="' + (VH - 14 - bh).toFixed(1) +
+        '" width="' + (step * 0.7).toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="1"><title>' +
+        esc(b[i].key) + " " + b[i].games + "試合</title></rect>");
+    }
+    o.push('<line class="grid" x1="' + padL + '" y1="' + (VH - 14) + '" x2="' + (W - padR) +
+      '" y2="' + (VH - 14) + '"/>');
+    o.push('<text class="tick" x="' + padL + '" y="' + (VH - 3) + '">プレイ回数</text>');
+    o.push("</svg>");
+
+    document.getElementById("chart").innerHTML = o.join("");
+  }
+
+  /* ---------- 期間内の集計 ---------- */
+  function summary() {
+    var b = S.buckets;
+    if (!b.length) { document.getElementById("sum").innerHTML = ""; return; }
+    var from = b[S.lo].key, to = b[S.hi].key;
+    var rows = S.rows.filter(function (r) {
+      var k = keyOf(r.battle_time_jst, S.unit);
+      return k >= from && k <= to;
+    });
+    var wins = 0, dec = 0, i, r;
+    for (i = 0; i < rows.length; i++) {
+      if (rows[i].result === "draw") continue;
+      dec++; if (rows[i].result === "win") wins++;
+    }
+    var wl = wilson(wins, dec), p = wl[0];
+
+    var decks = {}, faces = {}, opp = {};
+    for (i = 0; i < rows.length; i++) {
+      r = rows[i];
+      if (r.result === "draw") continue;
+      var cards = (r.my_deck || "").split("|").filter(Boolean);
+      var dk = cards.slice().sort().join("|");
+      if (!decks[dk]) { decks[dk] = [0, 0]; faces[dk] = cards.slice(0, 8); }
+      decks[dk][1]++; if (r.result === "win") decks[dk][0]++;
+      var seen = {};
+      (r.opp_deck || "").split("|").filter(Boolean).forEach(function (c) {
+        if (seen[c]) return; seen[c] = 1;
+        if (!opp[c]) opp[c] = [0, 0];
+        opp[c][1]++; if (r.result === "win") opp[c][0]++;
+      });
+    }
+    function best(obj, min, worst) {
+      var k, out = null;
+      for (k in obj) {
+        if (obj[k][1] < min) continue;
+        var v = obj[k][0] / obj[k][1];
+        if (!out || (worst ? v < out.v : v > out.v)) out = { k: k, v: v, w: obj[k][0], n: obj[k][1] };
+      }
+      return out;
+    }
+    function img(c) {
+      var u = S.icons[c];
+      return u ? '<img src="' + esc(u) + '" alt="' + esc(c) + '">' : '<span class="noimg"></span>';
+    }
+    function box(lab, inner, w, n) {
+      var q = wilson(w, n)[0];
+      var t = q > p ? "up-t" : q < p ? "down-t" : "";
+      return '<div class="hl"><span class="hl-lab">' + esc(lab) + "</span>" + inner +
+        '<span class="hl-val ' + t + '">' + (q * 100).toFixed(1) +
+        '<span class="hl-u">%</span></span><span class="hl-sub">' + w + "勝" + (n - w) + "敗</span></div>";
+    }
+    var boxes = [];
+    var bd = best(decks, 5, false);
+    if (bd) boxes.push(box("最も勝てているデッキ",
+      '<div class="deck">' + faces[bd.k].map(img).join("") + "</div>", bd.w, bd.n));
+    var wc = best(opp, 5, true), gc = best(opp, 5, false);
+    if (wc) boxes.push(box("苦手な相手カード",
+      '<div class="hl-card">' + img(wc.k) + "<b>" + esc(wc.k) + "</b></div>", wc.w, wc.n));
+    if (gc) boxes.push(box("得意な相手カード",
+      '<div class="hl-card">' + img(gc.k) + "<b>" + esc(gc.k) + "</b></div>", gc.w, gc.n));
+
+    var html = '<table class="kv">' +
+      '<tr><th>期間</th><td>' + esc(from) + " 〜 " + esc(to) + "</td></tr>" +
+      '<tr><th>試合数</th><td>' + rows.length + " 試合</td></tr>" +
+      '<tr><th>勝率</th><td class="' + (p > 0.5 ? "up" : p < 0.5 ? "down" : "") +
+      '"><span class="big">' + (p * 100).toFixed(1) + '<span class="u">%</span></span></td></tr>' +
+      '<tr><th>95%信頼区間</th><td>' + (wl[1] * 100).toFixed(1) + "% 〜 " +
+      (wl[2] * 100).toFixed(1) + "%</td></tr>" +
+      '<tr><th>勝敗</th><td><span class="up-t">' + wins + '勝</span> / <span class="down-t">' +
+      (dec - wins) + "敗</span></td></tr></table>";
+    if (boxes.length) html += '<div class="hl-grid" style="margin-top:12px">' + boxes.join("") + "</div>";
+    document.getElementById("sum").innerHTML = html;
+  }
+
+  function refreshRange() {
+    var a = document.getElementById("r1"), z = document.getElementById("r2");
+    var nb = S.buckets.length;
+    a.max = z.max = Math.max(0, nb - 1);
+    a.value = S.lo; z.value = S.hi;
+    document.getElementById("rlab").textContent =
+      nb ? S.buckets[S.lo].key + " 〜 " + S.buckets[S.hi].key : "-";
+  }
+
+  function rebuild(keepRange) {
+    var rows = S.all.filter(function (r) { return MODE === "all" || classify(r) === MODE; });
+    S.rows = rows;
+    S.buckets = bucketize(rows, S.unit);
+    var w = 0, n = 0;
+    rows.forEach(function (r) { if (r.result !== "draw") { n++; if (r.result === "win") w++; } });
+    S.overall = n ? w / n : 0.5;
+    if (!keepRange) { S.lo = 0; S.hi = Math.max(0, S.buckets.length - 1); }
+    S.hi = Math.min(S.hi, Math.max(0, S.buckets.length - 1));
+    S.lo = Math.min(S.lo, S.hi);
+    refreshRange(); draw(); summary();
+  }
+
+  function bind() {
+    ["day", "week", "month"].forEach(function (u) {
+      var el = document.getElementById("u-" + u);
+      if (!el) return;
+      el.onclick = function () {
+        S.unit = u;
+        ["day", "week", "month"].forEach(function (v) {
+          document.getElementById("u-" + v).className = "ubtn" + (v === u ? " on" : "");
+        });
+        rebuild(false);
+      };
+    });
+    var a = document.getElementById("r1"), z = document.getElementById("r2");
+    a.oninput = function () {
+      S.lo = Math.min(+a.value, +z.value); S.hi = Math.max(+a.value, +z.value);
+      refreshRange(); draw(); summary();
+    };
+    z.oninput = a.oninput;
+    var full = document.getElementById("rfull");
+    if (full) full.onclick = function () { S.lo = 0; S.hi = S.buckets.length - 1; refreshRange(); draw(); summary(); };
+    var btn = document.getElementById("lytbtn");
+    if (btn) btn.addEventListener("click", function () { setTimeout(function () { draw(); }, 0); });
+  }
+
+  function boot() {
+    fetch("battles.csv", { cache: "no-store" }).then(function (r) { return r.text(); })
+      .then(function (t) {
+        S.all = parseCSV(t).filter(function (r) { return r.battle_time_jst; })
+          .sort(function (x, y) { return x.battle_time_jst < y.battle_time_jst ? -1 : 1; });
+        return fetch("cards.json", { cache: "no-store" }).then(function (r) { return r.json(); })
+          .catch(function () { return { cards: {} }; });
+      })
+      .then(function (c) { S.icons = (c && c.cards) || {}; bind(); rebuild(false); })
+      .catch(function (e) {
+        document.getElementById("chart").innerHTML =
+          '<p class="empty">データを読み込めなかった。' + esc(e) + "</p>";
+      });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+"""
+
 SCRIPT = """
 function crLayout(m){
   document.documentElement.setAttribute('data-layout', m);
@@ -463,6 +802,31 @@ html[data-layout="narrow"] .lead{display:none}
   font-family:inherit}
 .lyt:hover{border-color:var(--link);color:var(--link)}
 @media print{.navwrap{display:none}}
+.season{fill:#F4F6F8}
+.grid{stroke:var(--line);stroke-width:1}
+.grid.half{stroke:#B6BDC4;stroke-dasharray:3 3}
+.tick{font-size:9.5px;fill:var(--label)}
+.ciband{fill:#C8102E;opacity:.10}
+.rate{fill:none;stroke:var(--up);stroke-width:1.6;stroke-linejoin:round}
+.ma{fill:none;stroke:var(--down);stroke-width:2.4;stroke-linejoin:round;opacity:.85}
+.pt{stroke:#fff;stroke-width:1.4}
+.pt.up{fill:var(--up)}.pt.down{fill:var(--down)}.pt.na{fill:var(--na)}
+.patch{stroke:#8A939C;stroke-width:1.4;stroke-dasharray:4 3}
+.mask{fill:#fff;opacity:.62}
+.vol{margin-top:2px}
+.volbar{fill:#4E7CB8;opacity:.85}
+.volbar.out{fill:#C7CDD4;opacity:.7}
+.ubtn{font-size:12px;padding:5px 14px;border:1px solid var(--line);border-radius:4px;
+  background:var(--panel);color:var(--ink);cursor:pointer;font-family:inherit;margin-right:5px}
+.ubtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
+.ctrl{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.rng{margin:8px 0 0}
+.rng input{width:100%;margin:2px 0;accent-color:var(--accent)}
+.rlab{font-size:12px;color:var(--label);display:flex;justify-content:space-between;
+  align-items:center;gap:10px}
+.legend2{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--label);margin-top:8px}
+.legend2 i{display:inline-block;width:20px;height:0;border-top-width:3px;border-top-style:solid;
+  vertical-align:middle;margin-right:6px}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
   nav a{font-size:12px;padding:6px 11px}
@@ -649,7 +1013,7 @@ def coverage_strip(rows):
 
 # ---------------- 本体 ----------------
 
-def build(prefix, label, rows, total_records):
+def build(mode_key, prefix, label, rows, total_records):
     """1モード分の5ページを書き出す。"""
     wins = sum(1 for r in rows if r["result"] == "win")
     decided = sum(1 for r in rows if r["result"] != "draw")
@@ -794,6 +1158,38 @@ def build(prefix, label, rows, total_records):
   {legend_panel("　カードの種類が多いため、偶然により極端な値が生じやすい。")}
 """)
 
+    # 推移
+    page(prefix, "chart.html", label, "勝率の推移", stamp, """
+  <section class="panel"><h2>勝率の推移</h2>
+    <div class="ctrl">
+      <span class="navlab" style="width:auto">粒度</span>
+      <button id="u-day" class="ubtn">日</button>
+      <button id="u-week" class="ubtn on">週</button>
+      <button id="u-month" class="ubtn">月</button>
+    </div>
+    <div id="chart"></div>
+    <div class="rng">
+      <div class="rlab"><span>期間 <b id="rlab">-</b></span>
+        <button id="rfull" class="ubtn">全期間</button></div>
+      <input id="r1" type="range" min="0" max="0" value="0">
+      <input id="r2" type="range" min="0" max="0" value="0">
+    </div>
+    <div class="legend2">
+      <span><i style="border-color:#C8102E"></i>実測</span>
+      <span><i style="border-color:#0B57A4"></i>移動平均（4期間）</span>
+      <span>薄い赤帯＝95%信頼区間</span>
+      <span>灰色の背景＝月の区切り</span>
+    </div>
+    <p class="note">週や日の勝率は試合数が少ないと大きく上下する。帯の幅がその不確かさを表す。
+      背景の色分けは暦月による目安で、実際のシーズン境界とは一致しないことがある。</p>
+  </section>
+  <section class="panel"><h2>選んだ期間の成績</h2>
+    <p class="lead">上のつまみで期間を絞ると、ここが連動して変わる。</p>
+    <div id="sum"></div>
+  </section>
+  <script>""" + CHART_JS.replace("__MODE__", mode_key) + """</script>
+""")
+
     # 対戦記録
     page(prefix, "log.html", label, "対戦記録", stamp, f"""
   {panel("直近100試合", battle_log(rows, 100),
@@ -866,7 +1262,7 @@ def main():
         if key not in AVAILABLE:
             continue
         rows = all_rows if key == "all" else groups[key]
-        build(prefix, label, rows, len(all_rows))
+        build(key, prefix, label, rows, len(all_rows))
 
     counts = " / ".join(f"{lab} {len(all_rows) if k == 'all' else len(groups.get(k, []))}"
                         for k, _, lab in MODES if k in AVAILABLE)
