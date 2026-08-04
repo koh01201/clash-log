@@ -10,7 +10,9 @@ body{margin:0;padding:20px 16px 64px;background:var(--bg);color:var(--ink);
   font-family:"Yu Gothic","Hiragino Kaku Gothic ProN","Noto Sans JP","Meiryo",sans-serif;
   font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
 .wrap{max-width:900px;margin:0 auto}
-nav{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+nav{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;z-index:20;
+  background:var(--bg);padding:10px 0 8px;margin:-10px 0 12px;
+  box-shadow:0 6px 8px -8px rgba(0,0,0,.28)}
 nav a{text-decoration:none;background:var(--panel);color:var(--ink);font-size:13px;
   padding:7px 18px;border:1px solid var(--line);border-radius:4px}
 nav a.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
@@ -58,6 +60,19 @@ table.kv td.down{background:var(--downbg);color:var(--down)}
 .bar{height:10px;background:#E7EAED;border-radius:2px;overflow:hidden;margin:10px 0 6px}
 .bar i{display:block;height:100%;background:var(--accent)}
 .barlab{display:flex;justify-content:space-between;font-size:12px;color:var(--label)}
+.hl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hl{background:var(--labelbg);border:1px solid var(--line);border-radius:4px;
+  padding:12px 14px 10px;display:flex;flex-direction:column;gap:6px}
+.hl-lab{font-size:11.5px;color:var(--label)}
+.hl-val{font-size:24px;font-weight:700;line-height:1.1}
+.hl-u{font-size:12px;font-weight:400;color:var(--label);margin-left:1px}
+.hl-sub{font-size:11px;color:var(--label);margin-top:-4px}
+.hl-card{display:flex;align-items:center;gap:8px;min-height:38px}
+.hl-card img,.hl-card .noimg{width:32px;aspect-ratio:5/6;border-radius:3px;display:block}
+.hl-card .noimg{background:#E7EAED;border:1px solid var(--line)}
+.hl-card b{font-size:13px;font-weight:700}
+.hl-card b.wide{font-size:14px}
+.hl .deck{grid-template-columns:repeat(4,1fr);gap:2px;max-width:150px}
 .menu{display:grid;gap:10px}
 .menu a{display:flex;justify-content:space-between;align-items:center;gap:16px;
   text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);
@@ -99,14 +114,12 @@ table.kv td.down{background:var(--downbg);color:var(--down)}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
   table.kv th{width:130px}
+  .hl-grid{grid-template-columns:1fr 1fr}
   .duel{grid-template-columns:1fr auto 1fr;gap:8px}
   .mid{min-width:52px}.badge{font-size:15px}.crowns{font-size:13px}
   .hp{font-size:9px}}
-</style></head><body><div class='wrap'><nav><a href="index.html" class="on">概要</a><a href="chosi.html">調子</a><a href="mydeck.html">使用デッキ</a><a href="enemy.html">対戦相手</a><a href="log.html">対戦記録</a></nav><div class='head'><h1>対戦記録レポート</h1><p>対象期間 2026/07/31 〜 2026/08/04　更新 2026/08/04 16:08 JST</p></div>
+</style></head><body><div class='wrap'><nav><a href="index.html" class="on">概要</a><a href="chosi.html">調子</a><a href="mydeck.html">使用デッキ</a><a href="enemy.html">対戦相手</a><a href="log.html">対戦記録</a></nav><div class='head'><h1>対戦記録レポート</h1><p>対象期間 2026/07/31 〜 2026/08/04　更新 2026/08/04 16:20 JST</p></div>
   <section class="panel"><h2>現況</h2><p class="lead">ランク戦のみを対象とする。</p><table class="kv"><tr><th>勝率</th><td class="up"><span class="big">58.1<span class="u">%</span></span></tr><tr><th>95%信頼区間</th><td>43.3% 〜 71.6%</tr><tr><th>勝敗</th><td><span class="up-t">25勝</span> / <span class="down-t">18敗</span></tr><tr><th>集計対象</th><td>43 試合</tr><tr><th>記録総数</th><td>49 試合</tr><tr><th>プレイ回数</th><td>11 回</tr></table></section>
-  <div class="menu">
-    <a href="chosi.html"><span><b>調子の分析</b><span>連敗後の勝率、連続対戦数、時間帯、曜日</span></span><em>表示 &gt;</em></a>
-    <a href="mydeck.html"><span><b>使用デッキ別</b><span>デッキ構成ごとの勝率と、入れ替えたカードの影響</span></span><em>表示 &gt;</em></a>
-    <a href="enemy.html"><span><b>対戦相手カード別</b><span>相手の編成に含まれるカードと勝率の関係</span></span><em>表示 &gt;</em></a>
-  </div>
+  <section class="panel"><h2>いま目立つところ</h2><p class="lead">5試合以上あるものから選んでいる。基準は全体平均 58.1%。</p><div class="hl-grid"><div class="hl"><span class="hl-lab">最も勝てているデッキ</span><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div><span class="hl-val up-t">81.2<span class="hl-u">%</span></span><span class="hl-sub">13勝3敗</span></div><div class="hl"><span class="hl-lab">苦戦しているデッキ</span><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"></div><span class="hl-val down-t">50.0<span class="hl-u">%</span></span><span class="hl-sub">5勝5敗</span></div><div class="hl"><span class="hl-lab">苦手な相手カード</span><div class="hl-card"><img src="https://api-assets.clashroyale.com/cards/300/nZK1y-beLxO5vnlyUhK6-2zH2NzXJwqykcosqQ1cmZ8.png" alt="Cannon"><b>Cannon</b></div><span class="hl-val down-t">28.6<span class="hl-u">%</span></span><span class="hl-sub">2勝5敗</span></div><div class="hl"><span class="hl-lab">得意な相手カード</span><div class="hl-card"><img src="https://api-assets.clashroyale.com/cards/300/fAOToOi1pRy7svN2xQS6mDkhQw2pj9m_17FauaNqyl4.png" alt="Skeleton Army"><b>Skeleton Army</b></div><span class="hl-val up-t">83.3<span class="hl-u">%</span></span><span class="hl-sub">5勝1敗</span></div><div class="hl"><span class="hl-lab">勝てている時間帯</span><div class="hl-card"><b class="wide">16時台</b></div><span class="hl-val up-t">85.7<span class="hl-u">%</span></span><span class="hl-sub">6勝1敗</span></div><div class="hl"><span class="hl-lab">負けている時間帯</span><div class="hl-card"><b class="wide">9時台</b></div><span class="hl-val down-t">50.0<span class="hl-u">%</span></span><span class="hl-sub">9勝9敗</span></div></div><p class="note">件数の少ないものは偶然で極端な値になりやすい。詳細は上のタブから。</p></section>
+  <section class="panel"><h2>検証課題：連敗後に勝率は低下するか</h2><table class="kv"><tr><th>現時点の判定</th><td><span class="big na-t">判定不可</span></tr><tr><th>敗戦後の勝率</th><td>62.5%（10勝6敗）</tr><tr><th>勝利後の勝率</th><td>62.5%（10勝6敗）</tr></table><div class="bar"><i style="width:5.6%"></i></div><div class="barlab"><span>必要試合数に対する進捗 43 / 770</span><span>残り 727 試合</span></div></section>
 <footer>battles.csv より自動生成<br>カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、Supercell は内容に関与していない。</footer></div></body></html>
