@@ -109,6 +109,7 @@ table.kv td.down{background:var(--downbg);color:var(--down)}
 .log header .tro{font-weight:700}
 .duel{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
 .deck{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+html[data-layout="wide"] .log .deck{grid-template-columns:repeat(8,1fr);gap:2px}
 .deck img,.deck .noimg{width:100%;aspect-ratio:5/6;display:block;border-radius:3px}
 .deck .noimg{background:#E7EAED;border:1px solid var(--line)}
 .hp{margin:6px 0 0;font-size:10.5px;color:var(--label);text-align:center}
@@ -156,7 +157,7 @@ function crToggle(){
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
 });
-</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="log.html" class='on'>伝説の道</a><a href="cw-log.html">クラン戦</a><a href="etc-log.html">その他</a><a href="all-log.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="index.html">概要</a><a href="chosi.html">調子</a><a href="mydeck.html">使用デッキ</a><a href="enemy.html">対戦相手</a><a href="log.html" class='on'>対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦記録<span class='mtag'>伝説の道</span></h1><p>対象期間 2026/07/31 〜 2026/08/04　更新 2026/08/04 17:24 JST</p></div>
+</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="log.html" class='on'>伝説の道</a><a href="cw-log.html">クラン戦</a><a href="etc-log.html">その他</a><a href="all-log.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="index.html">概要</a><a href="chosi.html">調子</a><a href="mydeck.html">使用デッキ</a><a href="enemy.html">対戦相手</a><a href="log.html" class='on'>対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦記録<span class='mtag'>伝説の道</span></h1><p>対象期間 2026/07/31 〜 2026/08/04　更新 2026/08/04 17:36 JST</p></div>
   <section class="panel"><h2>直近100試合</h2><p class="lead">左が自分、右が相手の編成。数字は残ったタワーのHP。</p><article class="log win">
   <header>
     <span class="when">08-04 09:14</span>
