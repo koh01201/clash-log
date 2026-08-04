@@ -183,7 +183,7 @@ def icon_tag(name, x, y, w, h):
 
 def _chart_wide(items, baseline, baseline_label, icon_mode):
     row_h = {"none": 42, "deck": 46, "single": 54}[icon_mode]
-    top, W = 26, 720
+    top, W = 36, 720
     height = top + row_h * len(items) + 4
     x0 = {"none": 210, "single": 210, "deck": 216}[icon_mode]
     x1 = 520
@@ -193,9 +193,13 @@ def _chart_wide(items, baseline, baseline_label, icon_mode):
         return x0 + span * v
 
     out = [f'<svg viewBox="0 0 {W} {height}" class="chart">']
+    for g in (0, 0.25, 0.5, 0.75, 1.0):
+        gx = px(g)
+        out.append(f'<line class="gridv" x1="{gx:.1f}" y1="{top-10}" x2="{gx:.1f}" y2="{height-4}"/>')
+        out.append(f'<text class="gtick" x="{gx:.1f}" y="{top-14}" text-anchor="middle">{int(g*100)}</text>')
     bx = px(baseline)
-    out.append(f'<line class="base" x1="{bx:.1f}" y1="{top-12}" x2="{bx:.1f}" y2="{height-4}"/>')
-    out.append(f'<text class="baselab" x="{bx:.1f}" y="{top-16}" text-anchor="middle">{esc(baseline_label)}</text>')
+    out.append(f'<line class="base" x1="{bx:.1f}" y1="{top-10}" x2="{bx:.1f}" y2="{height-4}"/>')
+    out.append(f'<text class="baselab" x="{bx:.1f}" y="{top-26}" text-anchor="middle">{esc(baseline_label)}</text>')
 
     for i, item in enumerate(items):
         label, wins, total = item[0], item[1], item[2]
@@ -225,7 +229,7 @@ def _chart_wide(items, baseline, baseline_label, icon_mode):
 def _chart_narrow(items, baseline, baseline_label, icon_mode):
     """スマホ用。1件を数段に分け、絵と数字を大きく出す。"""
     row_h = {"none": 64, "single": 90, "deck": 100}[icon_mode]
-    top, W = 34, 380
+    top, W = 44, 380
     height = top + row_h * len(items) + 6
     x0 = 72 if icon_mode == "deck" else 24
     x1 = 286
@@ -236,10 +240,14 @@ def _chart_narrow(items, baseline, baseline_label, icon_mode):
 
     bx = px(baseline)
     out = [f'<svg viewBox="0 0 {W} {height}" class="chart">']
+    for g in (0, 0.25, 0.5, 0.75, 1.0):
+        gx = px(g)
+        if icon_mode != "deck":
+            out.append(f'<line class="gridv" x1="{gx:.1f}" y1="{top-12}" x2="{gx:.1f}" y2="{height-6}"/>')
+        out.append(f'<text class="gtick" x="{gx:.1f}" y="{top-16}" text-anchor="middle">{int(g*100)}</text>')
     if icon_mode != "deck":
-        # カードを貫かない配置なので、基準線は通しで引く
-        out.append(f'<line class="base" x1="{bx:.1f}" y1="{top-14}" x2="{bx:.1f}" y2="{height-6}"/>')
-    out.append(f'<text class="baselab" x="{bx:.1f}" y="{top-18}" text-anchor="middle">{esc(baseline_label)}</text>')
+        out.append(f'<line class="base" x1="{bx:.1f}" y1="{top-12}" x2="{bx:.1f}" y2="{height-6}"/>')
+    out.append(f'<text class="baselab" x="{bx:.1f}" y="{top-28}" text-anchor="middle">{esc(baseline_label)}</text>')
 
     for i, item in enumerate(items):
         label, wins, total = item[0], item[1], item[2]
@@ -744,14 +752,21 @@ RANK_JS = """(function () {
   /* ---------- 図 ---------- */
   function wideRows(items, base, mode, blab) {
     var rh = mode === "none" ? 42 : mode === "deck" ? 46 : 54;
-    var top = 26, W = 720, H = top + rh * items.length + 4;
+    var top = 36, W = 720, H = top + rh * items.length + 4;
     var x0 = mode === "deck" ? 216 : 210, x1 = 520, sp = x1 - x0;
     var px = function (v) { return x0 + sp * v; };
     var o = ['<svg viewBox="0 0 ' + W + ' ' + H + '" class="chart">'];
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (g) {
+      var gx = px(g);
+      o.push('<line class="gridv" x1="' + gx.toFixed(1) + '" y1="' + (top - 10) + '" x2="' +
+        gx.toFixed(1) + '" y2="' + (H - 4) + '"/>');
+      o.push('<text class="gtick" x="' + gx.toFixed(1) + '" y="' + (top - 14) +
+        '" text-anchor="middle">' + (g * 100) + "</text>");
+    });
     var bx = px(base);
-    o.push('<line class="base" x1="' + bx.toFixed(1) + '" y1="' + (top - 12) + '" x2="' +
+    o.push('<line class="base" x1="' + bx.toFixed(1) + '" y1="' + (top - 10) + '" x2="' +
       bx.toFixed(1) + '" y2="' + (H - 4) + '"/>');
-    o.push('<text class="baselab" x="' + bx.toFixed(1) + '" y="' + (top - 16) +
+    o.push('<text class="baselab" x="' + bx.toFixed(1) + '" y="' + (top - 26) +
       '" text-anchor="middle">' + esc(blab) + "</text>");
     items.forEach(function (it, i) {
       var y = top + rh * i + rh / 2, r = wilson(it.w, it.n), cls = tone(r[0], base, it.n);
@@ -781,16 +796,21 @@ RANK_JS = """(function () {
   function narrowRows(items, base, mode, blab) {
     var W = 380;
     var rh = mode === "deck" ? 106 : mode === "single" ? 90 : 64;
-    var top = mode === "deck" ? 16 : 34, H = top + rh * items.length + 6;
+    var top = mode === "deck" ? 34 : 44, H = top + rh * items.length + 6;
     var x0 = mode === "deck" ? 162 : 24, x1 = mode === "deck" ? 372 : 286, sp = x1 - x0;
     var px = function (v) { return x0 + sp * v; };
     var o = ['<svg viewBox="0 0 ' + W + ' ' + H + '" class="chart">'];
-    if (mode !== "deck") {
-      o.push('<line class="base" x1="' + px(base).toFixed(1) + '" y1="' + (top - 14) + '" x2="' +
-        px(base).toFixed(1) + '" y2="' + (H - 6) + '"/>');
-      o.push('<text class="baselab" x="' + px(base).toFixed(1) + '" y="' + (top - 18) +
-        '" text-anchor="middle">' + esc(blab) + "</text>");
-    }
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (g) {
+      var gx = px(g);
+      o.push('<line class="gridv" x1="' + gx.toFixed(1) + '" y1="' + (top - 12) + '" x2="' +
+        gx.toFixed(1) + '" y2="' + (H - 6) + '"/>');
+      o.push('<text class="gtick" x="' + gx.toFixed(1) + '" y="' + (top - 16) +
+        '" text-anchor="middle">' + (g * 100) + "</text>");
+    });
+    o.push('<line class="base" x1="' + px(base).toFixed(1) + '" y1="' + (top - 12) + '" x2="' +
+      px(base).toFixed(1) + '" y2="' + (H - 6) + '"/>');
+    o.push('<text class="baselab" x="' + px(base).toFixed(1) + '" y="' + (top - 28) +
+      '" text-anchor="middle">' + esc(blab) + "</text>");
     items.forEach(function (it, i) {
       var by0 = top + rh * i + 4, r = wilson(it.w, it.n), cls = tone(r[0], base, it.n), by;
       var rec = it.w + "勝" + (it.n - it.w) + "敗";
@@ -803,8 +823,6 @@ RANK_JS = """(function () {
           '" text-anchor="end">' + (r[0] * 100).toFixed(1) + '<tspan class="unit">%</tspan></text>');
         o.push('<text class="n" x="' + W + '" y="' + (by0 + 44) + '" text-anchor="end">' + rec + "</text>");
         by = by0 + 70;
-        o.push('<line class="base" x1="' + px(base).toFixed(1) + '" y1="' + (by - 14) + '" x2="' +
-          px(base).toFixed(1) + '" y2="' + (by + 14) + '"/>');
       } else {
         o.push('<text class="n" x="' + W + '" y="' + (by0 + 13) + '" text-anchor="end">' + rec + "</text>");
         if (mode === "single") {
@@ -1025,6 +1043,8 @@ nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
 .empty{color:var(--label);font-size:13px;margin:4px 0}
 .chart{width:100%;height:auto;display:block;overflow:visible}
 .hair{stroke:var(--line);stroke-width:1}
+.gridv{stroke:#EDF0F2;stroke-width:1}
+.gtick{font-size:9px;fill:#9AA4AE}
 .base{stroke:#B6BDC4;stroke-width:1;stroke-dasharray:3 3}
 .baselab{font-size:10px;fill:var(--label)}
 .lab{font-size:12.5px;fill:var(--ink)}
@@ -1105,7 +1125,6 @@ html[data-layout="wide"] .log .deck{grid-template-columns:repeat(8,1fr);gap:2px}
 .narrowonly{display:none}
 html[data-layout="narrow"] .wideonly{display:none}
 html[data-layout="narrow"] .narrowonly{display:block}
-html[data-layout="narrow"] .lead{display:none}
 .basenote{margin:0 0 6px;font-size:11px;color:var(--label)}
 .lyt{margin-left:auto;font-size:11.5px;color:var(--label);background:var(--panel);
   border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;
