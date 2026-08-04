@@ -145,11 +145,185 @@ PAGES = [
     ("mydeck.html", "使用デッキ"),
     ("enemy.html", "対戦相手"),
     ("chosi.html", "調子"),
+    ("rate.html", "レート"),
     ("log.html", "対戦記録"),
 ]
 
 
 CARDS_FILE = os.path.join(SCRIPT_DIR, "cards.json")
+
+
+PROFILE_FILE = os.path.join(SCRIPT_DIR, "profile.csv")
+
+
+LEAGUES = {
+    1: ("チャレンジャー I", "#8AA0B5"),
+    2: ("チャレンジャー II", "#7591AB"),
+    3: ("チャレンジャー III", "#6082A1"),
+    4: ("マスター I", "#9A8CC0"),
+    5: ("マスター II", "#8878B8"),
+    6: ("マスター III", "#7664AE"),
+    7: ("チャンピオン", "#C9A227"),
+    8: ("グランドチャンピオン", "#D08A2C"),
+    9: ("ロイヤルチャンピオン", "#C0392B"),
+    10: ("アルティメットチャンピオン", "#7A3FBF"),
+}
+ULTIMATE = 10
+
+
+def league_name(n):
+    return LEAGUES.get(n, ("不明", "#8A939C"))[0]
+
+
+def badge(n, size=44):
+    """ステージの記章。公式素材が無いため自作の図形で表す。"""
+    name, col = LEAGUES.get(n, ("不明", "#8A939C"))
+    w = size
+    h = size * 1.12
+    pts = " ".join(f"{w*a:.1f},{h*b:.1f}" for a, b in
+                   ((.5, 0), (1, .26), (1, .74), (.5, 1), (0, .74), (0, .26)))
+    fs = size * 0.42
+    return (f'<svg class="badge" viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" '
+            f'role="img" aria-label="{esc(name)}">'
+            f'<polygon points="{pts}" fill="{col}" stroke="#FFFFFF" stroke-width="{size*0.06:.1f}"/>'
+            f'<polygon points="{pts}" fill="none" stroke="{col}" stroke-width="{size*0.03:.1f}"/>'
+            f'<text x="{w/2:.1f}" y="{h*0.63:.1f}" text-anchor="middle" fill="#fff" '
+            f'font-size="{fs:.1f}" font-weight="700">{n}</text></svg>')
+
+
+def load_profile():
+    """profile.csv を古い順に読む。無ければ空。"""
+    if not os.path.exists(PROFILE_FILE):
+        return []
+    try:
+        with open(PROFILE_FILE, encoding="utf-8-sig", newline="") as f:
+            return list(csv.DictReader(f))
+    except Exception:
+        return []
+
+
+def _num(v):
+    try:
+        return int(float(v))
+    except (TypeError, ValueError):
+        return None
+
+
+def stage_cell(league, trophies, rank, size=40):
+    """ステージ（未到達）ならステージ名、アルティメットならレートを返す。"""
+    if league is None:
+        return "-"
+    body = f'<span class="stage">{badge(league, size)}<span class="stxt">'
+    if league >= ULTIMATE and trophies:
+        body += f'<b class="big">{trophies:,}</b><span class="sname">{esc(league_name(league))}</span>'
+        if rank:
+            body += f'<span class="sname">世界 {rank:,} 位</span>'
+    else:
+        body += f'<b>{esc(league_name(league))}</b>'
+        if trophies:
+            body += f'<span class="sname">{trophies:,}</span>'
+    return body + "</span></span>"
+
+
+def rate_history_chart(prof):
+    """レート（未到達ならステージ）の推移。profile.csv の記録点をつなぐ。"""
+    pts = []
+    for r in prof:
+        lg, tr = _num(r.get("pol_current_league")), _num(r.get("pol_current_trophies"))
+        if lg is None:
+            continue
+        pts.append((r.get("checked_jst", "")[:10], lg, tr))
+    if len(pts) < 2:
+        return ""
+
+    use_rate = all(p[1] >= ULTIMATE and p[2] for p in pts)
+    vals = [p[2] for p in pts] if use_rate else [p[1] for p in pts]
+    lo, hi = min(vals), max(vals)
+    if hi == lo:
+        lo, hi = lo - 1, hi + 1
+
+    W, H = 720, 200
+    padL, padR, padT, padB = 8, 46, 14, 26
+    pw, ph = W - padL - padR, H - padT - padB
+    xs = lambda i: padL + (pw * i / max(1, len(pts) - 1))
+    ys = lambda v: padT + ph * (1 - (v - lo) / (hi - lo))
+
+    out = [f'<svg viewBox="0 0 {W} {H}" class="chart">']
+    out.append(f'<rect class="plot" x="{padL}" y="{padT}" width="{pw}" height="{ph}"/>')
+    for k in range(5):
+        v = lo + (hi - lo) * k / 4
+        yy = ys(v)
+        if 0 < k < 4:
+            out.append(f'<line class="grid" x1="{padL}" y1="{yy:.1f}" x2="{padL+pw}" y2="{yy:.1f}"/>')
+        lab = f"{int(round(v)):,}" if use_rate else league_name(int(round(v)))[:6]
+        out.append(f'<text class="tick" x="{padL+pw+5}" y="{yy+3.5:.1f}">{esc(lab)}</text>')
+    line = " ".join(f"{xs(i):.1f},{ys(v):.1f}" for i, v in enumerate(vals))
+    out.append(f'<polyline class="ma" points="{line}"/>')
+    for i, v in enumerate(vals):
+        out.append(f'<circle class="pt" cx="{xs(i):.1f}" cy="{ys(v):.1f}" r="3"><title>'
+                   f'{esc(pts[i][0])} {v:,}</title></circle>')
+    every = max(1, len(pts) // 8)
+    for i in range(0, len(pts), every):
+        out.append(f'<text class="tick" x="{xs(i):.1f}" y="{H-8}" text-anchor="middle">'
+                   f'{esc(pts[i][0][5:])}</text>')
+    out.append("</svg>")
+    caption = "レートの推移。" if use_rate else "ステージの推移。アルティメットチャンピオン到達後はレートで表示する。"
+    return f'<h3 class="sub2">推移</h3>{"".join(out)}<p class="cap">{caption}</p>'
+
+
+def rate_page_body(prof):
+    if not prof:
+        return panel("レート", '<p class="empty">まだ記録がない。次の実行から貯まりはじめる。</p>',
+                     "伝説の道の成績はバトルログに含まれないため、プレイヤー情報から別に記録している。")
+
+    cur = prof[-1]
+    cl, ct, cr = (_num(cur.get("pol_current_league")), _num(cur.get("pol_current_trophies")),
+                  _num(cur.get("pol_current_rank")))
+    bl, bt, br = (_num(cur.get("pol_best_league")), _num(cur.get("pol_best_trophies")),
+                  _num(cur.get("pol_best_rank")))
+
+    best_rank = None
+    for r in prof:
+        for k in ("pol_current_rank", "pol_last_rank", "pol_best_rank"):
+            v = _num(r.get(k))
+            if v and (best_rank is None or v < best_rank):
+                best_rank = v
+
+    kv = [("今シーズン", stage_cell(cl, ct, cr))]
+    if bl is not None:
+        kv.append(("自己ベスト", stage_cell(bl, bt, br)))
+    if ct and bt and cl is not None and bl is not None and cl >= ULTIMATE and bl >= ULTIMATE:
+        kv.append(("ベストとの差", f"{ct - bt:+,}", "up" if ct >= bt else "down"))
+    if best_rank:
+        kv.append(("最高順位", f"世界 {best_rank:,} 位"))
+    t, btr = _num(cur.get("trophies")), _num(cur.get("best_trophies"))
+    if t is not None:
+        kv.append(("トロフィー（通常）", f"{t:,}" + (f"　最高 {btr:,}" if btr else "")))
+    w, l = _num(cur.get("wins")), _num(cur.get("losses"))
+    if w is not None and l is not None and (w + l):
+        kv.append(("通算成績", f"{w:,}勝 {l:,}敗（{w/(w+l)*100:.1f}%）"))
+
+    seasons, seen = [], None
+    for r in prof:
+        key = (r.get("pol_last_league"), r.get("pol_last_trophies"), r.get("pol_last_rank"))
+        if key == seen or _num(key[0]) is None:
+            continue
+        seen = key
+        seasons.append((r.get("checked_jst", "")[:10], _num(key[0]), _num(key[1]), _num(key[2])))
+
+    if seasons:
+        body = "".join(f"<tr><th>{esc(d)} 時点で確認</th><td>{stage_cell(lg, tr, rk, 32)}</td></tr>"
+                       for d, lg, tr, rk in reversed(seasons))
+        hist = f'<h3 class="sub2">シーズン別の最終成績</h3><table class="kv">{body}</table>'
+    else:
+        hist = ('<p class="note">シーズンが切り替わると、ここに前シーズンの最終成績が積み上がる。'
+                "過去に遡って取得することはできないため、記録は今日以降のぶん。</p>")
+
+    return (panel("現在の成績", table(kv) + hist,
+                  "アルティメットチャンピオンに到達するまでレートは表示されないため、"
+                  "それまではステージを表示する。")
+            + (panel("レートの推移", rate_history_chart(prof).replace('<h3 class="sub2">推移</h3>', ""))
+               if rate_history_chart(prof) else ""))
 
 
 def load_icons():
@@ -164,6 +338,7 @@ def load_icons():
 
 
 ICONS = {}
+PROFILE = []
 
 
 def esc(text):
@@ -1038,6 +1213,12 @@ nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
 .panel h2::after{content:"";position:absolute;left:0;bottom:-3px;width:56px;height:3px;
   background:var(--accent)}
 .lead{margin:-2px 0 12px;color:var(--label);font-size:12.5px}
+.sub2{font-size:13px;font-weight:700;margin:16px 0 6px}
+.stage{display:inline-flex;align-items:center;gap:10px;justify-content:flex-end}
+.badge{flex:none;display:block}
+.stxt{display:flex;flex-direction:column;align-items:flex-end;line-height:1.35}
+.stxt .big{font-size:26px}
+.sname{font-size:11.5px;color:var(--label);font-weight:400}
 .note{margin:10px 0 0;color:var(--warnink);font-size:12px;background:var(--warnbg);
   border:1px solid var(--warnline);border-radius:3px;padding:8px 12px}
 .empty{color:var(--label);font-size:13px;margin:4px 0}
@@ -1529,6 +1710,9 @@ def build(mode_key, prefix, label, rows, total_records):
   <script>""" + CHART_JS.replace("__MODE__", mode_key) + """</script>
 """)
 
+    # レート
+    page(prefix, "rate.html", label, "レート", stamp, rate_page_body(PROFILE))
+
     # 対戦記録
     page(prefix, "log.html", label, "対戦記録", stamp, f"""
   {panel("直近100試合", battle_log(rows, 100),
@@ -1597,8 +1781,9 @@ def build(mode_key, prefix, label, rows, total_records):
 
 
 def main():
-    global ICONS, AVAILABLE
+    global ICONS, AVAILABLE, PROFILE
     ICONS = load_icons()
+    PROFILE = load_profile()
     all_rows = add_sessions(load_rows())
     prev_state(all_rows)
 
