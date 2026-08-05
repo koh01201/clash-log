@@ -271,6 +271,59 @@ def rate_history_chart(prof):
     return f'<h3 class="sub2">推移</h3>{"".join(out)}<p class="cap">{caption}</p>'
 
 
+def monthly_decks(rows):
+    """暦月ごとの最多使用デッキと成績。シーズン区切りの目安として使う。"""
+    by_month = defaultdict(lambda: {"w": 0, "n": 0, "decks": defaultdict(lambda: [0, 0]), "face": {}})
+    for r in rows:
+        if r["result"] == "draw":
+            continue
+        m = by_month[r["_dt"].strftime("%Y-%m")]
+        m["n"] += 1
+        if r["result"] == "win":
+            m["w"] += 1
+        cards = [c for c in r["my_deck"].split("|") if c]
+        if not cards:
+            continue
+        k = "|".join(sorted(cards))
+        m["decks"][k][1] += 1
+        if r["result"] == "win":
+            m["decks"][k][0] += 1
+        m["face"].setdefault(k, cards[:8])
+
+    out = []
+    for month in sorted(by_month, reverse=True):
+        m = by_month[month]
+        if not m["decks"]:
+            continue
+        k = max(m["decks"], key=lambda x: m["decks"][x][1])
+        dw, dn = m["decks"][k]
+        out.append({
+            "month": month, "n": m["n"], "w": m["w"],
+            "cards": m["face"].get(k, []), "dw": dw, "dn": dn,
+            "kinds": len(m["decks"]),
+        })
+    return out
+
+
+def monthly_deck_panel(rows):
+    data = monthly_decks(rows)
+    if not data:
+        return ""
+    body = []
+    for d in data:
+        wr = d["w"] / d["n"] * 100 if d["n"] else 0
+        dwr = d["dw"] / d["dn"] * 100 if d["dn"] else 0
+        y, mo = d["month"].split("-")
+        body.append(
+            f'<tr><th>{y}年{int(mo)}月<span class="sname">{d["n"]}試合・勝率{wr:.1f}%</span></th>'
+            f'<td><div class="mdeck">{deck_grid(d["cards"])}'
+            f'<span class="sname">{d["dn"]}試合使用（{d["kinds"]}種類中）・このデッキの勝率 {dwr:.1f}%</span>'
+            "</div></td></tr>")
+    return panel("月ごとの最多使用デッキ", f'<table class="kv">{"".join(body)}</table>',
+                 "シーズンの区切りはAPIから取得できないため、暦月で区切っている。",
+                 "その月にいちばん多く使った構成を1つ表示している。")
+
+
 def rate_page_body(prof):
     if not prof:
         return panel("レート", '<p class="empty">まだ記録がない。次の実行から貯まりはじめる。</p>',
@@ -1218,7 +1271,10 @@ nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
 .badge{flex:none;display:block}
 .stxt{display:flex;flex-direction:column;align-items:flex-end;line-height:1.35}
 .stxt .big{font-size:26px}
-.sname{font-size:11.5px;color:var(--label);font-weight:400}
+.sname{font-size:11.5px;color:var(--label);font-weight:400;display:block}
+.mdeck{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.mdeck .deck{grid-template-columns:repeat(8,1fr);gap:3px;max-width:290px;width:100%}
+@media(max-width:520px){.mdeck .deck{grid-template-columns:repeat(4,1fr);max-width:170px}}
 .note{margin:10px 0 0;color:var(--warnink);font-size:12px;background:var(--warnbg);
   border:1px solid var(--warnline);border-radius:3px;padding:8px 12px}
 .empty{color:var(--label);font-size:13px;margin:4px 0}
@@ -1711,7 +1767,8 @@ def build(mode_key, prefix, label, rows, total_records):
 """)
 
     # レート
-    page(prefix, "rate.html", label, "レート", stamp, rate_page_body(PROFILE))
+    page(prefix, "rate.html", label, "レート", stamp,
+         rate_page_body(PROFILE) + monthly_deck_panel(rows))
 
     # 対戦記録
     page(prefix, "log.html", label, "対戦記録", stamp, f"""
