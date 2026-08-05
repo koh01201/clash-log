@@ -41,7 +41,10 @@ nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
 .badge{flex:none;display:block}
 .stxt{display:flex;flex-direction:column;align-items:flex-end;line-height:1.35}
 .stxt .big{font-size:26px}
-.sname{font-size:11.5px;color:var(--label);font-weight:400}
+.sname{font-size:11.5px;color:var(--label);font-weight:400;display:block}
+.mdeck{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.mdeck .deck{grid-template-columns:repeat(8,1fr);gap:3px;max-width:290px;width:100%}
+@media(max-width:520px){.mdeck .deck{grid-template-columns:repeat(4,1fr);max-width:170px}}
 .note{margin:10px 0 0;color:var(--warnink);font-size:12px;background:var(--warnbg);
   border:1px solid var(--warnline);border-radius:3px;padding:8px 12px}
 .empty{color:var(--label);font-size:13px;margin:4px 0}
@@ -194,7 +197,7 @@ function crToggle(){
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
 });
-</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="log.html">伝説の道</a><a href="cw-log.html">クラン戦</a><a href="etc-log.html" class='on'>その他</a><a href="all-log.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="etc-index.html">概要</a><a href="etc-chart.html">推移</a><a href="etc-mydeck.html">使用デッキ</a><a href="etc-enemy.html">対戦相手</a><a href="etc-chosi.html">調子</a><a href="etc-rate.html">レート</a><a href="etc-log.html" class='on'>対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦記録<span class='mtag'>その他</span></h1><p>対象期間 2026/08/04 〜 2026/08/05　更新 2026/08/05 09:00 JST</p></div>
+</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="log.html">伝説の道</a><a href="cw-log.html">クラン戦</a><a href="etc-log.html" class='on'>その他</a><a href="all-log.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="etc-index.html">概要</a><a href="etc-chart.html">推移</a><a href="etc-mydeck.html">使用デッキ</a><a href="etc-enemy.html">対戦相手</a><a href="etc-chosi.html">調子</a><a href="etc-rate.html">レート</a><a href="etc-log.html" class='on'>対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦記録<span class='mtag'>その他</span></h1><p>対象期間 2026/08/04 〜 2026/08/05　更新 2026/08/05 09:27 JST</p></div>
   <section class="panel"><h2>直近100試合</h2><p class="lead">左が自分、右が相手の編成。数字は残ったタワーのHP。</p><article class="log win">
   <header>
     <span class="when">08-05 08:16</span>
