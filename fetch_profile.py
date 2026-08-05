@@ -12,6 +12,7 @@ profile.csv に追記する。値が前回から変わったときだけ1行増�
 
 import csv
 import datetime
+import json
 import os
 import sys
 import urllib.parse
@@ -33,6 +34,7 @@ FIELDS = [
     "pol_current_league", "pol_current_trophies", "pol_current_rank",
     "pol_last_league", "pol_last_trophies", "pol_last_rank",
     "pol_best_league", "pol_best_trophies", "pol_best_rank",
+    "pol_raw",
 ]
 # 比較に使う列（時刻以外）
 COMPARE = FIELDS[1:]
@@ -82,6 +84,12 @@ def build_row(d):
         row[f"pol_{tag}_league"] = pick(d, key, "leagueNumber")
         row[f"pol_{tag}_trophies"] = pick(d, key, "trophies")
         row[f"pol_{tag}_rank"] = pick(d, key, "rank")
+
+    # 実際にどんな項目が返っているかを残す（達成日などが含まれるか確認するため）
+    raw = {k: d.get(k) for k in
+           ("currentPathOfLegendSeasonResult", "lastPathOfLegendSeasonResult",
+            "bestPathOfLegendSeasonResult") if d.get(k)}
+    row["pol_raw"] = json.dumps(raw, ensure_ascii=False, sort_keys=True)
     return row
 
 

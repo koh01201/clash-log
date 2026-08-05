@@ -170,6 +170,9 @@ LEAGUES = {
 }
 ULTIMATE = 10
 
+# 記録開始より前に達成した自己ベストの時期（APIから取得できないため手で持つ）
+BEST_ACHIEVED_BEFORE = "2024年4月"
+
 
 def league_name(n):
     return LEAGUES.get(n, ("不明", "#8A939C"))[0]
@@ -324,6 +327,23 @@ def monthly_deck_panel(rows):
                  "その月にいちばん多く使った構成を1つ表示している。")
 
 
+def achieved_note(prof, key, value):
+    """その値が記録上いつ現れたか。記録開始時点で既にあれば遡れない旨を返す。"""
+    if value is None or not prof:
+        return ""
+    first = None
+    for r in prof:
+        if _num(r.get(key)) == value:
+            first = r.get("checked_jst", "")[:10]
+            break
+    if not first:
+        return ""
+    if first == prof[0].get("checked_jst", "")[:10]:
+        return f'<span class="sname">{esc(BEST_ACHIEVED_BEFORE)}に達成</span>'
+    y, m = first.split("-")[:2]
+    return f'<span class="sname">{y}年{int(m)}月に更新</span>'
+
+
 def rate_page_body(prof):
     if not prof:
         return panel("レート", '<p class="empty">まだ記録がない。次の実行から貯まりはじめる。</p>',
@@ -344,11 +364,17 @@ def rate_page_body(prof):
 
     kv = [("今シーズン", stage_cell(cl, ct, cr))]
     if bl is not None:
-        kv.append(("自己ベスト", stage_cell(bl, bt, br)))
+        kv.append(("自己ベスト", stage_cell(bl, bt, br)
+                   + achieved_note(prof, "pol_best_trophies", bt)))
     if ct and bt and cl is not None and bl is not None and cl >= ULTIMATE and bl >= ULTIMATE:
         kv.append(("ベストとの差", f"{ct - bt:+,}", "up" if ct >= bt else "down"))
     if best_rank:
-        kv.append(("最高順位", f"世界 {best_rank:,} 位"))
+        note = ""
+        for k in ("pol_best_rank", "pol_last_rank", "pol_current_rank"):
+            note = achieved_note(prof, k, best_rank)
+            if note:
+                break
+        kv.append(("最高順位", f"世界 {best_rank:,} 位" + note))
     t, btr = _num(cur.get("trophies")), _num(cur.get("best_trophies"))
     if t is not None:
         kv.append(("トロフィー（通常）", f"{t:,}" + (f"　最高 {btr:,}" if btr else "")))
