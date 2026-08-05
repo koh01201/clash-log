@@ -157,41 +157,26 @@ PROFILE_FILE = os.path.join(SCRIPT_DIR, "profile.csv")
 
 
 LEAGUES = {
-    1: ("チャレンジャー I", "#8AA0B5"),
-    2: ("チャレンジャー II", "#7591AB"),
-    3: ("チャレンジャー III", "#6082A1"),
-    4: ("マスター I", "#9A8CC0"),
-    5: ("マスター II", "#8878B8"),
-    6: ("マスター III", "#7664AE"),
-    7: ("チャンピオン", "#C9A227"),
-    8: ("グランドチャンピオン", "#D08A2C"),
-    9: ("ロイヤルチャンピオン", "#C0392B"),
-    10: ("アルティメットチャンピオン", "#7A3FBF"),
+    1: ("Master I", "#8AA0B5"),
+    2: ("Master II", "#6E90AE"),
+    3: ("Master III", "#4F7A9B"),
+    4: ("Champion", "#C9A227"),
+    5: ("Grand Champion", "#D08A2C"),
+    6: ("Royal Champion", "#C0392B"),
+    7: ("Ultimate Champion", "#7A3FBF"),
 }
-ULTIMATE = 10
+ULTIMATE = 7
 
 # 記録開始より前に達成した自己ベストの時期（APIから取得できないため手で持つ）
 BEST_ACHIEVED_BEFORE = "2024年4月"
 
 
 def league_name(n):
-    return LEAGUES.get(n, ("不明", "#8A939C"))[0]
+    return LEAGUES.get(n, (f"League {n}", "#8A939C"))[0]
 
 
-def badge(n, size=44):
-    """ステージの記章。公式素材が無いため自作の図形で表す。"""
-    name, col = LEAGUES.get(n, ("不明", "#8A939C"))
-    w = size
-    h = size * 1.12
-    pts = " ".join(f"{w*a:.1f},{h*b:.1f}" for a, b in
-                   ((.5, 0), (1, .26), (1, .74), (.5, 1), (0, .74), (0, .26)))
-    fs = size * 0.42
-    return (f'<svg class="badge" viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" '
-            f'role="img" aria-label="{esc(name)}">'
-            f'<polygon points="{pts}" fill="{col}" stroke="#FFFFFF" stroke-width="{size*0.06:.1f}"/>'
-            f'<polygon points="{pts}" fill="none" stroke="{col}" stroke-width="{size*0.03:.1f}"/>'
-            f'<text x="{w/2:.1f}" y="{h*0.63:.1f}" text-anchor="middle" fill="#fff" '
-            f'font-size="{fs:.1f}" font-weight="700">{n}</text></svg>')
+def league_color(n):
+    return LEAGUES.get(n, (f"League {n}", "#8A939C"))[1]
 
 
 def load_profile():
@@ -216,16 +201,19 @@ def stage_cell(league, trophies, rank, size=40):
     """ステージ（未到達）ならステージ名、アルティメットならレートを返す。"""
     if league is None:
         return "-"
-    body = f'<span class="stage">{badge(league, size)}<span class="stxt">'
+    col = league_color(league)
+    body = '<span class="stxt">'
     if league >= ULTIMATE and trophies:
-        body += f'<b class="big">{trophies:,}</b><span class="sname">{esc(league_name(league))}</span>'
-        if rank:
-            body += f'<span class="sname">世界 {rank:,} 位</span>'
+        body += (f'<span class="sname">レート</span>'
+                 f'<b class="big">{trophies:,}</b>'
+                 f'<span class="lgname" style="color:{col}">{esc(league_name(league))}</span>')
     else:
-        body += f'<b>{esc(league_name(league))}</b>'
+        body += f'<b class="lgname big2" style="color:{col}">{esc(league_name(league))}</b>'
         if trophies:
             body += f'<span class="sname">{trophies:,}</span>'
-    return body + "</span></span>"
+    if rank:
+        body += f'<span class="sname">世界 {rank:,} 位</span>'
+    return body + "</span>"
 
 
 def rate_history_chart(prof):
@@ -258,7 +246,7 @@ def rate_history_chart(prof):
         yy = ys(v)
         if 0 < k < 4:
             out.append(f'<line class="grid" x1="{padL}" y1="{yy:.1f}" x2="{padL+pw}" y2="{yy:.1f}"/>')
-        lab = f"{int(round(v)):,}" if use_rate else league_name(int(round(v)))[:6]
+        lab = f"{int(round(v)):,}" if use_rate else league_name(int(round(v)))
         out.append(f'<text class="tick" x="{padL+pw+5}" y="{yy+3.5:.1f}">{esc(lab)}</text>')
     line = " ".join(f"{xs(i):.1f},{ys(v):.1f}" for i, v in enumerate(vals))
     out.append(f'<polyline class="ma" points="{line}"/>')
@@ -1293,10 +1281,10 @@ nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
   background:var(--accent)}
 .lead{margin:-2px 0 12px;color:var(--label);font-size:12.5px}
 .sub2{font-size:13px;font-weight:700;margin:16px 0 6px}
-.stage{display:inline-flex;align-items:center;gap:10px;justify-content:flex-end}
-.badge{flex:none;display:block}
 .stxt{display:flex;flex-direction:column;align-items:flex-end;line-height:1.35}
 .stxt .big{font-size:26px}
+.lgname{font-size:13px;font-weight:700;letter-spacing:.01em}
+.lgname.big2{font-size:17px}
 .sname{font-size:11.5px;color:var(--label);font-weight:400;display:block}
 .mdeck{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .mdeck .deck{grid-template-columns:repeat(8,1fr);gap:3px;max-width:290px;width:100%}
