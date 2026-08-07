@@ -335,7 +335,7 @@ def achieved_note(prof, key, value):
 def rate_page_body(prof):
     if not prof:
         return panel("レート", '<p class="empty">まだ記録がない。次の実行から貯まりはじめる。</p>',
-                     "伝説の道の成績はバトルログに含まれないため、プレイヤー情報から別に記録している。")
+                     "ランク戦の成績はバトルログに含まれないため、プレイヤー情報から別に記録している。")
 
     cur = prof[-1]
     cl, ct, cr = (_num(cur.get("pol_current_league")), _num(cur.get("pol_current_trophies")),
@@ -1424,7 +1424,7 @@ footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 
 
 MODES = [
-    ("pol", "", "伝説の道"),
+    ("pol", "", "ランク戦"),
     ("cw", "cw-", "クラン戦"),
     ("etc", "etc-", "その他"),
     ("all", "all-", "すべて"),
