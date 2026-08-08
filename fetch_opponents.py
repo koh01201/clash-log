@@ -32,10 +32,12 @@ BATTLES_FILE = os.path.join(SCRIPT_DIR, "battles.csv")
 OUT_FILE = os.path.join(SCRIPT_DIR, "opponents.csv")
 JST = datetime.timezone(datetime.timedelta(hours=9))
 
+SCHEMA = "2"     # 判定方法を変えたら上げる。古い行は取り直す
+
 FIELDS = [
-    "tag", "name", "checked_jst",
+    "ver", "tag", "name", "checked_jst",
     "pol_best_rank", "pol_best_trophies", "pol_best_league",
-    "gt_best_rank", "gt_badge",
+    "gt_best_rank", "gt_badge", "tournament_badges",
     "exp_level", "trophies", "best_trophies",
 ]
 
@@ -74,6 +76,8 @@ def opponent_tags():
 
 
 def is_fresh(row):
+    if str(row.get("ver", "")) != SCHEMA:
+        return False
     try:
         d = datetime.datetime.strptime(row.get("checked_jst", "")[:10], "%Y-%m-%d")
     except ValueError:
@@ -88,20 +92,25 @@ def pick(d, key, field):
 
 
 def best_tournament(badges):
-    """バッジからグローバルトーナメントの最高順位らしきものを探す。
-    順位系のバッジは progress に到達順位が入るため、最小値を採用する。"""
-    best, name = "", ""
+    """グローバルトーナメントの最高順位を返す。
+    バッジ名を小文字化し記号を除いたうえで globaltournament を含むものだけを見る。
+    名前に tournament を含むだけの別バッジ（クラシック等）を拾わないため。"""
+    best, name, seen = "", "", []
     for b in badges or []:
-        n = str(b.get("name", ""))
-        low = n.lower()
-        if "tournament" not in low and "globaltournament" not in low:
+        raw = str(b.get("name", ""))
+        norm = "".join(ch for ch in raw.lower() if ch.isalnum())
+        if "tournament" not in norm:
+            continue
+        seen.append({"name": raw, "level": b.get("level"), "progress": b.get("progress"),
+                     "target": b.get("target")})
+        if "globaltournament" not in norm:
             continue
         p = b.get("progress")
         if not isinstance(p, int):
             continue
         if best == "" or p < best:
-            best, name = p, n
-    return best, name
+            best, name = p, raw
+    return best, name, json.dumps(seen, ensure_ascii=False) if seen else ""
 
 
 def fetch(tag, token):
@@ -133,8 +142,9 @@ def main():
         time.sleep(SLEEP)
         if not d:
             continue
-        gt_rank, gt_name = best_tournament(d.get("badges"))
+        gt_rank, gt_name, tb = best_tournament(d.get("badges"))
         known[tag] = {
+            "ver": SCHEMA,
             "tag": tag,
             "name": d.get("name", ""),
             "checked_jst": datetime.datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"),
@@ -143,6 +153,7 @@ def main():
             "pol_best_league": pick(d, "bestPathOfLegendSeasonResult", "leagueNumber"),
             "gt_best_rank": gt_rank,
             "gt_badge": gt_name,
+            "tournament_badges": tb,
             "exp_level": d.get("expLevel", ""),
             "trophies": d.get("trophies", ""),
             "best_trophies": d.get("bestTrophies", ""),
