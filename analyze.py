@@ -156,6 +156,7 @@ CARDS_FILE = os.path.join(SCRIPT_DIR, "cards.json")
 
 PROFILE_FILE = os.path.join(SCRIPT_DIR, "profile.csv")
 OPPONENTS_FILE = os.path.join(SCRIPT_DIR, "opponents.csv")
+GT_FILE = os.path.join(SCRIPT_DIR, "gt_ranks.csv")
 
 # 強敵とみなす条件
 RIVAL_POL_RANK = 10000     # レート戦の過去最高順位がこれ以内
@@ -174,13 +175,24 @@ def load_opponents():
         return {}
 
 
+def load_gt():
+    """グローバルトーナメントの順位表（別途収集）。"""
+    if not os.path.exists(GT_FILE):
+        return {}
+    try:
+        with open(GT_FILE, encoding="utf-8-sig", newline="") as f:
+            return {r["tag"]: r for r in csv.DictReader(f) if r.get("tag")}
+    except Exception:
+        return {}
+
+
 def opp_ranks(tag):
     """相手の実績をまとめて返す。未取得なら空の辞書と同じ扱い。"""
     o = OPPONENTS.get(tag or "") or {}
     return {
         "name": o.get("name", ""),
         "pol": _num(o.get("pol_best_rank")),
-        "gt": _num(o.get("gt_best_rank")),
+        "gt": _num(o.get("gt_best_rank")) or _num((GT_RANKS.get(tag or "") or {}).get("best_rank")),
         "best": _num(o.get("pol_best_trophies")),
         "ladder": _num(o.get("ladder_best_rank")),
         "ladder_season": (o.get("ladder_best_season") or "").strip(),
@@ -445,6 +457,7 @@ def load_icons():
 ICONS = {}
 PROFILE = []
 OPPONENTS = {}
+GT_RANKS = {}
 
 
 def esc(text):
@@ -1727,30 +1740,36 @@ def rivals_body(rows):
                      f"グローバルトーナメント{RIVAL_GT_RANK:,}位以内、"
                  f"または Top Ladder {RIVAL_LADDER_RANK:,}位以内の相手が対象。")
 
+    # 値が1件も無い列は出さない
+    has_gt = any(x["gt"] is not None for x in items)
+
+    def num_cell(v, suffix=""):
+        return f'<td class="num">{"-" if v is None else f"{v:,}{suffix}"}</td>'
+
     body = "".join(
         f'<tr><td class="rk">{i}</td><td><b>{esc(x["name"])}</b>'
         f'<span class="sname">{esc(x["tag"])}</span></td>'
-        f'<td class="num">{"-" if x["best"] is None else f"{x['best']:,}"}</td>'
-        f'<td class="num">{"-" if x["pol"] is None else f"{x['pol']:,} 位"}</td>'
-        f'<td class="num">{"-" if x["gt"] is None else f"{x['gt']:,} 位"}</td>'
-        f'<td class="num">{"-" if x["ladder"] is None else f"{x['ladder']:,} 位"}</td>'
-        f'<td class="num">{"-" if x["battles"] is None else f"{x['battles']:,}"}</td>'
-        f'<td class="dt">{esc(x["date"])}<span class="sname">{esc(x["mode"])}</span></td></tr>'
+        + num_cell(x["best"])
+        + num_cell(x["pol"], " 位")
+        + (num_cell(x["gt"], " 位") if has_gt else "")
+        + num_cell(x["ladder"], " 位")
+        + num_cell(x["battles"])
+        + f'<td class="dt">{esc(x["date"])}<span class="sname">{esc(x["mode"])}</span></td></tr>'
         for i, x in enumerate(items, 1))
 
     table_html = (
         '<div class="rivalwrap"><table class="rivals">'
         "<thead><tr><th>#</th><th>相手</th><th>最高<br>レート</th><th>レート戦<br>最高順位</th>"
-        "<th>グローバル<br>トーナメント<br>最高順位</th>"
-        "<th>Top Ladder<br>最高順位</th><th>通算<br>試合数</th>"
+        + ("<th>グローバル<br>トーナメント<br>最高順位</th>" if has_gt else "")
+        + "<th>Top Ladder<br>最高順位</th><th>通算<br>試合数</th>"
         "<th>撃破した試合</th></tr></thead>"
         f"<tbody>{body}</tbody></table></div>")
 
     return panel(f"勝利した強敵 {len(items)} 件", table_html,
                  "レート戦の過去最高順位が高い順。同じ相手に複数回勝っていれば、その回数だけ並ぶ。",
                  f"対象はレート戦の過去最高順位{RIVAL_POL_RANK:,}位以内、"
-                 f"グローバルトーナメント{RIVAL_GT_RANK:,}位以内、"
-                 f"または Top Ladder {RIVAL_LADDER_RANK:,}位以内の相手。")
+                 + (f"グローバルトーナメント{RIVAL_GT_RANK:,}位以内、" if has_gt else "")
+                 + f"または Top Ladder {RIVAL_LADDER_RANK:,}位以内の相手。")
 
 
 def build(mode_key, prefix, label, rows, total_records):
@@ -1995,10 +2014,11 @@ def build(mode_key, prefix, label, rows, total_records):
 
 
 def main():
-    global ICONS, AVAILABLE, PROFILE, OPPONENTS
+    global ICONS, AVAILABLE, PROFILE, OPPONENTS, GT_RANKS
     ICONS = load_icons()
     PROFILE = load_profile()
     OPPONENTS = load_opponents()
+    GT_RANKS = load_gt()
     all_rows = add_sessions(load_rows())
     prev_state(all_rows)
 
