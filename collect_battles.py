@@ -17,7 +17,7 @@ import urllib.parse
 import requests
 
 # ============ 設定 ここだけ書き換える ============
-PLAYER_TAG = "#XXXXXXXX"          # ゲーム内のプロフィールに出ている自分のタグ
+PLAYER_TAG = "#LQQQQPUL0"          # ゲーム内のプロフィールに出ている自分のタグ
 # ===============================================
 
 BASE_URL = "https://proxy.royaleapi.dev/v1"
