@@ -167,6 +167,20 @@ html[data-layout="narrow"] .narrowonly{display:block}
 .legend2 span{display:inline-flex;align-items:center;gap:7px}
 .lgline{display:inline-block;width:22px;height:0;border-top-width:2px;border-top-style:solid}
 .lgbox{display:inline-block;width:20px;height:11px;border-radius:2px}
+.oppinfo{margin:0 0 8px;font-size:11.5px;color:var(--label);
+  display:flex;flex-wrap:wrap;gap:0 4px;align-items:center}
+.oppinfo b{color:var(--ink)}
+.rivaltag{background:var(--up);color:#fff;border-radius:3px;padding:1px 7px;
+  font-size:10.5px;font-weight:700}
+.rivalwrap{overflow-x:auto}
+table.rivals{width:100%;border-collapse:collapse;font-size:13px}
+table.rivals th{background:var(--labelbg);color:var(--label);font-weight:400;font-size:11.5px;
+  padding:8px 10px;border:1px solid var(--line);text-align:left;white-space:nowrap}
+table.rivals td{padding:8px 10px;border:1px solid var(--line);vertical-align:top}
+table.rivals tr:nth-child(even) td{background:#FCFCFD}
+table.rivals .rk{width:34px;color:var(--label);font-size:12px}
+table.rivals .num{text-align:right;font-weight:700;white-space:nowrap}
+table.rivals .dt{font-size:12px;white-space:nowrap}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
   nav a{font-size:12px;padding:6px 11px}
@@ -197,13 +211,77 @@ function crToggle(){
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
 });
-</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="log.html" class='on'>ランク戦</a><a href="cw-log.html">クラン戦</a><a href="etc-log.html">その他</a><a href="all-log.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="index.html">概要</a><a href="chart.html">推移</a><a href="mydeck.html">使用デッキ</a><a href="enemy.html">対戦相手</a><a href="chosi.html">調子</a><a href="rate.html">レート</a><a href="log.html" class='on'>対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦記録<span class='mtag'>ランク戦</span></h1><p>対象期間 2026/07/31 〜 2026/08/08　更新 2026/08/08 08:57 JST</p></div>
-  <section class="panel"><h2>直近100試合</h2><p class="lead">左が自分、右が相手の編成。数字は残ったタワーのHP。</p><article class="log lose">
+</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="log.html" class='on'>ランク戦</a><a href="cw-log.html">クラン戦</a><a href="etc-log.html">その他</a><a href="all-log.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="index.html">概要</a><a href="chart.html">推移</a><a href="mydeck.html">使用デッキ</a><a href="enemy.html">対戦相手</a><a href="chosi.html">調子</a><a href="rate.html">レート</a><a href="rivals.html">強敵</a><a href="log.html" class='on'>対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦記録<span class='mtag'>ランク戦</span></h1><p>対象期間 2026/07/31 〜 2026/08/08　更新 2026/08/08 10:11 JST</p></div>
+  <section class="panel"><h2>直近100試合</h2><p class="lead">左が自分、右が相手の編成。数字は残ったタワーのHP。</p><article class="log win">
+  <header>
+    <span class="when">08-08 09:14</span>
+    <span class="mode">Ranked1v1_NewArena</span>
+    <span class="tro"><span class="up-t">+30</span></span>
+  </header>
+  <p class="oppinfo"><b>ÆESAUÆ</b>　#CJ9LQG9CV</p>
+  <div class="duel">
+    <div class="side">
+      <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/C88C5JH_F3lLZj6K-tLcMo5DPjrFmvzIb1R2M6xCfTE.png" alt="Elite Barbarians" title="Elite Barbarians"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
+      <p class="hp">王 7,728　姫 4,858/601</p>
+    </div>
+    <div class="mid">
+      <span class="badge win">勝</span>
+      <span class="crowns">3 - 0</span>
+    </div>
+    <div class="side">
+      <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/Tex1C48UTq9FKtAX-3tzG0FJmc9jzncUZG3bb5Vf-Ds.png" alt="Musketeer" title="Musketeer"><img src="https://api-assets.clashroyale.com/cards/300/SU4qFXmbQXWjvASxVI6z9IJuTYolx4A0MKK90sTIE88.png" alt="Bowler" title="Bowler"><img src="https://api-assets.clashroyale.com/cards/300/qBipxLo-3hhCnPrApp2Nn3b2NgrSrvwzWytvREev0CY.png" alt="Balloon" title="Balloon"><img src="https://api-assets.clashroyale.com/cards/300/fpnESbYqe5GyZmaVVYe-SEu7tE0Kxh_HZyVigzvLjks.png" alt="Lightning" title="Lightning"><img src="https://api-assets.clashroyale.com/cards/300/QJB-QK1QJHdw4hjpAwVSyZBozc2ZWAR9pQ-SMUyKaT0.png" alt="Tornado" title="Tornado"><img src="https://api-assets.clashroyale.com/cards/300/OiwnGrxFMNiHetYEerE-UZt0L_uYNzFY7qV_CA_OxR4.png" alt="Tesla" title="Tesla"><img src="https://api-assets.clashroyale.com/cards/300/E6RWrnCuk13xMX5OE1EQtLEKTZQV6B78d00y8PlXt6Q.png" alt="Lumberjack" title="Lumberjack"><img src="https://api-assets.clashroyale.com/cards/300/X0dTFs7OGUavreDEzOtYd_YNZ8Zly6qgAE-dd-bNfWU.png" alt="Ronin" title="Ronin"></div>
+      <p class="hp">王 陥落　姫 陥落/陥落</p>
+    </div>
+  </div>
+</article><article class="log win">
+  <header>
+    <span class="when">08-08 09:10</span>
+    <span class="mode">Ranked1v1_NewArena</span>
+    <span class="tro"><span class="up-t">+30</span></span>
+  </header>
+  <p class="oppinfo"><b>Rg4veterano</b>　#ULR0JLQGC</p>
+  <div class="duel">
+    <div class="side">
+      <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/C88C5JH_F3lLZj6K-tLcMo5DPjrFmvzIb1R2M6xCfTE.png" alt="Elite Barbarians" title="Elite Barbarians"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
+      <p class="hp">王 7,728　姫 3,414/2,618</p>
+    </div>
+    <div class="mid">
+      <span class="badge win">勝</span>
+      <span class="crowns">1 - 0</span>
+    </div>
+    <div class="side">
+      <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/bAwMcqp9EKVIKH3ZLm_m0MqZFSG72zG-vKxpx8aKoVs.png" alt="Princess" title="Princess"><img src="https://api-assets.clashroyale.com/cards/300/jAj1Q5rclXxU9kVImGqSJxa4wEMfEhvwNQ_4jiGUuqg.png" alt="Knight" title="Knight"><img src="https://api-assets.clashroyale.com/cards/300/CoZdp5PpsTH858l212lAMeJxVJ0zxv9V-f5xC8Bvj5g.png" alt="Goblin Barrel" title="Goblin Barrel"><img src="https://api-assets.clashroyale.com/cards/300/GSHY_wrooMMLET6bG_WJB8redtwx66c4i80ipi4gYOM.png" alt="Inferno Tower" title="Inferno Tower"><img src="https://api-assets.clashroyale.com/cards/300/Flsoci-Y6y8ZFVi5uRFTmgkPnCmMyMVrU7YmmuPvSBo.png" alt="Arrows" title="Arrows"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/WKd4-IAFsgPpMo7dDi9sujmYjRhOMEWiE07OUJpvD9g.png" alt="Electro Spirit" title="Electro Spirit"><img src="https://api-assets.clashroyale.com/cards/300/1ArKfLJxYo6_NU_S9cAeIrfbXqWH0oULVJXedxBXQlU.png" alt="Guards" title="Guards"></div>
+      <p class="hp">王 7,728　姫 2,954/陥落</p>
+    </div>
+  </div>
+</article><article class="log win">
+  <header>
+    <span class="when">08-08 09:05</span>
+    <span class="mode">Ranked1v1_NewArena</span>
+    <span class="tro"><span class="up-t">+30</span></span>
+  </header>
+  <p class="oppinfo"><b>Jimmi pan</b>　#8GUYVLRCP</p>
+  <div class="duel">
+    <div class="side">
+      <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/C88C5JH_F3lLZj6K-tLcMo5DPjrFmvzIb1R2M6xCfTE.png" alt="Elite Barbarians" title="Elite Barbarians"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
+      <p class="hp">王 7,728　姫 3,948/182</p>
+    </div>
+    <div class="mid">
+      <span class="badge win">勝</span>
+      <span class="crowns">1 - 0</span>
+    </div>
+    <div class="side">
+      <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vCB4DWCcrGbTkarjcOiVz4aNDx6GWLm0yUepg9E1MGo.png" alt="Skeleton Barrel" title="Skeleton Barrel"><img src="https://api-assets.clashroyale.com/cards/300/dCd69_wN9f8DxwuqOGtR4QgWhHIPIaTNxZ1e23RzAAc.png" alt="Skeleton King" title="Skeleton King"><img src="https://api-assets.clashroyale.com/cards/300/lPOSw6H7YOHq2miSCrf7ZDL3ANjhJdPPDYOTujdNrVE.png" alt="Mortar" title="Mortar"><img src="https://api-assets.clashroyale.com/cards/300/BmpK3bqEAviflqHCdxxnfm-_l3pRPJw3qxHkwS55nCY.png" alt="Dart Goblin" title="Dart Goblin"><img src="https://api-assets.clashroyale.com/cards/300/Flsoci-Y6y8ZFVi5uRFTmgkPnCmMyMVrU7YmmuPvSBo.png" alt="Arrows" title="Arrows"><img src="https://api-assets.clashroyale.com/cards/300/aqwxRz8HXzqlMCO4WMXNA1txynjXTsLinknqsgZLbok.png" alt="Cannon Cart" title="Cannon Cart"><img src="https://api-assets.clashroyale.com/cards/300/NHflxzVAQT4oAz7eDfdueqpictb5vrWezn1nuqFhE4w.png" alt="Goblin Gang" title="Goblin Gang"><img src="https://api-assets.clashroyale.com/cards/300/EnIcvO21hxiNpoI-zO6MDjLmzwPbq8Z4JPo2OKoVUjU.png" alt="Bats" title="Bats"></div>
+      <p class="hp">王 7,728　姫 3,833/陥落</p>
+    </div>
+  </div>
+</article><article class="log lose">
   <header>
     <span class="when">08-08 08:15</span>
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo"><b>etp3</b>　#88YLLYUR</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/C88C5JH_F3lLZj6K-tLcMo5DPjrFmvzIb1R2M6xCfTE.png" alt="Elite Barbarians" title="Elite Barbarians"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -224,6 +302,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>Axiom</b>　#V9QV89JJG</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/C88C5JH_F3lLZj6K-tLcMo5DPjrFmvzIb1R2M6xCfTE.png" alt="Elite Barbarians" title="Elite Barbarians"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -244,6 +323,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>@_@</b>　#8P0292JUR</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/C88C5JH_F3lLZj6K-tLcMo5DPjrFmvzIb1R2M6xCfTE.png" alt="Elite Barbarians" title="Elite Barbarians"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -264,6 +344,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>AsianCarlos</b>　#VLCY92YG</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -284,6 +365,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>luffyesp</b>　#2VVQJRYYV</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -304,6 +386,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo"><b>MissAndrea</b>　#GQ0YQJQJ　レート戦 最高 6,213 位　GT 最高 1 位　<span class="rivaltag">強敵</span></p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -324,6 +407,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>unknown</b>　#98RVVLLV8</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -344,6 +428,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>Follilton</b>　#2Q0L99CJL</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -364,6 +449,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>Der_200iq_king</b>　#PP88C9CRR</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -384,6 +470,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>Ramon19King</b>　#GL0CRVRCY</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -404,6 +491,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo"><b>Darkness</b>　#PGVC0V0J</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -424,6 +512,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>chris</b>　#2GL8RLCGV</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -444,6 +533,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>☠Picconi☠</b>　#22UJPRJGG</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -464,6 +554,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>Nirvana</b>　#8YPPL982V</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -484,6 +575,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo"><b>agutimm</b>　#V00LPJ2JR</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -504,6 +596,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>Sentimental</b>　#P0GUC920</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -524,6 +617,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo"><b>N!G</b>　#R0CCURUC</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -544,6 +638,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo"><b>Lelouch</b>　#20V20RCR2L</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -564,6 +659,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>CoLoco</b>　#20CCRQ08U</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -584,6 +680,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>VezTrevor</b>　#R9PLU90LP</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -604,6 +701,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>i87df</b>　#J2RPQVLGG</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -624,6 +722,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>FierrosX</b>　#GVVPYULQP</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -644,6 +743,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>Di1ctator</b>　#R0VQCV9RP</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -664,6 +764,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>THE BEAST</b>　#2RJ8YYYU2</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -684,6 +785,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>Ihsanullah BD</b>　#QQQQP0C0P</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -704,6 +806,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo"><b>Trafalgar D Law</b>　#9C9R8G09Y</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -724,6 +827,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>ProstataPaul</b>　#8CCUQRVR2</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -744,6 +848,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>ClashofCash</b>　#RL2YJJ22</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -764,6 +869,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo"><b>Kinoking</b>　#JVVPYGPCC</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -784,6 +890,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#R2P28QC9R</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -804,6 +911,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#YYQ82JUC0</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -824,6 +932,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#2UJU9LPJU</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/E6RWrnCuk13xMX5OE1EQtLEKTZQV6B78d00y8PlXt6Q.png" alt="Lumberjack" title="Lumberjack"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -844,6 +953,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#8YG02VYP</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/E6RWrnCuk13xMX5OE1EQtLEKTZQV6B78d00y8PlXt6Q.png" alt="Lumberjack" title="Lumberjack"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -864,6 +974,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#2GY0ULP</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/E6RWrnCuk13xMX5OE1EQtLEKTZQV6B78d00y8PlXt6Q.png" alt="Lumberjack" title="Lumberjack"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -884,6 +995,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#VCPUJUG</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/E6RWrnCuk13xMX5OE1EQtLEKTZQV6B78d00y8PlXt6Q.png" alt="Lumberjack" title="Lumberjack"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -904,6 +1016,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#2GGQCCU98</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/E6RWrnCuk13xMX5OE1EQtLEKTZQV6B78d00y8PlXt6Q.png" alt="Lumberjack" title="Lumberjack"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -924,6 +1037,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#99PRYJG9</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/E6RWrnCuk13xMX5OE1EQtLEKTZQV6B78d00y8PlXt6Q.png" alt="Lumberjack" title="Lumberjack"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -944,6 +1058,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#9U9UL280</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Mej7vnv4H_3p_8qPs_N6_GKahy6HDr7pU7i9eTHS84U.png" alt="Wizard" title="Wizard"><img src="https://api-assets.clashroyale.com/cards/300/E6RWrnCuk13xMX5OE1EQtLEKTZQV6B78d00y8PlXt6Q.png" alt="Lumberjack" title="Lumberjack"><img src="https://api-assets.clashroyale.com/cards/300/0p0gd0XaVRu1Hb1iSG1hTYbz2AN6aEiZnhaAib5O8Z8.png" alt="Giant Skeleton" title="Giant Skeleton"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/fO-Xah8XZkYKaSK9SCp3wnzwxtvIhun9NVY-zzte1Ng.png" alt="Mother Witch" title="Mother Witch"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div>
@@ -964,6 +1079,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#ULRQLPVGG</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/cjC9n4AvEZJ3urkVh-rwBkJ-aRSsydIMqSAV48hAih0.png" alt="Baby Dragon" title="Baby Dragon"><img src="https://api-assets.clashroyale.com/cards/300/Fmltc4j3Ve9vO_xhHHPEO3PRP3SmU2oKp2zkZQHRZT4.png" alt="Mini P.E.K.K.A" title="Mini P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/0lIoYf3Y_plFTzo95zZL93JVxpfb3MMgFDDhgSDGU9A.png" alt="Valkyrie" title="Valkyrie"><img src="https://api-assets.clashroyale.com/cards/300/npdmCnET7jmVjJvjJQkFnNSNnDxYHDBigbvIAloFMds.png" alt="Golem" title="Golem"><img src="https://api-assets.clashroyale.com/cards/300/KdwXcoigS2Kg-cgA7BJJIANbUJG6SNgjetRQ-MegZ08.png" alt="Battle Healer" title="Battle Healer"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/BGLo3Grsp81c72EpxLLk-Sofk3VY56zahnUNOv3JcT0.png" alt="Elixir Collector" title="Elixir Collector"></div>
@@ -984,6 +1100,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#RQYVVLCU</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/cjC9n4AvEZJ3urkVh-rwBkJ-aRSsydIMqSAV48hAih0.png" alt="Baby Dragon" title="Baby Dragon"><img src="https://api-assets.clashroyale.com/cards/300/Fmltc4j3Ve9vO_xhHHPEO3PRP3SmU2oKp2zkZQHRZT4.png" alt="Mini P.E.K.K.A" title="Mini P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/0lIoYf3Y_plFTzo95zZL93JVxpfb3MMgFDDhgSDGU9A.png" alt="Valkyrie" title="Valkyrie"><img src="https://api-assets.clashroyale.com/cards/300/npdmCnET7jmVjJvjJQkFnNSNnDxYHDBigbvIAloFMds.png" alt="Golem" title="Golem"><img src="https://api-assets.clashroyale.com/cards/300/KdwXcoigS2Kg-cgA7BJJIANbUJG6SNgjetRQ-MegZ08.png" alt="Battle Healer" title="Battle Healer"><img src="https://api-assets.clashroyale.com/cards/300/V5sJlPuo2WBRtirJ1lGEPJA4NvQ0KPwFeMrpxLX5z_8.png" alt="Vines" title="Vines"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/BGLo3Grsp81c72EpxLLk-Sofk3VY56zahnUNOv3JcT0.png" alt="Elixir Collector" title="Elixir Collector"></div>
@@ -1004,6 +1121,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#V9R9PY2L</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"></div>
@@ -1024,6 +1142,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#LPCYY00U9</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"></div>
@@ -1044,6 +1163,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#QPJLPPG9</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"></div>
@@ -1064,6 +1184,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#LRUPJ9U9U</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"></div>
@@ -1084,6 +1205,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#R0J2C9UUQ</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"></div>
@@ -1104,6 +1226,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#22RG8YUC</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"></div>
@@ -1124,6 +1247,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#8GGCYYL09</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"></div>
@@ -1144,6 +1268,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#2Y92PJYV0</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"></div>
@@ -1164,6 +1289,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#Y0P9G8QPP</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"></div>
@@ -1184,6 +1310,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#YRQ29LPLR</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"></div>
@@ -1204,6 +1331,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#82R8YJJJ</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vD24bBgK4rSq7wx5QEbuqChtPMRFviL_ep76GwQw1yA.png" alt="Goblin Cage" title="Goblin Cage"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/jcNyYGUiXXNz3kuz8NBkHNKNREQKraXlb_Ts7rhCIdM.png" alt="Royal Recruits" title="Royal Recruits"><img src="https://api-assets.clashroyale.com/cards/300/ASSQJG_MoVq9e81HZzo4bynMnyLNpNJMfSLb3hqydOw.png" alt="Royal Hogs" title="Royal Hogs"><img src="https://api-assets.clashroyale.com/cards/300/hzKNE3QwFcrSrDDRuVW3QY_OnrDPijSiIp-PsWgFevE.png" alt="Flying Machine" title="Flying Machine"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/Flsoci-Y6y8ZFVi5uRFTmgkPnCmMyMVrU7YmmuPvSBo.png" alt="Arrows" title="Arrows"><img src="https://api-assets.clashroyale.com/cards/300/WKd4-IAFsgPpMo7dDi9sujmYjRhOMEWiE07OUJpvD9g.png" alt="Electro Spirit" title="Electro Spirit"></div>
@@ -1224,6 +1352,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#P8C0VQUP8</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vD24bBgK4rSq7wx5QEbuqChtPMRFviL_ep76GwQw1yA.png" alt="Goblin Cage" title="Goblin Cage"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/jcNyYGUiXXNz3kuz8NBkHNKNREQKraXlb_Ts7rhCIdM.png" alt="Royal Recruits" title="Royal Recruits"><img src="https://api-assets.clashroyale.com/cards/300/ASSQJG_MoVq9e81HZzo4bynMnyLNpNJMfSLb3hqydOw.png" alt="Royal Hogs" title="Royal Hogs"><img src="https://api-assets.clashroyale.com/cards/300/hzKNE3QwFcrSrDDRuVW3QY_OnrDPijSiIp-PsWgFevE.png" alt="Flying Machine" title="Flying Machine"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/Flsoci-Y6y8ZFVi5uRFTmgkPnCmMyMVrU7YmmuPvSBo.png" alt="Arrows" title="Arrows"><img src="https://api-assets.clashroyale.com/cards/300/WKd4-IAFsgPpMo7dDi9sujmYjRhOMEWiE07OUJpvD9g.png" alt="Electro Spirit" title="Electro Spirit"></div>
@@ -1244,6 +1373,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#VYG0CR0</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vD24bBgK4rSq7wx5QEbuqChtPMRFviL_ep76GwQw1yA.png" alt="Goblin Cage" title="Goblin Cage"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/jcNyYGUiXXNz3kuz8NBkHNKNREQKraXlb_Ts7rhCIdM.png" alt="Royal Recruits" title="Royal Recruits"><img src="https://api-assets.clashroyale.com/cards/300/ASSQJG_MoVq9e81HZzo4bynMnyLNpNJMfSLb3hqydOw.png" alt="Royal Hogs" title="Royal Hogs"><img src="https://api-assets.clashroyale.com/cards/300/hzKNE3QwFcrSrDDRuVW3QY_OnrDPijSiIp-PsWgFevE.png" alt="Flying Machine" title="Flying Machine"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/Flsoci-Y6y8ZFVi5uRFTmgkPnCmMyMVrU7YmmuPvSBo.png" alt="Arrows" title="Arrows"><img src="https://api-assets.clashroyale.com/cards/300/WKd4-IAFsgPpMo7dDi9sujmYjRhOMEWiE07OUJpvD9g.png" alt="Electro Spirit" title="Electro Spirit"></div>
@@ -1264,6 +1394,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#29JPGC2GC</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vD24bBgK4rSq7wx5QEbuqChtPMRFviL_ep76GwQw1yA.png" alt="Goblin Cage" title="Goblin Cage"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/jcNyYGUiXXNz3kuz8NBkHNKNREQKraXlb_Ts7rhCIdM.png" alt="Royal Recruits" title="Royal Recruits"><img src="https://api-assets.clashroyale.com/cards/300/ASSQJG_MoVq9e81HZzo4bynMnyLNpNJMfSLb3hqydOw.png" alt="Royal Hogs" title="Royal Hogs"><img src="https://api-assets.clashroyale.com/cards/300/hzKNE3QwFcrSrDDRuVW3QY_OnrDPijSiIp-PsWgFevE.png" alt="Flying Machine" title="Flying Machine"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/Flsoci-Y6y8ZFVi5uRFTmgkPnCmMyMVrU7YmmuPvSBo.png" alt="Arrows" title="Arrows"><img src="https://api-assets.clashroyale.com/cards/300/WKd4-IAFsgPpMo7dDi9sujmYjRhOMEWiE07OUJpvD9g.png" alt="Electro Spirit" title="Electro Spirit"></div>
@@ -1284,6 +1415,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#LCRGC88UG</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vCB4DWCcrGbTkarjcOiVz4aNDx6GWLm0yUepg9E1MGo.png" alt="Skeleton Barrel" title="Skeleton Barrel"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/lPOSw6H7YOHq2miSCrf7ZDL3ANjhJdPPDYOTujdNrVE.png" alt="Mortar" title="Mortar"><img src="https://api-assets.clashroyale.com/cards/300/aqwxRz8HXzqlMCO4WMXNA1txynjXTsLinknqsgZLbok.png" alt="Cannon Cart" title="Cannon Cart"><img src="https://api-assets.clashroyale.com/cards/300/KV48DfwVHKx9XCjzBdk3daT_Eb52Me4VgjVO7WctRc4.png" alt="Rascals" title="Rascals"><img src="https://api-assets.clashroyale.com/cards/300/98HDkG2189yOULcVG9jz2QbJKtfuhH21DIrIjkOjxI8.png" alt="Poison" title="Poison"><img src="https://api-assets.clashroyale.com/cards/300/yHGpoEnmUWPGV_hBbhn-Kk-Bs838OjGzWzJJlQpQKQA.png" alt="Minions" title="Minions"><img src="https://api-assets.clashroyale.com/cards/300/X_DQUye_OaS3QN6VC9CPw05Fit7wvSm3XegXIXKP--0.png" alt="Goblins" title="Goblins"></div>
@@ -1304,6 +1436,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#JGPGUURVJ</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vCB4DWCcrGbTkarjcOiVz4aNDx6GWLm0yUepg9E1MGo.png" alt="Skeleton Barrel" title="Skeleton Barrel"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/lPOSw6H7YOHq2miSCrf7ZDL3ANjhJdPPDYOTujdNrVE.png" alt="Mortar" title="Mortar"><img src="https://api-assets.clashroyale.com/cards/300/aqwxRz8HXzqlMCO4WMXNA1txynjXTsLinknqsgZLbok.png" alt="Cannon Cart" title="Cannon Cart"><img src="https://api-assets.clashroyale.com/cards/300/KV48DfwVHKx9XCjzBdk3daT_Eb52Me4VgjVO7WctRc4.png" alt="Rascals" title="Rascals"><img src="https://api-assets.clashroyale.com/cards/300/98HDkG2189yOULcVG9jz2QbJKtfuhH21DIrIjkOjxI8.png" alt="Poison" title="Poison"><img src="https://api-assets.clashroyale.com/cards/300/yHGpoEnmUWPGV_hBbhn-Kk-Bs838OjGzWzJJlQpQKQA.png" alt="Minions" title="Minions"><img src="https://api-assets.clashroyale.com/cards/300/X_DQUye_OaS3QN6VC9CPw05Fit7wvSm3XegXIXKP--0.png" alt="Goblins" title="Goblins"></div>
@@ -1324,6 +1457,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"><span class="up-t">+30</span></span>
   </header>
+  <p class="oppinfo">#28CQRUJYV</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vCB4DWCcrGbTkarjcOiVz4aNDx6GWLm0yUepg9E1MGo.png" alt="Skeleton Barrel" title="Skeleton Barrel"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/lPOSw6H7YOHq2miSCrf7ZDL3ANjhJdPPDYOTujdNrVE.png" alt="Mortar" title="Mortar"><img src="https://api-assets.clashroyale.com/cards/300/aqwxRz8HXzqlMCO4WMXNA1txynjXTsLinknqsgZLbok.png" alt="Cannon Cart" title="Cannon Cart"><img src="https://api-assets.clashroyale.com/cards/300/KV48DfwVHKx9XCjzBdk3daT_Eb52Me4VgjVO7WctRc4.png" alt="Rascals" title="Rascals"><img src="https://api-assets.clashroyale.com/cards/300/98HDkG2189yOULcVG9jz2QbJKtfuhH21DIrIjkOjxI8.png" alt="Poison" title="Poison"><img src="https://api-assets.clashroyale.com/cards/300/yHGpoEnmUWPGV_hBbhn-Kk-Bs838OjGzWzJJlQpQKQA.png" alt="Minions" title="Minions"><img src="https://api-assets.clashroyale.com/cards/300/X_DQUye_OaS3QN6VC9CPw05Fit7wvSm3XegXIXKP--0.png" alt="Goblins" title="Goblins"></div>
@@ -1344,6 +1478,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <span class="mode">Ranked1v1_NewArena2</span>
     <span class="tro"></span>
   </header>
+  <p class="oppinfo">#Q80L00UUJ</p>
   <div class="duel">
     <div class="side">
       <div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vCB4DWCcrGbTkarjcOiVz4aNDx6GWLm0yUepg9E1MGo.png" alt="Skeleton Barrel" title="Skeleton Barrel"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/lPOSw6H7YOHq2miSCrf7ZDL3ANjhJdPPDYOTujdNrVE.png" alt="Mortar" title="Mortar"><img src="https://api-assets.clashroyale.com/cards/300/aqwxRz8HXzqlMCO4WMXNA1txynjXTsLinknqsgZLbok.png" alt="Cannon Cart" title="Cannon Cart"><img src="https://api-assets.clashroyale.com/cards/300/KV48DfwVHKx9XCjzBdk3daT_Eb52Me4VgjVO7WctRc4.png" alt="Rascals" title="Rascals"><img src="https://api-assets.clashroyale.com/cards/300/98HDkG2189yOULcVG9jz2QbJKtfuhH21DIrIjkOjxI8.png" alt="Poison" title="Poison"><img src="https://api-assets.clashroyale.com/cards/300/yHGpoEnmUWPGV_hBbhn-Kk-Bs838OjGzWzJJlQpQKQA.png" alt="Minions" title="Minions"><img src="https://api-assets.clashroyale.com/cards/300/X_DQUye_OaS3QN6VC9CPw05Fit7wvSm3XegXIXKP--0.png" alt="Goblins" title="Goblins"></div>

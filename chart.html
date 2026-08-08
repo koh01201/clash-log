@@ -167,6 +167,20 @@ html[data-layout="narrow"] .narrowonly{display:block}
 .legend2 span{display:inline-flex;align-items:center;gap:7px}
 .lgline{display:inline-block;width:22px;height:0;border-top-width:2px;border-top-style:solid}
 .lgbox{display:inline-block;width:20px;height:11px;border-radius:2px}
+.oppinfo{margin:0 0 8px;font-size:11.5px;color:var(--label);
+  display:flex;flex-wrap:wrap;gap:0 4px;align-items:center}
+.oppinfo b{color:var(--ink)}
+.rivaltag{background:var(--up);color:#fff;border-radius:3px;padding:1px 7px;
+  font-size:10.5px;font-weight:700}
+.rivalwrap{overflow-x:auto}
+table.rivals{width:100%;border-collapse:collapse;font-size:13px}
+table.rivals th{background:var(--labelbg);color:var(--label);font-weight:400;font-size:11.5px;
+  padding:8px 10px;border:1px solid var(--line);text-align:left;white-space:nowrap}
+table.rivals td{padding:8px 10px;border:1px solid var(--line);vertical-align:top}
+table.rivals tr:nth-child(even) td{background:#FCFCFD}
+table.rivals .rk{width:34px;color:var(--label);font-size:12px}
+table.rivals .num{text-align:right;font-weight:700;white-space:nowrap}
+table.rivals .dt{font-size:12px;white-space:nowrap}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
   nav a{font-size:12px;padding:6px 11px}
@@ -197,7 +211,7 @@ function crToggle(){
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
 });
-</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="chart.html" class='on'>ランク戦</a><a href="cw-chart.html">クラン戦</a><a href="etc-chart.html">その他</a><a href="all-chart.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="index.html">概要</a><a href="chart.html" class='on'>推移</a><a href="mydeck.html">使用デッキ</a><a href="enemy.html">対戦相手</a><a href="chosi.html">調子</a><a href="rate.html">レート</a><a href="log.html">対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>勝率の推移<span class='mtag'>ランク戦</span></h1><p>対象期間 2026/07/31 〜 2026/08/08　更新 2026/08/08 08:57 JST</p></div>
+</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="chart.html" class='on'>ランク戦</a><a href="cw-chart.html">クラン戦</a><a href="etc-chart.html">その他</a><a href="all-chart.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="index.html">概要</a><a href="chart.html" class='on'>推移</a><a href="mydeck.html">使用デッキ</a><a href="enemy.html">対戦相手</a><a href="chosi.html">調子</a><a href="rate.html">レート</a><a href="rivals.html">強敵</a><a href="log.html">対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>勝率の推移<span class='mtag'>ランク戦</span></h1><p>対象期間 2026/07/31 〜 2026/08/08　更新 2026/08/08 10:11 JST</p></div>
   <section class="panel"><h2>勝率の推移</h2>
     <div class="ctrl">
       <span class="navlab" style="width:auto">粒度</span>
