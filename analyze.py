@@ -146,6 +146,7 @@ PAGES = [
     ("enemy.html", "対戦相手"),
     ("chosi.html", "調子"),
     ("rate.html", "レート"),
+    ("rivals.html", "強敵"),
     ("log.html", "対戦記録"),
 ]
 
@@ -154,6 +155,35 @@ CARDS_FILE = os.path.join(SCRIPT_DIR, "cards.json")
 
 
 PROFILE_FILE = os.path.join(SCRIPT_DIR, "profile.csv")
+OPPONENTS_FILE = os.path.join(SCRIPT_DIR, "opponents.csv")
+
+# 強敵とみなす条件
+RIVAL_POL_RANK = 10000     # レート戦の過去最高順位がこれ以内
+RIVAL_GT_RANK = 1000       # グローバルトーナメントの最高順位がこれ以内
+
+
+def load_opponents():
+    """opponents.csv をタグ引きの辞書にする。"""
+    if not os.path.exists(OPPONENTS_FILE):
+        return {}
+    try:
+        with open(OPPONENTS_FILE, encoding="utf-8-sig", newline="") as f:
+            return {r["tag"]: r for r in csv.DictReader(f) if r.get("tag")}
+    except Exception:
+        return {}
+
+
+def opp_ranks(tag):
+    """(名前, レート戦最高順位, GT最高順位) を返す。"""
+    o = OPPONENTS.get(tag or "")
+    if not o:
+        return "", None, None
+    return o.get("name", ""), _num(o.get("pol_best_rank")), _num(o.get("gt_best_rank"))
+
+
+def is_rival(pol, gt):
+    return ((pol is not None and pol <= RIVAL_POL_RANK)
+            or (gt is not None and gt <= RIVAL_GT_RANK))
 
 
 LEAGUES = {
@@ -406,6 +436,7 @@ def load_icons():
 
 ICONS = {}
 PROFILE = []
+OPPONENTS = {}
 
 
 def esc(text):
@@ -1411,6 +1442,20 @@ html[data-layout="narrow"] .narrowonly{display:block}
 .legend2 span{display:inline-flex;align-items:center;gap:7px}
 .lgline{display:inline-block;width:22px;height:0;border-top-width:2px;border-top-style:solid}
 .lgbox{display:inline-block;width:20px;height:11px;border-radius:2px}
+.oppinfo{margin:0 0 8px;font-size:11.5px;color:var(--label);
+  display:flex;flex-wrap:wrap;gap:0 4px;align-items:center}
+.oppinfo b{color:var(--ink)}
+.rivaltag{background:var(--up);color:#fff;border-radius:3px;padding:1px 7px;
+  font-size:10.5px;font-weight:700}
+.rivalwrap{overflow-x:auto}
+table.rivals{width:100%;border-collapse:collapse;font-size:13px}
+table.rivals th{background:var(--labelbg);color:var(--label);font-weight:400;font-size:11.5px;
+  padding:8px 10px;border:1px solid var(--line);text-align:left;white-space:nowrap}
+table.rivals td{padding:8px 10px;border:1px solid var(--line);vertical-align:top}
+table.rivals tr:nth-child(even) td{background:#FCFCFD}
+table.rivals .rk{width:34px;color:var(--label);font-size:12px}
+table.rivals .num{text-align:right;font-weight:700;white-space:nowrap}
+table.rivals .dt{font-size:12px;white-space:nowrap}
 footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 @media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
   nav a{font-size:12px;padding:6px 11px}
@@ -1521,6 +1566,25 @@ def hp_text(king, princess):
     return f"{king_txt}　姫 {towers[0]}/{towers[1]}"
 
 
+def opp_line(r):
+    """対戦記録に添える相手の情報。"""
+    tag = (r.get("opp_tag") or "").strip()
+    name, pol, gt = opp_ranks(tag)
+    name = name or (r.get("opp_name") or "")
+    bits = []
+    if name:
+        bits.append(f"<b>{esc(name)}</b>")
+    if tag:
+        bits.append(esc(tag))
+    if pol is not None:
+        bits.append(f"レート戦 最高 {pol:,} 位")
+    if gt is not None:
+        bits.append(f"GT 最高 {gt:,} 位")
+    if is_rival(pol, gt):
+        bits.append('<span class="rivaltag">強敵</span>')
+    return "　".join(bits) if bits else ""
+
+
 def battle_log(rows, limit=100):
     """直近の対戦を1件1ブロックで並べる。"""
     recent = rows[-limit:][::-1]
@@ -1543,6 +1607,7 @@ def battle_log(rows, limit=100):
     <span class="mode">{esc(r.get("game_mode") or r.get("battle_type") or "")}</span>
     <span class="tro">{chtxt}</span>
   </header>
+  <p class="oppinfo">{opp_line(r)}</p>
   <div class="duel">
     <div class="side">
       {deck_grid(mine)}
@@ -1612,6 +1677,55 @@ def coverage_strip(rows):
 
 
 # ---------------- 本体 ----------------
+
+def rivals_body(rows):
+    """勝った相手のうち、上位実績を持つ者を順位順に並べる。"""
+    items = []
+    for r in rows:
+        if r.get("result") != "win":
+            continue
+        tag = (r.get("opp_tag") or "").strip()
+        name, pol, gt = opp_ranks(tag)
+        if not is_rival(pol, gt):
+            continue
+        items.append({
+            "date": r["battle_time_jst"][:16],
+            "name": name or r.get("opp_name") or "-",
+            "tag": tag,
+            "mode": r.get("game_mode") or r.get("battle_type") or "",
+            "pol": pol, "gt": gt,
+        })
+    items.sort(key=lambda x: (x["pol"] if x["pol"] is not None else 10 ** 9,
+                             x["gt"] if x["gt"] is not None else 10 ** 9))
+
+    if not OPPONENTS:
+        return panel("強敵", '<p class="empty">相手の情報がまだ集まっていない。'
+                     "収集が回ると順に貯まる。</p>",
+                     "対戦相手のプレイヤー情報を別途取得して判定している。")
+    if not items:
+        return panel("強敵", '<p class="empty">条件を満たす相手にまだ勝っていない。</p>',
+                     f"レート戦の過去最高順位が{RIVAL_POL_RANK:,}位以内、"
+                     f"またはグローバルトーナメントで{RIVAL_GT_RANK:,}位以内の相手が対象。")
+
+    body = "".join(
+        f'<tr><td class="rk">{i}</td><td><b>{esc(x["name"])}</b>'
+        f'<span class="sname">{esc(x["tag"])}</span></td>'
+        f'<td class="num">{"-" if x["pol"] is None else f"{x['pol']:,} 位"}</td>'
+        f'<td class="num">{"-" if x["gt"] is None else f"{x['gt']:,} 位"}</td>'
+        f'<td class="dt">{esc(x["date"])}<span class="sname">{esc(x["mode"])}</span></td></tr>'
+        for i, x in enumerate(items, 1))
+
+    table_html = (
+        '<div class="rivalwrap"><table class="rivals">'
+        "<thead><tr><th>#</th><th>相手</th><th>レート戦<br>最高順位</th>"
+        "<th>GT<br>最高順位</th><th>撃破した試合</th></tr></thead>"
+        f"<tbody>{body}</tbody></table></div>")
+
+    return panel(f"勝利した強敵 {len(items)} 件", table_html,
+                 "レート戦の過去最高順位が高い順。同じ相手に複数回勝っていれば、その回数だけ並ぶ。",
+                 f"対象はレート戦の過去最高順位{RIVAL_POL_RANK:,}位以内、"
+                 f"またはグローバルトーナメント{RIVAL_GT_RANK:,}位以内の相手。")
+
 
 def build(mode_key, prefix, label, rows, total_records):
     """1モード分の5ページを書き出す。"""
@@ -1784,6 +1898,9 @@ def build(mode_key, prefix, label, rows, total_records):
     page(prefix, "rate.html", label, "レート", stamp,
          rate_page_body(PROFILE) + monthly_deck_panel(rows))
 
+    # 強敵
+    page(prefix, "rivals.html", label, "強敵", stamp, rivals_body(rows))
+
     # 対戦記録
     page(prefix, "log.html", label, "対戦記録", stamp, f"""
   {panel("直近100試合", battle_log(rows, 100),
@@ -1852,9 +1969,10 @@ def build(mode_key, prefix, label, rows, total_records):
 
 
 def main():
-    global ICONS, AVAILABLE, PROFILE
+    global ICONS, AVAILABLE, PROFILE, OPPONENTS
     ICONS = load_icons()
     PROFILE = load_profile()
+    OPPONENTS = load_opponents()
     all_rows = add_sessions(load_rows())
     prev_state(all_rows)
 
