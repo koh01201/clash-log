@@ -1722,7 +1722,7 @@ def rivals_body(rows):
     if not items:
         return panel("強敵", '<p class="empty">条件を満たす相手にまだ勝っていない。</p>',
                      f"レート戦の過去最高順位が{RIVAL_POL_RANK:,}位以内、"
-                     f"、グローバルトーナメント{RIVAL_GT_RANK:,}位以内、"
+                     f"グローバルトーナメント{RIVAL_GT_RANK:,}位以内、"
                  f"または Top Ladder {RIVAL_LADDER_RANK:,}位以内の相手が対象。")
 
     body = "".join(

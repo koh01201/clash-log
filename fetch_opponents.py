@@ -32,14 +32,14 @@ BATTLES_FILE = os.path.join(SCRIPT_DIR, "battles.csv")
 OUT_FILE = os.path.join(SCRIPT_DIR, "opponents.csv")
 JST = datetime.timezone(datetime.timedelta(hours=9))
 
-SCHEMA = "4"     # 判定方法を変えたら上げる。古い行は取り直す
+SCHEMA = "5"     # 判定方法を変えたら上げる。古い行は取り直す
 
 FIELDS = [
     "ver", "tag", "name", "checked_jst",
     "pol_best_rank", "pol_best_trophies", "pol_best_league",
     "gt_best_rank", "gt_badge",
     "ladder_best_rank", "ladder_badge",
-    "rank_badges",
+    "rank_badges", "badges_all", "raw_keys",
     "exp_level", "trophies", "best_trophies",
     "battle_count", "wins", "losses",
 ]
@@ -120,6 +120,16 @@ def rank_badges(badges):
     return gt, gt_name, ld, ld_name, json.dumps(seen, ensure_ascii=False) if seen else ""
 
 
+def survey(d):
+    """APIが実際に何を返しているかを記録する。項目名の確認用。"""
+    keys = sorted(d.keys())
+    names = []
+    for b in d.get("badges") or []:
+        p = b.get("progress")
+        names.append(f"{b.get('name')}" + (f":{p}" if isinstance(p, int) else ""))
+    return json.dumps(sorted(names), ensure_ascii=False), json.dumps(keys, ensure_ascii=False)
+
+
 def fetch(tag, token):
     url = f"{BASE_URL}/players/{urllib.parse.quote(tag)}"
     r = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=30)
@@ -163,6 +173,8 @@ def main():
             "ladder_best_rank": ld_rank,
             "ladder_badge": ld_name,
             "rank_badges": rb,
+            "badges_all": survey(d)[0],
+            "raw_keys": survey(d)[1],
             "exp_level": d.get("expLevel", ""),
             "trophies": d.get("trophies", ""),
             "best_trophies": d.get("bestTrophies", ""),
