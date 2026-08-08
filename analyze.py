@@ -160,6 +160,7 @@ OPPONENTS_FILE = os.path.join(SCRIPT_DIR, "opponents.csv")
 # 強敵とみなす条件
 RIVAL_POL_RANK = 10000     # レート戦の過去最高順位がこれ以内
 RIVAL_GT_RANK = 1000       # グローバルトーナメントの最高順位がこれ以内
+RIVAL_LADDER_RANK = 10000  # Top Ladder の最高順位がこれ以内
 
 
 def load_opponents():
@@ -174,17 +175,19 @@ def load_opponents():
 
 
 def opp_ranks(tag):
-    """(名前, レート戦最高順位, グローバルトーナメント最高順位, 最高レート) を返す。"""
+    """(名前, レート戦最高順位, GT最高順位, 最高レート, Top Ladder最高順位) を返す。"""
     o = OPPONENTS.get(tag or "")
     if not o:
-        return "", None, None, None
+        return "", None, None, None, None
     return (o.get("name", ""), _num(o.get("pol_best_rank")),
-            _num(o.get("gt_best_rank")), _num(o.get("pol_best_trophies")))
+            _num(o.get("gt_best_rank")), _num(o.get("pol_best_trophies")),
+            _num(o.get("ladder_best_rank")))
 
 
-def is_rival(pol, gt):
+def is_rival(pol, gt, ladder=None):
     return ((pol is not None and pol <= RIVAL_POL_RANK)
-            or (gt is not None and gt <= RIVAL_GT_RANK))
+            or (gt is not None and gt <= RIVAL_GT_RANK)
+            or (ladder is not None and ladder <= RIVAL_LADDER_RANK))
 
 
 LEAGUES = {
@@ -1570,7 +1573,7 @@ def hp_text(king, princess):
 def opp_line(r):
     """対戦記録に添える相手の情報。"""
     tag = (r.get("opp_tag") or "").strip()
-    name, pol, gt, best = opp_ranks(tag)
+    name, pol, gt, best, ladder = opp_ranks(tag)
     name = name or (r.get("opp_name") or "")
     bits = []
     if name:
@@ -1583,7 +1586,9 @@ def opp_line(r):
         bits.append(f"レート戦 最高 {pol:,} 位")
     if gt is not None:
         bits.append(f"グローバルトーナメント 最高 {gt:,} 位")
-    if is_rival(pol, gt):
+    if ladder is not None:
+        bits.append(f"Top Ladder 最高 {ladder:,} 位")
+    if is_rival(pol, gt, ladder):
         bits.append('<span class="rivaltag">強敵</span>')
     return "　".join(bits) if bits else ""
 
@@ -1688,18 +1693,19 @@ def rivals_body(rows):
         if r.get("result") != "win":
             continue
         tag = (r.get("opp_tag") or "").strip()
-        name, pol, gt, best = opp_ranks(tag)
-        if not is_rival(pol, gt):
+        name, pol, gt, best, ladder = opp_ranks(tag)
+        if not is_rival(pol, gt, ladder):
             continue
         items.append({
             "date": r["battle_time_jst"][:16],
             "name": name or r.get("opp_name") or "-",
             "tag": tag,
             "mode": r.get("game_mode") or r.get("battle_type") or "",
-            "pol": pol, "gt": gt, "best": best,
+            "pol": pol, "gt": gt, "best": best, "ladder": ladder,
         })
     items.sort(key=lambda x: (x["pol"] if x["pol"] is not None else 10 ** 9,
-                             x["gt"] if x["gt"] is not None else 10 ** 9))
+                             x["gt"] if x["gt"] is not None else 10 ** 9,
+                             x["ladder"] if x["ladder"] is not None else 10 ** 9))
 
     if not OPPONENTS:
         return panel("強敵", '<p class="empty">相手の情報がまだ集まっていない。'
@@ -1708,7 +1714,8 @@ def rivals_body(rows):
     if not items:
         return panel("強敵", '<p class="empty">条件を満たす相手にまだ勝っていない。</p>',
                      f"レート戦の過去最高順位が{RIVAL_POL_RANK:,}位以内、"
-                     f"またはグローバルトーナメントで{RIVAL_GT_RANK:,}位以内の相手が対象。")
+                     f"、グローバルトーナメント{RIVAL_GT_RANK:,}位以内、"
+                 f"または Top Ladder {RIVAL_LADDER_RANK:,}位以内の相手が対象。")
 
     body = "".join(
         f'<tr><td class="rk">{i}</td><td><b>{esc(x["name"])}</b>'
@@ -1716,19 +1723,22 @@ def rivals_body(rows):
         f'<td class="num">{"-" if x["best"] is None else f"{x['best']:,}"}</td>'
         f'<td class="num">{"-" if x["pol"] is None else f"{x['pol']:,} 位"}</td>'
         f'<td class="num">{"-" if x["gt"] is None else f"{x['gt']:,} 位"}</td>'
+        f'<td class="num">{"-" if x["ladder"] is None else f"{x['ladder']:,} 位"}</td>'
         f'<td class="dt">{esc(x["date"])}<span class="sname">{esc(x["mode"])}</span></td></tr>'
         for i, x in enumerate(items, 1))
 
     table_html = (
         '<div class="rivalwrap"><table class="rivals">'
         "<thead><tr><th>#</th><th>相手</th><th>最高<br>レート</th><th>レート戦<br>最高順位</th>"
-        "<th>グローバル<br>トーナメント<br>最高順位</th><th>撃破した試合</th></tr></thead>"
+        "<th>グローバル<br>トーナメント<br>最高順位</th>"
+        "<th>Top Ladder<br>最高順位</th><th>撃破した試合</th></tr></thead>"
         f"<tbody>{body}</tbody></table></div>")
 
     return panel(f"勝利した強敵 {len(items)} 件", table_html,
                  "レート戦の過去最高順位が高い順。同じ相手に複数回勝っていれば、その回数だけ並ぶ。",
                  f"対象はレート戦の過去最高順位{RIVAL_POL_RANK:,}位以内、"
-                 f"またはグローバルトーナメント{RIVAL_GT_RANK:,}位以内の相手。")
+                 f"グローバルトーナメント{RIVAL_GT_RANK:,}位以内、"
+                 f"または Top Ladder {RIVAL_LADDER_RANK:,}位以内の相手。")
 
 
 def build(mode_key, prefix, label, rows, total_records):
