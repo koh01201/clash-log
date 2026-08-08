@@ -32,16 +32,17 @@ BATTLES_FILE = os.path.join(SCRIPT_DIR, "battles.csv")
 OUT_FILE = os.path.join(SCRIPT_DIR, "opponents.csv")
 JST = datetime.timezone(datetime.timedelta(hours=9))
 
-SCHEMA = "6"     # 判定方法を変えたら上げる。古い行は取り直す
+SCHEMA = "7"     # 判定方法を変えたら上げる。古い行は取り直す
 
 FIELDS = [
     "ver", "tag", "name", "checked_jst",
     "pol_best_rank", "pol_best_trophies", "pol_best_league",
     "gt_best_rank", "gt_badge",
     "ladder_best_rank", "ladder_best_trophies", "ladder_best_season",
-    "ladder_prev_rank", "league_raw",
+    "ladder_prev_rank",
     "exp_level", "trophies", "best_trophies",
     "battle_count", "wins", "losses",
+    "raw_json",
 ]
 
 
@@ -124,6 +125,16 @@ def ladder_ranks(d):
             g(prev, "rank"), json.dumps(ls, ensure_ascii=False))
 
 
+# 保存から外す項目（巨大なわりに使い道がない）
+DROP_KEYS = ("cards", "currentDeck", "currentDeckSupportCards", "supportCards")
+
+
+def raw_json(d):
+    """応答をそのまま残す。あとから別の項目が欲しくなっても取り直さずに済む。"""
+    slim = {k: v for k, v in d.items() if k not in DROP_KEYS}
+    return json.dumps(slim, ensure_ascii=False, sort_keys=True)
+
+
 def fetch(tag, token):
     url = f"{BASE_URL}/players/{urllib.parse.quote(tag)}"
     r = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=30)
@@ -154,7 +165,7 @@ def main():
         if not d:
             continue
         gt_rank, gt_name = best_tournament(d.get("badges"))
-        ld_rank, ld_tro, ld_season, ld_prev, ls_raw = ladder_ranks(d)
+        ld_rank, ld_tro, ld_season, ld_prev, _ = ladder_ranks(d)
         known[tag] = {
             "ver": SCHEMA,
             "tag": tag,
@@ -169,13 +180,13 @@ def main():
             "ladder_best_trophies": ld_tro,
             "ladder_best_season": ld_season,
             "ladder_prev_rank": ld_prev,
-            "league_raw": ls_raw,
             "exp_level": d.get("expLevel", ""),
             "trophies": d.get("trophies", ""),
             "best_trophies": d.get("bestTrophies", ""),
             "battle_count": d.get("battleCount", ""),
             "wins": d.get("wins", ""),
             "losses": d.get("losses", ""),
+            "raw_json": raw_json(d),
         }
         added += 1
 
