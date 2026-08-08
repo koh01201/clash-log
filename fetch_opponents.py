@@ -32,7 +32,7 @@ BATTLES_FILE = os.path.join(SCRIPT_DIR, "battles.csv")
 OUT_FILE = os.path.join(SCRIPT_DIR, "opponents.csv")
 JST = datetime.timezone(datetime.timedelta(hours=9))
 
-SCHEMA = "3"     # 判定方法を変えたら上げる。古い行は取り直す
+SCHEMA = "4"     # 判定方法を変えたら上げる。古い行は取り直す
 
 FIELDS = [
     "ver", "tag", "name", "checked_jst",
@@ -41,6 +41,7 @@ FIELDS = [
     "ladder_best_rank", "ladder_badge",
     "rank_badges",
     "exp_level", "trophies", "best_trophies",
+    "battle_count", "wins", "losses",
 ]
 
 
@@ -165,6 +166,9 @@ def main():
             "exp_level": d.get("expLevel", ""),
             "trophies": d.get("trophies", ""),
             "best_trophies": d.get("bestTrophies", ""),
+            "battle_count": d.get("battleCount", ""),
+            "wins": d.get("wins", ""),
+            "losses": d.get("losses", ""),
         }
         added += 1
 

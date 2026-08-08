@@ -175,13 +175,16 @@ def load_opponents():
 
 
 def opp_ranks(tag):
-    """(名前, レート戦最高順位, GT最高順位, 最高レート, Top Ladder最高順位) を返す。"""
-    o = OPPONENTS.get(tag or "")
-    if not o:
-        return "", None, None, None, None
-    return (o.get("name", ""), _num(o.get("pol_best_rank")),
-            _num(o.get("gt_best_rank")), _num(o.get("pol_best_trophies")),
-            _num(o.get("ladder_best_rank")))
+    """相手の実績をまとめて返す。未取得なら空の辞書と同じ扱い。"""
+    o = OPPONENTS.get(tag or "") or {}
+    return {
+        "name": o.get("name", ""),
+        "pol": _num(o.get("pol_best_rank")),
+        "gt": _num(o.get("gt_best_rank")),
+        "best": _num(o.get("pol_best_trophies")),
+        "ladder": _num(o.get("ladder_best_rank")),
+        "battles": _num(o.get("battle_count")),
+    }
 
 
 def is_rival(pol, gt, ladder=None):
@@ -1573,7 +1576,8 @@ def hp_text(king, princess):
 def opp_line(r):
     """対戦記録に添える相手の情報。"""
     tag = (r.get("opp_tag") or "").strip()
-    name, pol, gt, best, ladder = opp_ranks(tag)
+    o = opp_ranks(tag)
+    name, pol, gt, best, ladder = o["name"], o["pol"], o["gt"], o["best"], o["ladder"]
     name = name or (r.get("opp_name") or "")
     bits = []
     if name:
@@ -1588,6 +1592,8 @@ def opp_line(r):
         bits.append(f"グローバルトーナメント 最高 {gt:,} 位")
     if ladder is not None:
         bits.append(f"Top Ladder 最高 {ladder:,} 位")
+    if o["battles"] is not None:
+        bits.append(f"通算 {o['battles']:,} 戦")
     if is_rival(pol, gt, ladder):
         bits.append('<span class="rivaltag">強敵</span>')
     return "　".join(bits) if bits else ""
@@ -1693,7 +1699,8 @@ def rivals_body(rows):
         if r.get("result") != "win":
             continue
         tag = (r.get("opp_tag") or "").strip()
-        name, pol, gt, best, ladder = opp_ranks(tag)
+        o = opp_ranks(tag)
+        name, pol, gt, best, ladder = o["name"], o["pol"], o["gt"], o["best"], o["ladder"]
         if not is_rival(pol, gt, ladder):
             continue
         items.append({
@@ -1702,6 +1709,7 @@ def rivals_body(rows):
             "tag": tag,
             "mode": r.get("game_mode") or r.get("battle_type") or "",
             "pol": pol, "gt": gt, "best": best, "ladder": ladder,
+            "battles": o["battles"],
         })
     items.sort(key=lambda x: (x["pol"] if x["pol"] is not None else 10 ** 9,
                              x["gt"] if x["gt"] is not None else 10 ** 9,
@@ -1724,6 +1732,7 @@ def rivals_body(rows):
         f'<td class="num">{"-" if x["pol"] is None else f"{x['pol']:,} 位"}</td>'
         f'<td class="num">{"-" if x["gt"] is None else f"{x['gt']:,} 位"}</td>'
         f'<td class="num">{"-" if x["ladder"] is None else f"{x['ladder']:,} 位"}</td>'
+        f'<td class="num">{"-" if x["battles"] is None else f"{x['battles']:,}"}</td>'
         f'<td class="dt">{esc(x["date"])}<span class="sname">{esc(x["mode"])}</span></td></tr>'
         for i, x in enumerate(items, 1))
 
@@ -1731,7 +1740,8 @@ def rivals_body(rows):
         '<div class="rivalwrap"><table class="rivals">'
         "<thead><tr><th>#</th><th>相手</th><th>最高<br>レート</th><th>レート戦<br>最高順位</th>"
         "<th>グローバル<br>トーナメント<br>最高順位</th>"
-        "<th>Top Ladder<br>最高順位</th><th>撃破した試合</th></tr></thead>"
+        "<th>Top Ladder<br>最高順位</th><th>通算<br>試合数</th>"
+        "<th>撃破した試合</th></tr></thead>"
         f"<tbody>{body}</tbody></table></div>")
 
     return panel(f"勝利した強敵 {len(items)} 件", table_html,
