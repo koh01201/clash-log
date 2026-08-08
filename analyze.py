@@ -183,6 +183,7 @@ def opp_ranks(tag):
         "gt": _num(o.get("gt_best_rank")),
         "best": _num(o.get("pol_best_trophies")),
         "ladder": _num(o.get("ladder_best_rank")),
+        "ladder_season": (o.get("ladder_best_season") or "").strip(),
         "battles": _num(o.get("battle_count")),
     }
 
@@ -1591,7 +1592,8 @@ def opp_line(r):
     if gt is not None:
         bits.append(f"グローバルトーナメント 最高 {gt:,} 位")
     if ladder is not None:
-        bits.append(f"Top Ladder 最高 {ladder:,} 位")
+        season = o["ladder_season"]
+        bits.append(f"Top Ladder 最高 {ladder:,} 位" + (f"（{esc(season)}）" if season else ""))
     if o["battles"] is not None:
         bits.append(f"通算 {o['battles']:,} 戦")
     if is_rival(pol, gt, ladder):

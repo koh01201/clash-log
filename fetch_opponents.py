@@ -32,14 +32,14 @@ BATTLES_FILE = os.path.join(SCRIPT_DIR, "battles.csv")
 OUT_FILE = os.path.join(SCRIPT_DIR, "opponents.csv")
 JST = datetime.timezone(datetime.timedelta(hours=9))
 
-SCHEMA = "5"     # 判定方法を変えたら上げる。古い行は取り直す
+SCHEMA = "6"     # 判定方法を変えたら上げる。古い行は取り直す
 
 FIELDS = [
     "ver", "tag", "name", "checked_jst",
     "pol_best_rank", "pol_best_trophies", "pol_best_league",
     "gt_best_rank", "gt_badge",
-    "ladder_best_rank", "ladder_badge",
-    "rank_badges", "badges_all", "raw_keys",
+    "ladder_best_rank", "ladder_best_trophies", "ladder_best_season",
+    "ladder_prev_rank", "league_raw",
     "exp_level", "trophies", "best_trophies",
     "battle_count", "wins", "losses",
 ]
@@ -94,40 +94,34 @@ def pick(d, key, field):
     return "" if v is None else v
 
 
-def rank_badges(badges):
-    """順位系のバッジから、グローバルトーナメントと Top Ladder の最高順位を取り出す。
-    バッジ名は記号や大文字小文字を無視して照合する。
-    progress には到達した順位が入るため、小さいほうを採用する。"""
-    gt, gt_name = "", ""
-    ld, ld_name = "", ""
-    seen = []
+def best_tournament(badges):
+    """グローバルトーナメントの最高順位。バッジ名を正規化して照合する。"""
+    best, name = "", ""
     for b in badges or []:
-        raw = str(b.get("name", ""))
-        norm = "".join(ch for ch in raw.lower() if ch.isalnum())
-        if "tournament" not in norm and "ladder" not in norm:
+        norm = "".join(ch for ch in str(b.get("name", "")).lower() if ch.isalnum())
+        if "globaltournament" not in norm:
             continue
-        seen.append({"name": raw, "level": b.get("level"), "progress": b.get("progress"),
-                     "target": b.get("target")})
         p = b.get("progress")
-        if not isinstance(p, int):
-            continue
-        if "globaltournament" in norm:
-            if gt == "" or p < gt:
-                gt, gt_name = p, raw
-        elif "ladder" in norm and "tournament" not in norm:
-            if ld == "" or p < ld:
-                ld, ld_name = p, raw
-    return gt, gt_name, ld, ld_name, json.dumps(seen, ensure_ascii=False) if seen else ""
+        if isinstance(p, int) and (best == "" or p < best):
+            best, name = p, str(b.get("name", ""))
+    return best, name
 
 
-def survey(d):
-    """APIが実際に何を返しているかを記録する。項目名の確認用。"""
-    keys = sorted(d.keys())
-    names = []
-    for b in d.get("badges") or []:
-        p = b.get("progress")
-        names.append(f"{b.get('name')}" + (f":{p}" if isinstance(p, int) else ""))
-    return json.dumps(sorted(names), ensure_ascii=False), json.dumps(keys, ensure_ascii=False)
+def ladder_ranks(d):
+    """Top Ladder（旧トロフィーランキング）の成績。
+    バッジではなく leagueStatistics に入っている。"""
+    ls = d.get("leagueStatistics") or {}
+    if not isinstance(ls, dict):
+        return "", "", "", "", ""
+    best = ls.get("bestSeason") or {}
+    prev = ls.get("previousSeason") or {}
+
+    def g(block, key):
+        v = block.get(key) if isinstance(block, dict) else None
+        return "" if v is None else v
+
+    return (g(best, "rank"), g(best, "trophies"), g(best, "id"),
+            g(prev, "rank"), json.dumps(ls, ensure_ascii=False))
 
 
 def fetch(tag, token):
@@ -159,7 +153,8 @@ def main():
         time.sleep(SLEEP)
         if not d:
             continue
-        gt_rank, gt_name, ld_rank, ld_name, rb = rank_badges(d.get("badges"))
+        gt_rank, gt_name = best_tournament(d.get("badges"))
+        ld_rank, ld_tro, ld_season, ld_prev, ls_raw = ladder_ranks(d)
         known[tag] = {
             "ver": SCHEMA,
             "tag": tag,
@@ -171,10 +166,10 @@ def main():
             "gt_best_rank": gt_rank,
             "gt_badge": gt_name,
             "ladder_best_rank": ld_rank,
-            "ladder_badge": ld_name,
-            "rank_badges": rb,
-            "badges_all": survey(d)[0],
-            "raw_keys": survey(d)[1],
+            "ladder_best_trophies": ld_tro,
+            "ladder_best_season": ld_season,
+            "ladder_prev_rank": ld_prev,
+            "league_raw": ls_raw,
             "exp_level": d.get("expLevel", ""),
             "trophies": d.get("trophies", ""),
             "best_trophies": d.get("bestTrophies", ""),
