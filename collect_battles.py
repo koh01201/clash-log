@@ -63,9 +63,12 @@ def log(message):
 
 
 def load_token():
-    """token.txt からAPIトークンを読む。"""
+    """クラウド実行時は環境変数(Secrets)から、手元では token.txt から読む。"""
+    token = os.environ.get("CR_TOKEN", "").strip()
+    if token:
+        return token
     if not os.path.exists(TOKEN_FILE):
-        raise RuntimeError(f"{TOKEN_FILE} がありません。APIトークンを書いたテキストファイルを置いてください。")
+        raise RuntimeError("トークンが見つかりません（CR_TOKEN も token.txt も無し）")
     with open(TOKEN_FILE, encoding="utf-8") as f:
         token = f.read().strip()
     if not token:
