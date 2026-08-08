@@ -26,14 +26,22 @@ jobs:
         run: python collect_battles.py
 
       - name: Fetch cards
+        continue-on-error: true
         env:
           CR_TOKEN: ${{ secrets.CR_TOKEN }}
         run: python fetch_cards.py
 
       - name: Fetch profile
+        continue-on-error: true
         env:
           CR_TOKEN: ${{ secrets.CR_TOKEN }}
         run: python fetch_profile.py
+
+      - name: Fetch opponents
+        continue-on-error: true
+        env:
+          CR_TOKEN: ${{ secrets.CR_TOKEN }}
+        run: python fetch_opponents.py
 
       - name: Build report
         run: python analyze.py
