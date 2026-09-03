@@ -267,7 +267,11 @@ def stage_cell(league, trophies, rank, size=40):
 
 
 def rate_history_chart(prof):
-    """レート（未到達ならステージ）の推移。profile.csv の記録点をつなぐ。"""
+    """レート（未到達ならステージ）の推移。profile.csv の記録点をつなぐ。
+
+    アルティメットチャンピオン到達後はレートの数値で描く。
+    到達前と到達後が混ざる場合は、下段にステージ・上段にレートを置いた2段の軸にする。
+    """
     pts = []
     for r in prof:
         lg, tr = _num(r.get("pol_current_league")), _num(r.get("pol_current_trophies"))
@@ -277,38 +281,89 @@ def rate_history_chart(prof):
     if len(pts) < 2:
         return ""
 
-    use_rate = all(p[1] >= ULTIMATE and p[2] for p in pts)
-    vals = [p[2] for p in pts] if use_rate else [p[1] for p in pts]
-    lo, hi = min(vals), max(vals)
-    if hi == lo:
-        lo, hi = lo - 1, hi + 1
+    ult = [bool(p[1] >= ULTIMATE and p[2]) for p in pts]
 
     W, H = 720, 200
     padL, padR, padT, padB = 8, 46, 14, 26
     pw, ph = W - padL - padR, H - padT - padB
     xs = lambda i: padL + (pw * i / max(1, len(pts) - 1))
-    ys = lambda v: padT + ph * (1 - (v - lo) / (hi - lo))
+
+    ticks = []          # (y, ラベル)
+    sep_y = None        # アルティメット到達ラインの高さ
+
+    if all(ult):
+        # 全期間アルティメット：レートの数値だけで描く
+        vals = [p[2] for p in pts]
+        lo, hi = min(vals), max(vals)
+        if hi == lo:
+            lo, hi = lo - 1, hi + 1
+        ys = [padT + ph * (1 - (v - lo) / (hi - lo)) for v in vals]
+        for k in range(5):
+            ticks.append((padT + ph * (1 - k / 4),
+                          f"{int(round(lo + (hi - lo) * k / 4)):,}"))
+        labels = [f"{v:,}" for v in vals]
+        caption = "レートの推移。"
+    elif not any(ult):
+        # 未到達：ステージだけで描く
+        vals = [p[1] for p in pts]
+        lo, hi = min(vals), max(vals)
+        if hi == lo:
+            lo, hi = lo - 1, hi + 1
+        ys = [padT + ph * (1 - (v - lo) / (hi - lo)) for v in vals]
+        for k in range(5):
+            ticks.append((padT + ph * (1 - k / 4),
+                          league_name(int(round(lo + (hi - lo) * k / 4)))))
+        labels = [league_name(v) for v in vals]
+        caption = "ステージの推移。アルティメットチャンピオン到達後はレートで表示する。"
+    else:
+        # 混在：下段＝ステージ、上段＝レート
+        st = [p[1] for p, u in zip(pts, ult) if not u]
+        rt = [p[2] for p, u in zip(pts, ult) if u]
+        slo, shi = min(st), max(max(st), ULTIMATE)
+        if shi == slo:
+            slo = shi - 1
+        sh = min(ph * 0.5, max(40.0, 16.0 * (shi - slo)))       # 下段の高さ
+        sep_y = padT + ph - sh
+        rlo, rhi = min(rt), max(rt)
+        if rhi == rlo:
+            rlo, rhi = rlo - 1, rhi + 1
+        ys = [(sep_y - (ph - sh) * (p[2] - rlo) / (rhi - rlo)) if u
+              else (padT + ph - sh * (p[1] - slo) / (shi - slo))
+              for p, u in zip(pts, ult)]
+        for v in range(slo, shi):                                # 下段：リーグ名
+            ticks.append((padT + ph - sh * (v - slo) / (shi - slo), league_name(v)))
+        for k in range(5):                                       # 上段：レートの数値
+            ticks.append((sep_y - (ph - sh) * k / 4,
+                          f"{int(round(rlo + (rhi - rlo) * k / 4)):,}"))
+        labels = [f"{p[2]:,}" if u else league_name(p[1]) for p, u in zip(pts, ult)]
+        caption = ("下段はステージ、上段はアルティメットチャンピオン到達後のレート。"
+                   "破線が到達ライン。")
 
     out = [f'<svg viewBox="0 0 {W} {H}" class="chart">']
     out.append(f'<rect class="plot" x="{padL}" y="{padT}" width="{pw}" height="{ph}"/>')
-    for k in range(5):
-        v = lo + (hi - lo) * k / 4
-        yy = ys(v)
-        if 0 < k < 4:
+    for yy, lab in ticks:
+        if padT + 1 < yy < padT + ph - 1:
             out.append(f'<line class="grid" x1="{padL}" y1="{yy:.1f}" x2="{padL+pw}" y2="{yy:.1f}"/>')
-        lab = f"{int(round(v)):,}" if use_rate else league_name(int(round(v)))
         out.append(f'<text class="tick" x="{padL+pw+5}" y="{yy+3.5:.1f}">{esc(lab)}</text>')
-    line = " ".join(f"{xs(i):.1f},{ys(v):.1f}" for i, v in enumerate(vals))
+    if sep_y is not None:
+        out.append(f'<line class="fifty" x1="{padL}" y1="{sep_y:.1f}" '
+                   f'x2="{padL+pw}" y2="{sep_y:.1f}"/>')
+        out.append(f'<text class="tick" x="{padL+4}" y="{sep_y-4:.1f}">'
+                   "アルティメットチャンピオン到達</text>")
+
+    line = " ".join(f"{xs(i):.1f},{yy:.1f}" for i, yy in enumerate(ys))
     out.append(f'<polyline class="ma" points="{line}"/>')
-    for i, v in enumerate(vals):
-        out.append(f'<circle class="pt" cx="{xs(i):.1f}" cy="{ys(v):.1f}" r="3"><title>'
-                   f'{esc(pts[i][0])} {v:,}</title></circle>')
+    for i, yy in enumerate(ys):
+        # 値が動いていない点は打たない（記録点が多く、線が黒く潰れるため）
+        if 0 < i < len(ys) - 1 and abs(yy - ys[i - 1]) < 0.05 and abs(yy - ys[i + 1]) < 0.05:
+            continue
+        out.append(f'<circle class="pt" cx="{xs(i):.1f}" cy="{yy:.1f}" r="2.6"><title>'
+                   f'{esc(pts[i][0])} {esc(labels[i])}</title></circle>')
     every = max(1, len(pts) // 8)
     for i in range(0, len(pts), every):
         out.append(f'<text class="tick" x="{xs(i):.1f}" y="{H-8}" text-anchor="middle">'
                    f'{esc(pts[i][0][5:])}</text>')
     out.append("</svg>")
-    caption = "レートの推移。" if use_rate else "ステージの推移。アルティメットチャンピオン到達後はレートで表示する。"
     return f'<h3 class="sub2">推移</h3>{"".join(out)}<p class="cap">{caption}</p>'
 
 
@@ -704,9 +759,14 @@ CHART_JS = """(function () {
 
   /* ---------- 描画 ---------- */
   function draw() {
-    var b = S.buckets, nb = b.length;
-    if (!nb) { document.getElementById("chart").innerHTML =
+    var all = S.buckets, total = all.length;
+    if (!total) { document.getElementById("chart").innerHTML =
       '<p class="empty">この期間のデータがない。</p>'; return; }
+
+    /* 期間スライダーで選ばれた範囲だけを描く（範囲外は描かない） */
+    var lo = Math.max(0, Math.min(S.lo, total - 1));
+    var hi = Math.max(lo, Math.min(S.hi, total - 1));
+    var nb = hi - lo + 1;
 
     var nw = narrow();
     var W = nw ? 380 : 720;
@@ -715,7 +775,8 @@ CHART_JS = """(function () {
     var H = padT + MH + GAP + VH + 20;
     var pw = W - padL - padR;
     var step = pw / nb;
-    var x = function (i) { return padL + (i + 0.5) * step; };
+    var x = function (i) { return padL + (i - lo + 0.5) * step; };   // 桁の中心
+    var xe = function (i) { return padL + (i - lo) * step; };        // 桁の左端
     var y = function (v) { return padT + MH * (1 - v); };
     var vy0 = padT + MH + GAP, vy1 = vy0 + VH;
     var o = [];
@@ -739,90 +800,87 @@ CHART_JS = """(function () {
     o.push('<line class="fifty" x1="' + padL + '" y1="' + y(0.5).toFixed(1) +
       '" x2="' + (padL + pw) + '" y2="' + y(0.5).toFixed(1) + '"/>');
 
-    // 月の区切り
+    // 月の区切り（期間内のみ）
     var i, mb = [];
-    for (i = 1; i < nb; i++) {
-      if (b[i].key.slice(0, 7) !== b[i - 1].key.slice(0, 7)) mb.push(i);
+    for (i = lo + 1; i <= hi; i++) {
+      if (all[i].key.slice(0, 7) !== all[i - 1].key.slice(0, 7)) mb.push(i);
     }
     mb.forEach(function (i2) {
-      var mx = (padL + i2 * step).toFixed(1);
+      var mx = xe(i2).toFixed(1);
       o.push('<line class="monthsep" x1="' + mx + '" y1="' + padT + '" x2="' + mx + '" y2="' + vy1 + '"/>');
     });
 
     // 信頼区間
-    var up = [], dn, lohi = [];
-    for (i = 0; i < nb; i++) lohi.push(wilson(b[i].w, b[i].n));
+    var up = [], dn = [], lohi = {};
+    for (i = lo; i <= hi; i++) lohi[i] = wilson(all[i].w, all[i].n);
     if (nb > 1) {
-      dn = [];
-      for (i = 0; i < nb; i++) up.push(x(i).toFixed(1) + "," + y(lohi[i][2]).toFixed(1));
-      for (i = nb - 1; i >= 0; i--) dn.push(x(i).toFixed(1) + "," + y(lohi[i][1]).toFixed(1));
+      for (i = lo; i <= hi; i++) up.push(x(i).toFixed(1) + "," + y(lohi[i][2]).toFixed(1));
+      for (i = hi; i >= lo; i--) dn.push(x(i).toFixed(1) + "," + y(lohi[i][1]).toFixed(1));
       o.push('<polygon class="ciband" points="' + up.concat(dn).join(" ") + '"/>');
     } else {
-      o.push('<line class="cistick" x1="' + x(0).toFixed(1) + '" y1="' + y(lohi[0][1]).toFixed(1) +
-        '" x2="' + x(0).toFixed(1) + '" y2="' + y(lohi[0][2]).toFixed(1) + '"/>');
+      o.push('<line class="cistick" x1="' + x(lo).toFixed(1) + '" y1="' + y(lohi[lo][1]).toFixed(1) +
+        '" x2="' + x(lo).toFixed(1) + '" y2="' + y(lohi[lo][2]).toFixed(1) + '"/>');
     }
 
     // 実測（細い黒）
-    var pts = b.map(function (d, j) { return x(j).toFixed(1) + "," + y(d.n ? d.w / d.n : 0).toFixed(1); });
+    var pts = [];
+    for (i = lo; i <= hi; i++) {
+      pts.push(x(i).toFixed(1) + "," + y(all[i].n ? all[i].w / all[i].n : 0).toFixed(1));
+    }
     if (nb > 1) o.push('<polyline class="rate" points="' + pts.join(" ") + '"/>');
-    for (i = 0; i < nb; i++) {
+    for (i = lo; i <= hi; i++) {
       o.push('<circle class="pt" cx="' + x(i).toFixed(1) + '" cy="' +
-        y(b[i].n ? b[i].w / b[i].n : 0).toFixed(1) + '" r="' + (nw ? 2 : 2.6) + '"><title>' +
-        esc(b[i].key) + " " + b[i].w + "勝" + (b[i].n - b[i].w) + "敗</title></circle>");
+        y(all[i].n ? all[i].w / all[i].n : 0).toFixed(1) + '" r="' + (nw ? 2 : 2.6) + '"><title>' +
+        esc(all[i].key) + " " + all[i].w + "勝" + (all[i].n - all[i].w) + "敗</title></circle>");
     }
 
-    // 移動平均（赤の太線）
-    var ma = movingAvg(b, MA_WIN), mp = [];
-    for (i = 0; i < nb; i++) if (ma[i] !== null) mp.push(x(i).toFixed(1) + "," + y(ma[i]).toFixed(1));
+    // 移動平均（赤の太線）：期間外も含めて計算し、描くのは期間内だけ
+    var ma = movingAvg(all, MA_WIN), mp = [];
+    for (i = lo; i <= hi; i++) if (ma[i] !== null) mp.push(x(i).toFixed(1) + "," + y(ma[i]).toFixed(1));
     if (mp.length > 1) o.push('<polyline class="ma" points="' + mp.join(" ") + '"/>');
 
-    // バランス調整日
+    // バランス調整日（期間内に入るものだけ）
     PATCHES.forEach(function (d) {
-      for (i = 0; i < nb; i++) {
-        if (b[i].key >= d) {
-          var px2 = (padL + i * step).toFixed(1);
-          o.push('<line class="patch" x1="' + px2 + '" y1="' + padT + '" x2="' + px2 + '" y2="' + (padT + MH) + '"/>');
+      for (i = 0; i < total; i++) {
+        if (all[i].key >= d) {
+          if (i >= lo && i <= hi) {
+            var px2 = xe(i).toFixed(1);
+            o.push('<line class="patch" x1="' + px2 + '" y1="' + padT + '" x2="' + px2 + '" y2="' + (padT + MH) + '"/>');
+          }
           break;
         }
       }
     });
 
-    // 出来高
-    var maxg = Math.max.apply(null, b.map(function (d) { return d.games; })) || 1;
-    var vtick = [0, 0.5, 1];
-    vtick.forEach(function (t) {
+    // 出来高（縦の目盛りも期間内の最大に合わせる）
+    var maxg = 1;
+    for (i = lo; i <= hi; i++) if (all[i].games > maxg) maxg = all[i].games;
+    [0, 0.5, 1].forEach(function (t) {
       var yy = vy1 - VH * t;
       if (t > 0) o.push('<line class="grid" x1="' + padL + '" y1="' + yy.toFixed(1) +
         '" x2="' + (padL + pw) + '" y2="' + yy.toFixed(1) + '"/>');
       o.push('<text class="tick" x="' + (padL + pw + 5) + '" y="' + (yy + 3.5).toFixed(1) + '">' +
         Math.round(maxg * t) + "</text>");
     });
-    for (i = 0; i < nb; i++) {
-      var bh = VH * (b[i].games / maxg);
-      o.push('<rect class="volbar" x="' + (padL + i * step + step * 0.18).toFixed(1) +
+    for (i = lo; i <= hi; i++) {
+      var bh = VH * (all[i].games / maxg);
+      o.push('<rect class="volbar" x="' + (xe(i) + step * 0.18).toFixed(1) +
         '" y="' + (vy1 - bh).toFixed(1) + '" width="' + Math.max(1, step * 0.64).toFixed(1) +
-        '" height="' + bh.toFixed(1) + '"><title>' + esc(b[i].key) + " " + b[i].games + "試合</title></rect>");
+        '" height="' + bh.toFixed(1) + '"><title>' + esc(all[i].key) + " " + all[i].games + "試合</title></rect>");
     }
-
-    // 範囲外を薄く
-    if (S.lo > 0) o.push('<rect class="mask" x="' + padL + '" y="' + padT + '" width="' +
-      (S.lo * step).toFixed(1) + '" height="' + (vy1 - padT) + '"/>');
-    if (S.hi < nb - 1) o.push('<rect class="mask" x="' + (padL + (S.hi + 1) * step).toFixed(1) +
-      '" y="' + padT + '" width="' + ((nb - 1 - S.hi) * step).toFixed(1) +
-      '" height="' + (vy1 - padT) + '"/>');
 
     // 横軸ラベル（月の区切りを優先）
     var labeled = {}, yl = vy1 + 13;
     mb.forEach(function (i2) {
       labeled[i2] = 1;
       o.push('<text class="tick mon" x="' + x(i2).toFixed(1) + '" y="' + yl +
-        '" text-anchor="middle">' + esc(b[i2].key.slice(0, 7).replace("-", "/")) + "</text>");
+        '" text-anchor="middle">' + esc(all[i2].key.slice(0, 7).replace("-", "/")) + "</text>");
     });
     var everyN = Math.max(1, Math.ceil(nb / (nw ? 4 : 9)));
-    for (i = 0; i < nb; i += everyN) {
+    for (i = lo; i <= hi; i += everyN) {
       if (labeled[i]) continue;
       o.push('<text class="tick" x="' + x(i).toFixed(1) + '" y="' + yl +
-        '" text-anchor="middle">' + esc(fmtDate(b[i].key, S.unit)) + "</text>");
+        '" text-anchor="middle">' + esc(fmtDate(all[i].key, S.unit)) + "</text>");
     }
     o.push('<text class="tick vlab" x="' + padL + '" y="' + (vy0 - 3) + '">プレイ回数</text>');
     o.push("</svg>");
