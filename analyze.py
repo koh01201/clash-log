@@ -265,174 +265,6 @@ def stage_cell(league, trophies, rank, size=40):
     return body + "</span>"
 
 
-WR_WINDOW = 30          # 勝率の移動平均に使う試合数
-
-
-def rolling_winrate(rows, window=WR_WINDOW):
-    """直近 window 試合の勝率（Wilson法の95%区間つき）を時系列で返す。"""
-    games = sorted((r for r in (rows or [])
-                    if r.get("result") != "draw" and r.get("_dt")),
-                   key=lambda r: r["_dt"])
-    if len(games) < window:
-        return []
-    out, w = [], 0
-    for i, r in enumerate(games):
-        if r["result"] == "win":
-            w += 1
-        if i >= window and games[i - window]["result"] == "win":
-            w -= 1
-        if i >= window - 1:
-            out.append((r["_dt"],) + wilson(w, window))
-    return out
-
-
-def rate_history_chart(prof, rows=None):
-    """レート（未到達ならステージ）の推移。横軸は実時間。
-
-    アルティメットチャンピオン到達後はレートの数値で描く。
-    到達前と到達後が混ざる場合は、下段にステージ・上段にレートを置いた2段の軸にする。
-    表示中のモードの勝率（移動平均）を同じ横軸に重ねる。
-    """
-    pts = []
-    for r in prof:
-        lg, tr = _num(r.get("pol_current_league")), _num(r.get("pol_current_trophies"))
-        if lg is None:
-            continue
-        raw = (r.get("checked_jst") or "").strip()
-        t = None
-        for fmt, cut_to in (("%Y-%m-%d %H:%M:%S", 19), ("%Y-%m-%d", 10)):
-            try:
-                t = datetime.datetime.strptime(raw[:cut_to], fmt)
-                break
-            except ValueError:
-                continue
-        if t is None:
-            continue
-        pts.append((t, lg, tr))
-    if len(pts) < 2:
-        return ""
-    pts.sort(key=lambda x: x[0])
-
-    ult = [bool(p[1] >= ULTIMATE and p[2]) for p in pts]
-    wr = rolling_winrate(rows)
-
-    W, H = 720, 230
-    padT, padB, padR = 14, 26, 46
-    padL = 30 if wr else 8
-    pw, ph = W - padL - padR, H - padT - padB
-
-    t0 = min([pts[0][0]] + ([wr[0][0]] if wr else []))
-    t1 = max([pts[-1][0]] + ([wr[-1][0]] if wr else []))
-    span = (t1 - t0).total_seconds() or 1.0
-    xs = lambda t: padL + pw * ((t - t0).total_seconds() / span)
-    wy = lambda v: padT + ph * (1 - v)
-
-    ticks = []          # (y, ラベル)
-    sep_y = None        # アルティメット到達ラインの高さ
-
-    if all(ult):
-        # 全期間アルティメット：レートの数値だけで描く
-        vals = [p[2] for p in pts]
-        lo, hi = min(vals), max(vals)
-        if hi == lo:
-            lo, hi = lo - 1, hi + 1
-        ys = [padT + ph * (1 - (v - lo) / (hi - lo)) for v in vals]
-        for k in range(5):
-            ticks.append((padT + ph * (1 - k / 4),
-                          f"{int(round(lo + (hi - lo) * k / 4)):,}"))
-        labels = [f"{v:,}" for v in vals]
-        caption = "レートの推移。"
-    elif not any(ult):
-        # 未到達：ステージだけで描く
-        vals = [p[1] for p in pts]
-        lo, hi = min(vals), max(vals)
-        if hi == lo:
-            lo, hi = lo - 1, hi + 1
-        ys = [padT + ph * (1 - (v - lo) / (hi - lo)) for v in vals]
-        for k in range(5):
-            ticks.append((padT + ph * (1 - k / 4),
-                          league_name(int(round(lo + (hi - lo) * k / 4)))))
-        labels = [league_name(v) for v in vals]
-        caption = "ステージの推移。アルティメットチャンピオン到達後はレートで表示する。"
-    else:
-        # 混在：下段＝ステージ、上段＝レート
-        st = [p[1] for p, u in zip(pts, ult) if not u]
-        rt = [p[2] for p, u in zip(pts, ult) if u]
-        slo, shi = min(st), max(max(st), ULTIMATE)
-        if shi == slo:
-            slo = shi - 1
-        sh = min(ph * 0.5, max(40.0, 16.0 * (shi - slo)))       # 下段の高さ
-        sep_y = padT + ph - sh
-        rlo, rhi = min(rt), max(rt)
-        if rhi == rlo:
-            rlo, rhi = rlo - 1, rhi + 1
-        ys = [(sep_y - (ph - sh) * (p[2] - rlo) / (rhi - rlo)) if u
-              else (padT + ph - sh * (p[1] - slo) / (shi - slo))
-              for p, u in zip(pts, ult)]
-        for v in range(slo, shi):                                # 下段：リーグ名
-            ticks.append((padT + ph - sh * (v - slo) / (shi - slo), league_name(v)))
-        for k in range(5):                                       # 上段：レートの数値
-            ticks.append((sep_y - (ph - sh) * k / 4,
-                          f"{int(round(rlo + (rhi - rlo) * k / 4)):,}"))
-        labels = [f"{p[2]:,}" if u else league_name(p[1]) for p, u in zip(pts, ult)]
-        caption = ("下段はステージ、上段はアルティメットチャンピオン到達後のレート。"
-                   "破線が到達ライン。")
-
-    out = [f'<svg viewBox="0 0 {W} {H}" class="chart">']
-    out.append(f'<rect class="plot" x="{padL}" y="{padT}" width="{pw}" height="{ph}"/>')
-    for yy, lab in ticks:
-        if padT + 1 < yy < padT + ph - 1:
-            out.append(f'<line class="grid" x1="{padL}" y1="{yy:.1f}" x2="{padL+pw}" y2="{yy:.1f}"/>')
-        out.append(f'<text class="tick" x="{padL+pw+5}" y="{yy+3.5:.1f}">{esc(lab)}</text>')
-    if sep_y is not None:
-        out.append(f'<line class="fifty" x1="{padL}" y1="{sep_y:.1f}" '
-                   f'x2="{padL+pw}" y2="{sep_y:.1f}"/>')
-        out.append(f'<text class="tick" x="{padL+4}" y="{sep_y-4:.1f}">'
-                   "アルティメットチャンピオン到達</text>")
-
-    if wr:
-        # 勝率（左目盛り）。レートの線より下に敷く
-        band = ([f"{xs(t):.1f},{wy(h):.1f}" for t, _p, _l, h in wr]
-                + [f"{xs(t):.1f},{wy(l):.1f}" for t, _p, l, _h in reversed(wr)])
-        out.append(f'<polygon class="ciband" points="{" ".join(band)}"/>')
-        out.append(f'<line class="base" x1="{padL}" y1="{wy(0.5):.1f}" '
-                   f'x2="{padL+pw}" y2="{wy(0.5):.1f}"/>')
-        wline = " ".join(f"{xs(t):.1f},{wy(p):.1f}" for t, p, _l, _h in wr)
-        out.append(f'<polyline class="rate" points="{wline}"/>')
-        for k in range(5):
-            v = k / 4
-            out.append(f'<text class="tick" x="{padL-5}" y="{wy(v)+3.5:.1f}" '
-                       f'text-anchor="end">{int(v*100)}{"%" if k == 4 else ""}</text>')
-
-    line = " ".join(f"{xs(pts[i][0]):.1f},{yy:.1f}" for i, yy in enumerate(ys))
-    out.append(f'<polyline class="ma" points="{line}"/>')
-    for i, yy in enumerate(ys):
-        # 値が動いていない点は打たない（記録点が多く、線が黒く潰れるため）
-        if 0 < i < len(ys) - 1 and abs(yy - ys[i - 1]) < 0.05 and abs(yy - ys[i + 1]) < 0.05:
-            continue
-        out.append(f'<circle class="pt" cx="{xs(pts[i][0]):.1f}" cy="{yy:.1f}" r="2.6"><title>'
-                   f'{esc(pts[i][0].strftime("%Y-%m-%d %H:%M"))} {esc(labels[i])}</title></circle>')
-    for k in range(7):
-        t = t0 + datetime.timedelta(seconds=span * k / 6)
-        out.append(f'<text class="tick" x="{padL + pw * k / 6:.1f}" y="{H-8}" '
-                   f'text-anchor="middle">{t:%m-%d}</text>')
-    out.append("</svg>")
-
-    if wr:
-        caption += (f"細い黒線は勝率（直近{WR_WINDOW}試合の移動平均、左目盛り）。"
-                    "灰色の帯は95%信頼区間、破線は五分。表示中のモードの試合だけを使う。")
-        legend = ('<div class="legend2">'
-                  '<span><i class="lgline" style="border-color:#C8102E;border-top-width:3px"></i>'
-                  'レート</span>'
-                  '<span><i class="lgline" style="border-color:#3A424B"></i>'
-                  f'勝率（{WR_WINDOW}試合平均）</span>'
-                  '<span><i class="lgbox" style="background:#D9DCDF"></i>95%信頼区間</span>'
-                  "</div>")
-    else:
-        legend = ""
-    return (f'<h3 class="sub2">推移</h3>{"".join(out)}{legend}'
-            f'<p class="cap">{caption}</p>')
-
 
 def monthly_decks(rows):
     """暦月ごとの最多使用デッキと成績。シーズン区切りの目安として使う。"""
@@ -504,7 +336,29 @@ def achieved_note(prof, key, value):
     return f'<span class="sname">{y}年{int(m)}月に更新</span>'
 
 
-def rate_page_body(prof, rows=None):
+RATE_PANEL = """
+    <div class="ctrl">
+      <span class="navlab" style="width:auto">期間</span>
+      <button id="p-7" class="ubtn">7日</button>
+      <button id="p-30" class="ubtn">30日</button>
+      <button id="p-90" class="ubtn">90日</button>
+      <button id="p-all" class="ubtn on">全期間</button>
+    </div>
+    <div id="rchart"></div>
+    <div class="rng">
+      <div class="rlab">表示範囲 <b id="rlab">-</b></div>
+      <input id="r1" type="range" min="0" max="0" value="0">
+      <input id="r2" type="range" min="0" max="0" value="0">
+    </div>
+    <div class="legend2">
+      <span><i class="lgline" style="border-color:#C8102E;border-top-width:3px"></i>レート・ステージ</span>
+      <span><i class="lgline" style="border-color:#3A424B"></i>勝率（30試合の移動平均）</span>
+      <span><i class="lgbox" style="background:#D6CBEA"></i>アルティメットチャンピオン</span>
+      <span><i class="lgbox" style="background:#DCE1E6"></i>試合数</span>
+    </div>"""
+
+
+def rate_page_body(prof):
     if not prof:
         return panel("レート", '<p class="empty">まだ記録がない。次の実行から貯まりはじめる。</p>',
                      "ランク戦の成績はバトルログに含まれないため、プレイヤー情報から別に記録している。")
@@ -558,12 +412,14 @@ def rate_page_body(prof, rows=None):
         hist = ('<p class="note">シーズンが切り替わると、ここに前シーズンの最終成績が積み上がる。'
                 "過去に遡って取得することはできないため、記録は今日以降のぶん。</p>")
 
-    chart = rate_history_chart(prof, rows)
     return (panel("現在の成績", table(kv) + hist,
                   "アルティメットチャンピオンに到達するまでレートは表示されないため、"
                   "それまではステージを表示する。")
-            + (panel("レートの推移", chart.replace('<h3 class="sub2">推移</h3>', ""))
-               if chart else ""))
+            + panel("レートと勝率の推移", RATE_PANEL,
+                    "上がレート、下が勝率。横軸は共通で、つまみを動かすと両方が連動する。",
+                    "レートはランク戦の記録（全モード共通）。勝率と試合数は表示中のモードのもの。"
+                    "紫の帯はアルティメットチャンピオンの範囲。"))
+
 
 
 def load_icons():
@@ -1573,6 +1429,9 @@ html[data-layout="narrow"] .narrowonly{display:block}
 .patch{stroke:#0B57A4;stroke-width:1.2;stroke-dasharray:3 3}
 .mask{fill:#FFFFFF;opacity:.66}
 .volbar{fill:#7B8FA8}
+.volfaint{fill:#7B8FA8;opacity:.17}
+.ultband{fill:#7A3FBF;opacity:.10}
+.ultlab{font-size:9.5px;fill:#7A3FBF;font-weight:700}
 .ubtn{font-size:12px;padding:5px 14px;border:1px solid var(--line);border-radius:4px;
   background:var(--panel);color:var(--ink);cursor:pointer;font-family:inherit}
 .ubtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
@@ -1610,6 +1469,362 @@ footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
   .duel{grid-template-columns:1fr auto 1fr;gap:8px}
   .mid{min-width:52px}.badge{font-size:15px}.crowns{font-size:13px}
   .hp{font-size:9px}}
+"""
+
+
+LEAGUE_JS = "{" + ",".join(f'"{k}":"{v[0]}"' for k, v in sorted(LEAGUES.items())) + "}"
+
+
+RATE_JS = """(function () {
+  var MODE = "__MODE__";
+  var LG = __LEAGUES__;
+  var ULT = __ULT__;
+  var WR_WIN = 30;                 // 勝率の移動平均に使う試合数
+  var S = { prof: [], wr: [], vol: {}, days: [], lo: 0, hi: 0 };
+
+  function narrow() {
+    return document.documentElement.getAttribute("data-layout") === "narrow";
+  }
+  function esc(t) {
+    return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function parseCSV(text) {
+    var rows = [], row = [], cell = "", q = false, i, c;
+    for (i = 0; i < text.length; i++) {
+      c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else { q = false; } }
+        else { cell += c; }
+      } else if (c === '"') { q = true; }
+      else if (c === ",") { row.push(cell); cell = ""; }
+      else if (c === "\\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
+      else if (c !== "\\r") { cell += c; }
+    }
+    if (cell.length || row.length) { row.push(cell); rows.push(row); }
+    if (!rows.length) return [];
+    var head = rows.shift().map(function (h) { return h.replace(/^\\uFEFF/, "").trim(); });
+    /* profile.csv は見出しに無い列（生JSON）が付くため、過不足は切り捨てて読む */
+    return rows.filter(function (r) { return r.length >= head.length; }).map(function (r) {
+      var o = {}, k;
+      for (k = 0; k < head.length; k++) o[head[k]] = r[k];
+      return o;
+    });
+  }
+  function classify(r) {
+    var t = (r.battle_type || "").toLowerCase();
+    if (t.indexOf("pathoflegend") >= 0) return "pol";
+    return "etc";
+  }
+  function num(v) {
+    var n = parseFloat(v);
+    return isFinite(n) ? Math.round(n) : null;
+  }
+  function lname(n) { return LG[n] || ("League " + n); }
+  function fmtn(n) { return String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ","); }
+  function ms(s) {
+    s = String(s || "").trim();
+    if (s.length < 10) return null;
+    var d = new Date(s.slice(0, 10) + "T" + (s.length >= 19 ? s.slice(11, 19) : "00:00:00"));
+    var v = d.getTime();
+    return isNaN(v) ? null : v;
+  }
+  function keyOf(d) {
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) +
+      "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function shift(key, n) {
+    var d = new Date(key + "T00:00:00");
+    d.setDate(d.getDate() + n);
+    return keyOf(d);
+  }
+  function mn(a) { var v = a[0], i; for (i = 1; i < a.length; i++) if (a[i] < v) v = a[i]; return v; }
+  function mx(a) { var v = a[0], i; for (i = 1; i < a.length; i++) if (a[i] > v) v = a[i]; return v; }
+
+  /* ---------- 描画 ---------- */
+  function draw() {
+    var box = document.getElementById("rchart");
+    if (!box) return;
+    var days = S.days, total = days.length;
+    if (!total) { box.innerHTML = '<p class="empty">記録がまだない。</p>'; return; }
+
+    var lo = Math.max(0, Math.min(S.lo, total - 1));
+    var hi = Math.max(lo, Math.min(S.hi, total - 1));
+    var nd = hi - lo + 1;
+    var dS = new Date(days[lo] + "T00:00:00").getTime();
+    var dE = new Date(shift(days[hi], 1) + "T00:00:00").getTime();
+
+    var nw = narrow();
+    var W = nw ? 380 : 720;
+    var RH = nw ? 128 : 168, WH = nw ? 92 : 120, GAP = 18;
+    var padL = 8, padR = nw ? 46 : 52, padT = 14;
+    var H = padT + RH + GAP + WH + 22;
+    var pw = W - padL - padR;
+    var ry0 = padT, ry1 = padT + RH;
+    var wy0 = ry1 + GAP, wy1 = wy0 + WH;
+    var bw = pw / nd;
+    var xs = function (t) { return padL + pw * (t - dS) / (dE - dS); };
+    var xd = function (i) { return padL + (i - lo + 0.5) * bw; };
+    var i, k, o = [];
+
+    o.push('<svg viewBox="0 0 ' + W + ' ' + H + '" class="chart">');
+    o.push('<defs><clipPath id="rcA"><rect x="' + padL + '" y="' + ry0 + '" width="' + pw +
+      '" height="' + RH + '"/></clipPath><clipPath id="rcB"><rect x="' + padL + '" y="' + wy0 +
+      '" width="' + pw + '" height="' + WH + '"/></clipPath></defs>');
+
+    /* ===== 上：レート ===== */
+    o.push('<rect class="plot" x="' + padL + '" y="' + ry0 + '" width="' + pw + '" height="' + RH + '"/>');
+
+    var Pr = S.prof, vis = [];
+    for (i = 0; i < Pr.length; i++) if (Pr[i].t >= dS && Pr[i].t <= dE) vis.push(i);
+
+    var ticks = [], yof = null, ultTop = null, ultBot = null;
+    if (vis.length) {
+      var ults = [], stgs = [];
+      for (k = 0; k < vis.length; k++) {
+        if (Pr[vis[k]].u) ults.push(Pr[vis[k]].tr); else stgs.push(Pr[vis[k]].lg);
+      }
+      if (!stgs.length) {
+        var a1 = mn(ults), b1 = mx(ults);
+        if (b1 === a1) { a1 -= 1; b1 += 1; }
+        yof = function (p) { return ry0 + RH * (1 - (p.tr - a1) / (b1 - a1)); };
+        for (k = 0; k < 5; k++)
+          ticks.push([ry0 + RH * (1 - k / 4), fmtn(Math.round(a1 + (b1 - a1) * k / 4))]);
+        ultTop = ry0; ultBot = ry1;
+      } else if (!ults.length) {
+        var a2 = mn(stgs), b2 = mx(stgs);
+        if (b2 === a2) { a2 -= 1; b2 += 1; }
+        yof = function (p) { return ry0 + RH * (1 - (p.lg - a2) / (b2 - a2)); };
+        for (k = 0; k < 5; k++)
+          ticks.push([ry0 + RH * (1 - k / 4), lname(Math.round(a2 + (b2 - a2) * k / 4))]);
+      } else {
+        var slo = mn(stgs), shi = Math.max(mx(stgs), ULT);
+        if (shi === slo) slo = shi - 1;
+        var sh = Math.min(RH * 0.5, Math.max(38, 16 * (shi - slo)));
+        var sep = ry1 - sh;
+        var rlo = mn(ults), rhi = mx(ults);
+        if (rhi === rlo) { rlo -= 1; rhi += 1; }
+        yof = function (p) {
+          return p.u ? sep - (RH - sh) * (p.tr - rlo) / (rhi - rlo)
+                     : ry1 - sh * (p.lg - slo) / (shi - slo);
+        };
+        for (k = slo; k < shi; k++) ticks.push([ry1 - sh * (k - slo) / (shi - slo), lname(k)]);
+        for (k = 0; k < 5; k++)
+          ticks.push([sep - (RH - sh) * k / 4, fmtn(Math.round(rlo + (rhi - rlo) * k / 4))]);
+        ultTop = ry0; ultBot = sep;
+      }
+    }
+
+    if (ultTop !== null && ultBot - ultTop > 2) {
+      o.push('<rect class="ultband" x="' + padL + '" y="' + ultTop.toFixed(1) + '" width="' + pw +
+        '" height="' + (ultBot - ultTop).toFixed(1) + '"/>');
+      o.push('<text class="ultlab" x="' + (padL + 6) + '" y="' + (ultTop + 12).toFixed(1) +
+        '">Ultimate Champion</text>');
+    }
+    for (k = 0; k < ticks.length; k++) {
+      if (ticks[k][0] > ry0 + 1 && ticks[k][0] < ry1 - 1) {
+        o.push('<line class="grid" x1="' + padL + '" y1="' + ticks[k][0].toFixed(1) +
+          '" x2="' + (padL + pw) + '" y2="' + ticks[k][0].toFixed(1) + '"/>');
+      }
+      o.push('<text class="tick" x="' + (padL + pw + 5) + '" y="' + (ticks[k][0] + 3.5).toFixed(1) +
+        '">' + esc(ticks[k][1]) + "</text>");
+    }
+
+    if (vis.length) {
+      var seg = [];
+      for (k = 0; k < vis.length; k++) {
+        seg.push(xs(Pr[vis[k]].t).toFixed(1) + "," + yof(Pr[vis[k]]).toFixed(1));
+      }
+      o.push('<g clip-path="url(#rcA)">');
+      if (seg.length > 1) o.push('<polyline class="ma" points="' + seg.join(" ") + '"/>');
+      for (k = 0; k < vis.length; k++) {
+        var p0 = Pr[vis[k]], yy = yof(p0);
+        if (k > 0 && k < vis.length - 1 &&
+            Math.abs(yy - yof(Pr[vis[k - 1]])) < 0.05 &&
+            Math.abs(yy - yof(Pr[vis[k + 1]])) < 0.05) continue;
+        o.push('<circle class="pt" cx="' + xs(p0.t).toFixed(1) + '" cy="' + yy.toFixed(1) +
+          '" r="2.6"><title>' + esc(p0.at) + " " +
+          esc(p0.u ? fmtn(p0.tr) : lname(p0.lg)) + "</title></circle>");
+      }
+      o.push("</g>");
+    } else {
+      o.push('<text class="tick" x="' + (padL + pw / 2).toFixed(1) + '" y="' +
+        (ry0 + RH / 2).toFixed(1) + '" text-anchor="middle">この期間はレートの記録がない</text>');
+    }
+    o.push('<text class="tick vlab" x="' + padL + '" y="' + (ry0 - 4) + '">レート</text>');
+
+    /* ===== 下：勝率＋出来高 ===== */
+    o.push('<rect class="plot" x="' + padL + '" y="' + wy0 + '" width="' + pw + '" height="' + WH + '"/>');
+    var maxv = 0;
+    for (i = lo; i <= hi; i++) if ((S.vol[days[i]] || 0) > maxv) maxv = S.vol[days[i]];
+    if (maxv > 0) {
+      for (i = lo; i <= hi; i++) {
+        var g = S.vol[days[i]] || 0;
+        if (!g) continue;
+        var bh = (WH - 2) * (g / maxv);
+        o.push('<rect class="volfaint" x="' + (padL + (i - lo) * bw + bw * 0.14).toFixed(1) +
+          '" y="' + (wy1 - bh).toFixed(1) + '" width="' + Math.max(0.8, bw * 0.72).toFixed(1) +
+          '" height="' + bh.toFixed(1) + '"><title>' + esc(days[i]) + " " + g + "試合</title></rect>");
+      }
+    }
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (v) {
+      var yy = wy1 - WH * v;
+      if (v > 0 && v < 1) o.push('<line class="grid" x1="' + padL + '" y1="' + yy.toFixed(1) +
+        '" x2="' + (padL + pw) + '" y2="' + yy.toFixed(1) + '"/>');
+      o.push('<text class="tick" x="' + (padL + pw + 5) + '" y="' + (yy + 3.5).toFixed(1) + '">' +
+        (v * 100) + (v === 1 ? "%" : "") + "</text>");
+    });
+    o.push('<line class="fifty" x1="' + padL + '" y1="' + (wy1 - WH * 0.5).toFixed(1) +
+      '" x2="' + (padL + pw) + '" y2="' + (wy1 - WH * 0.5).toFixed(1) + '"/>');
+    var wp = [];
+    for (k = 0; k < S.wr.length; k++) {
+      if (S.wr[k].t < dS || S.wr[k].t > dE) continue;
+      wp.push(xs(S.wr[k].t).toFixed(1) + "," + (wy1 - WH * S.wr[k].p).toFixed(1));
+    }
+    if (wp.length > 1) {
+      o.push('<g clip-path="url(#rcB)"><polyline class="rate" points="' + wp.join(" ") + '"/></g>');
+    } else {
+      o.push('<text class="tick" x="' + (padL + pw / 2).toFixed(1) + '" y="' +
+        (wy0 + WH / 2).toFixed(1) + '" text-anchor="middle">移動平均には' + WR_WIN +
+        '試合の蓄積が要る</text>');
+    }
+    o.push('<text class="tick vlab" x="' + padL + '" y="' + (wy0 - 4) +
+      '">勝率（' + WR_WIN + '試合の移動平均）・薄い棒は試合数</text>');
+
+    /* ===== 横軸 ===== */
+    var mb = [];
+    for (i = lo + 1; i <= hi; i++) {
+      if (days[i].slice(0, 7) !== days[i - 1].slice(0, 7)) mb.push(i);
+    }
+    for (k = 0; k < mb.length; k++) {
+      var mxx = (padL + (mb[k] - lo) * bw).toFixed(1);
+      o.push('<line class="monthsep" x1="' + mxx + '" y1="' + ry0 + '" x2="' + mxx +
+        '" y2="' + wy1 + '"/>');
+    }
+    var used = [], yl = wy1 + 14, gap = nw ? 40 : 34;
+    function room(x) {
+      var j;
+      for (j = 0; j < used.length; j++) if (Math.abs(x - used[j]) < gap) return false;
+      used.push(x); return true;
+    }
+    for (k = 0; k < mb.length; k++) {
+      var mlx = xd(mb[k]);
+      if (!room(mlx)) continue;
+      o.push('<text class="tick mon" x="' + mlx.toFixed(1) + '" y="' + yl +
+        '" text-anchor="middle">' + esc(days[mb[k]].slice(0, 7).replace("-", "/")) + "</text>");
+    }
+    var everyN = Math.max(1, Math.ceil(nd / (nw ? 4 : 9)));
+    for (i = lo; i <= hi; i += everyN) {
+      var dlx = xd(i);
+      if (!room(dlx)) continue;
+      o.push('<text class="tick" x="' + dlx.toFixed(1) + '" y="' + yl +
+        '" text-anchor="middle">' + esc(days[i].slice(5).replace("-", "/")) + "</text>");
+    }
+    o.push("</svg>");
+    box.innerHTML = o.join("");
+  }
+
+  function refreshRange() {
+    var a = document.getElementById("r1"), z = document.getElementById("r2");
+    if (!a || !z) return;
+    var n = S.days.length;
+    a.max = z.max = Math.max(0, n - 1);
+    a.value = S.lo; z.value = S.hi;
+    document.getElementById("rlab").textContent =
+      n ? S.days[S.lo] + " 〜 " + S.days[S.hi] : "-";
+  }
+
+  function bind() {
+    var a = document.getElementById("r1"), z = document.getElementById("r2");
+    if (a && z) {
+      a.oninput = function () {
+        S.lo = Math.min(+a.value, +z.value); S.hi = Math.max(+a.value, +z.value);
+        refreshRange(); draw();
+      };
+      z.oninput = a.oninput;
+    }
+    [["p-all", 0], ["p-90", 90], ["p-30", 30], ["p-7", 7]].forEach(function (q) {
+      var el = document.getElementById(q[0]);
+      if (!el) return;
+      el.onclick = function () {
+        var n = S.days.length, j;
+        S.hi = n - 1;
+        if (!q[1]) { S.lo = 0; }
+        else {
+          var cut = shift(S.days[n - 1], -(q[1] - 1));
+          S.lo = 0;
+          for (j = 0; j < n; j++) if (S.days[j] >= cut) { S.lo = j; break; }
+        }
+        ["p-all", "p-90", "p-30", "p-7"].forEach(function (id) {
+          var e2 = document.getElementById(id);
+          if (e2) e2.className = "ubtn" + (id === q[0] ? " on" : "");
+        });
+        refreshRange(); draw();
+      };
+    });
+    var btn = document.getElementById("lytbtn");
+    if (btn) btn.addEventListener("click", function () { setTimeout(draw, 0); });
+  }
+
+  function boot() {
+    if (!document.getElementById("rchart")) return;
+    var prof = [], games = [];
+    fetch("profile.csv", { cache: "no-store" }).then(function (r) { return r.text(); })
+      .then(function (t) {
+        parseCSV(t).forEach(function (r) {
+          var lg = num(r.pol_current_league), tr = num(r.pol_current_trophies);
+          var v = ms(r.checked_jst);
+          if (lg === null || v === null) return;
+          prof.push({ t: v, at: (r.checked_jst || "").slice(0, 16), lg: lg, tr: tr,
+                      u: !!(lg >= ULT && tr) });
+        });
+        prof.sort(function (x, y) { return x.t - y.t; });
+        return fetch("battles.csv", { cache: "no-store" }).then(function (r) { return r.text(); });
+      })
+      .then(function (t) {
+        parseCSV(t).forEach(function (r) {
+          if (MODE !== "all" && classify(r) !== MODE) return;
+          var v = ms(r.battle_time_jst);
+          if (v === null) return;
+          games.push({ t: v, d: (r.battle_time_jst || "").slice(0, 10), win: r.result === "win",
+                       dec: r.result !== "draw" });
+        });
+        games.sort(function (x, y) { return x.t - y.t; });
+
+        S.prof = prof;
+        S.vol = {};
+        games.forEach(function (g) { S.vol[g.d] = (S.vol[g.d] || 0) + 1; });
+
+        var dec = games.filter(function (g) { return g.dec; }), w = 0, i;
+        S.wr = [];
+        for (i = 0; i < dec.length; i++) {
+          if (dec[i].win) w++;
+          if (i >= WR_WIN && dec[i - WR_WIN].win) w--;
+          if (i >= WR_WIN - 1) S.wr.push({ t: dec[i].t, p: w / WR_WIN });
+        }
+
+        var first = null, last = null;
+        if (prof.length) { first = prof[0].at.slice(0, 10); last = prof[prof.length - 1].at.slice(0, 10); }
+        if (games.length) {
+          if (!first || games[0].d < first) first = games[0].d;
+          if (!last || games[games.length - 1].d > last) last = games[games.length - 1].d;
+        }
+        S.days = [];
+        if (first && last) {
+          var cur = first, guard = 0;
+          while (cur <= last && guard < 4000) { S.days.push(cur); cur = shift(cur, 1); guard++; }
+        }
+        S.lo = 0; S.hi = Math.max(0, S.days.length - 1);
+        bind(); refreshRange(); draw();
+      })
+      .catch(function (e) {
+        var box = document.getElementById("rchart");
+        if (box) box.innerHTML = '<p class="empty">データを読み込めなかった。' + esc(e) + "</p>";
+      });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
 """
 
 
@@ -2025,7 +2240,10 @@ def build(mode_key, prefix, label, rows, total_records):
 
     # レート
     page(prefix, "rate.html", label, "レート", stamp,
-         rate_page_body(PROFILE, rows) + monthly_deck_panel(rows))
+         rate_page_body(PROFILE) + monthly_deck_panel(rows)
+         + "<script>" + RATE_JS.replace("__MODE__", mode_key)
+                               .replace("__LEAGUES__", LEAGUE_JS)
+                               .replace("__ULT__", str(ULTIMATE)) + "</script>")
 
     # 強敵
     page(prefix, "rivals.html", label, "強敵", stamp, rivals_body(rows))
