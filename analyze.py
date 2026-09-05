@@ -140,7 +140,6 @@ MIN_CARD_N = 5
 TOP_CARDS = 10
 
 PAGES = [
-    ("index.html", "概要"),
     ("chart.html", "推移"),
     ("mydeck.html", "使用デッキ"),
     ("enemy.html", "対戦相手"),
@@ -266,27 +265,67 @@ def stage_cell(league, trophies, rank, size=40):
     return body + "</span>"
 
 
-def rate_history_chart(prof):
-    """レート（未到達ならステージ）の推移。profile.csv の記録点をつなぐ。
+WR_WINDOW = 30          # 勝率の移動平均に使う試合数
+
+
+def rolling_winrate(rows, window=WR_WINDOW):
+    """直近 window 試合の勝率（Wilson法の95%区間つき）を時系列で返す。"""
+    games = sorted((r for r in (rows or [])
+                    if r.get("result") != "draw" and r.get("_dt")),
+                   key=lambda r: r["_dt"])
+    if len(games) < window:
+        return []
+    out, w = [], 0
+    for i, r in enumerate(games):
+        if r["result"] == "win":
+            w += 1
+        if i >= window and games[i - window]["result"] == "win":
+            w -= 1
+        if i >= window - 1:
+            out.append((r["_dt"],) + wilson(w, window))
+    return out
+
+
+def rate_history_chart(prof, rows=None):
+    """レート（未到達ならステージ）の推移。横軸は実時間。
 
     アルティメットチャンピオン到達後はレートの数値で描く。
     到達前と到達後が混ざる場合は、下段にステージ・上段にレートを置いた2段の軸にする。
+    表示中のモードの勝率（移動平均）を同じ横軸に重ねる。
     """
     pts = []
     for r in prof:
         lg, tr = _num(r.get("pol_current_league")), _num(r.get("pol_current_trophies"))
         if lg is None:
             continue
-        pts.append((r.get("checked_jst", "")[:10], lg, tr))
+        raw = (r.get("checked_jst") or "").strip()
+        t = None
+        for fmt, cut_to in (("%Y-%m-%d %H:%M:%S", 19), ("%Y-%m-%d", 10)):
+            try:
+                t = datetime.datetime.strptime(raw[:cut_to], fmt)
+                break
+            except ValueError:
+                continue
+        if t is None:
+            continue
+        pts.append((t, lg, tr))
     if len(pts) < 2:
         return ""
+    pts.sort(key=lambda x: x[0])
 
     ult = [bool(p[1] >= ULTIMATE and p[2]) for p in pts]
+    wr = rolling_winrate(rows)
 
-    W, H = 720, 200
-    padL, padR, padT, padB = 8, 46, 14, 26
+    W, H = 720, 230
+    padT, padB, padR = 14, 26, 46
+    padL = 30 if wr else 8
     pw, ph = W - padL - padR, H - padT - padB
-    xs = lambda i: padL + (pw * i / max(1, len(pts) - 1))
+
+    t0 = min([pts[0][0]] + ([wr[0][0]] if wr else []))
+    t1 = max([pts[-1][0]] + ([wr[-1][0]] if wr else []))
+    span = (t1 - t0).total_seconds() or 1.0
+    xs = lambda t: padL + pw * ((t - t0).total_seconds() / span)
+    wy = lambda v: padT + ph * (1 - v)
 
     ticks = []          # (y, ラベル)
     sep_y = None        # アルティメット到達ラインの高さ
@@ -351,20 +390,48 @@ def rate_history_chart(prof):
         out.append(f'<text class="tick" x="{padL+4}" y="{sep_y-4:.1f}">'
                    "アルティメットチャンピオン到達</text>")
 
-    line = " ".join(f"{xs(i):.1f},{yy:.1f}" for i, yy in enumerate(ys))
+    if wr:
+        # 勝率（左目盛り）。レートの線より下に敷く
+        band = ([f"{xs(t):.1f},{wy(h):.1f}" for t, _p, _l, h in wr]
+                + [f"{xs(t):.1f},{wy(l):.1f}" for t, _p, l, _h in reversed(wr)])
+        out.append(f'<polygon class="ciband" points="{" ".join(band)}"/>')
+        out.append(f'<line class="base" x1="{padL}" y1="{wy(0.5):.1f}" '
+                   f'x2="{padL+pw}" y2="{wy(0.5):.1f}"/>')
+        wline = " ".join(f"{xs(t):.1f},{wy(p):.1f}" for t, p, _l, _h in wr)
+        out.append(f'<polyline class="rate" points="{wline}"/>')
+        for k in range(5):
+            v = k / 4
+            out.append(f'<text class="tick" x="{padL-5}" y="{wy(v)+3.5:.1f}" '
+                       f'text-anchor="end">{int(v*100)}{"%" if k == 4 else ""}</text>')
+
+    line = " ".join(f"{xs(pts[i][0]):.1f},{yy:.1f}" for i, yy in enumerate(ys))
     out.append(f'<polyline class="ma" points="{line}"/>')
     for i, yy in enumerate(ys):
         # 値が動いていない点は打たない（記録点が多く、線が黒く潰れるため）
         if 0 < i < len(ys) - 1 and abs(yy - ys[i - 1]) < 0.05 and abs(yy - ys[i + 1]) < 0.05:
             continue
-        out.append(f'<circle class="pt" cx="{xs(i):.1f}" cy="{yy:.1f}" r="2.6"><title>'
-                   f'{esc(pts[i][0])} {esc(labels[i])}</title></circle>')
-    every = max(1, len(pts) // 8)
-    for i in range(0, len(pts), every):
-        out.append(f'<text class="tick" x="{xs(i):.1f}" y="{H-8}" text-anchor="middle">'
-                   f'{esc(pts[i][0][5:])}</text>')
+        out.append(f'<circle class="pt" cx="{xs(pts[i][0]):.1f}" cy="{yy:.1f}" r="2.6"><title>'
+                   f'{esc(pts[i][0].strftime("%Y-%m-%d %H:%M"))} {esc(labels[i])}</title></circle>')
+    for k in range(7):
+        t = t0 + datetime.timedelta(seconds=span * k / 6)
+        out.append(f'<text class="tick" x="{padL + pw * k / 6:.1f}" y="{H-8}" '
+                   f'text-anchor="middle">{t:%m-%d}</text>')
     out.append("</svg>")
-    return f'<h3 class="sub2">推移</h3>{"".join(out)}<p class="cap">{caption}</p>'
+
+    if wr:
+        caption += (f"細い黒線は勝率（直近{WR_WINDOW}試合の移動平均、左目盛り）。"
+                    "灰色の帯は95%信頼区間、破線は五分。表示中のモードの試合だけを使う。")
+        legend = ('<div class="legend2">'
+                  '<span><i class="lgline" style="border-color:#C8102E;border-top-width:3px"></i>'
+                  'レート</span>'
+                  '<span><i class="lgline" style="border-color:#3A424B"></i>'
+                  f'勝率（{WR_WINDOW}試合平均）</span>'
+                  '<span><i class="lgbox" style="background:#D9DCDF"></i>95%信頼区間</span>'
+                  "</div>")
+    else:
+        legend = ""
+    return (f'<h3 class="sub2">推移</h3>{"".join(out)}{legend}'
+            f'<p class="cap">{caption}</p>')
 
 
 def monthly_decks(rows):
@@ -437,7 +504,7 @@ def achieved_note(prof, key, value):
     return f'<span class="sname">{y}年{int(m)}月に更新</span>'
 
 
-def rate_page_body(prof):
+def rate_page_body(prof, rows=None):
     if not prof:
         return panel("レート", '<p class="empty">まだ記録がない。次の実行から貯まりはじめる。</p>',
                      "ランク戦の成績はバトルログに含まれないため、プレイヤー情報から別に記録している。")
@@ -491,11 +558,12 @@ def rate_page_body(prof):
         hist = ('<p class="note">シーズンが切り替わると、ここに前シーズンの最終成績が積み上がる。'
                 "過去に遡って取得することはできないため、記録は今日以降のぶん。</p>")
 
+    chart = rate_history_chart(prof, rows)
     return (panel("現在の成績", table(kv) + hist,
                   "アルティメットチャンピオンに到達するまでレートは表示されないため、"
                   "それまではステージを表示する。")
-            + (panel("レートの推移", rate_history_chart(prof).replace('<h3 class="sub2">推移</h3>', ""))
-               if rate_history_chart(prof) else ""))
+            + (panel("レートの推移", chart.replace('<h3 class="sub2">推移</h3>', ""))
+               if chart else ""))
 
 
 def load_icons():
@@ -706,7 +774,6 @@ CHART_JS = """(function () {
   function classify(r) {
     var t = (r.battle_type || "").toLowerCase();
     if (t.indexOf("pathoflegend") >= 0) return "pol";
-    if (t.indexOf("riverrace") >= 0 || t.indexOf("clanwar") >= 0) return "cw";
     return "etc";
   }
   function wilson(w, n) {
@@ -1078,7 +1145,6 @@ RANK_JS = """(function () {
   function classify(r) {
     var t = (r.battle_type || "").toLowerCase();
     if (t.indexOf("pathoflegend") >= 0) return "pol";
-    if (t.indexOf("riverrace") >= 0 || t.indexOf("clanwar") >= 0) return "cw";
     return "etc";
   }
   function wilson(w, n) {
@@ -1549,20 +1615,19 @@ footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
 
 MODES = [
     ("pol", "", "ランク戦"),
-    ("cw", "cw-", "クラン戦"),
     ("etc", "etc-", "その他"),
     ("all", "all-", "すべて"),
 ]
 
 AVAILABLE = []          # 実際に生成するモード（試合が1件以上あるもの）
+WRITTEN = set()         # この実行で書き出したHTML
 
 
 def classify(row):
+    """クラン戦もその他に含める。"""
     t = (row.get("battle_type") or "").lower()
     if "pathoflegend" in t:
         return "pol"
-    if "riverrace" in t or "clanwar" in t:
-        return "cw"
     return "etc"
 
 
@@ -1595,7 +1660,9 @@ def page(prefix, base, label, title, subtitle, body):
            + "<footer>battles.csv より自動生成<br>"
              "カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、"
              "Supercell は内容に関与していない。</footer></div></body></html>")
-    with open(os.path.join(SCRIPT_DIR, prefix + base), "w", encoding="utf-8") as f:
+    name = prefix + base
+    WRITTEN.add(name)
+    with open(os.path.join(SCRIPT_DIR, name), "w", encoding="utf-8") as f:
         f.write(doc)
 
 
@@ -1859,48 +1926,7 @@ def build(mode_key, prefix, label, rows, total_records):
     by_wd = tally(rows, lambda r: r["_wd"])
     wd_items = [(WEEKDAY_JA[k] + "曜", w, t) for k, (w, t) in sorted(by_wd.items())]
 
-    aft_l, aft_w, aft_f = [0, 0], [0, 0], [0, 0]
-    for r in rows:
-        if r["result"] == "draw":
-            continue
-        box = aft_f if r["_prev_streak"] == 0 else (aft_l if r["_prev_streak"] < 0 else aft_w)
-        box[1] += 1
-        if r["result"] == "win":
-            box[0] += 1
-    pf = wilson(*aft_f)[0]
-    pl, ll, hl_ = wilson(*aft_l)
-    pw, lw, hw = wilson(*aft_w)
-    conclusive = min(aft_l[1], aft_w[1]) >= RELIABLE_N and (hl_ < lw or hw < ll)
-    if not conclusive:
-        judge, judge_cls = "判定不可", "na-t"
-        judge_note = "試合数が不足しており、差の有無を判断できない。"
-    elif pl < pw:
-        judge, judge_cls = "低下の傾向あり", "down-t"
-        judge_note = f"敗戦後 {pl*100:.1f}% に対し勝利後 {pw*100:.1f}%。連敗時は中断が妥当と考えられる。"
-    else:
-        judge, judge_cls = "低下は認められない", "up-t"
-        judge_note = f"敗戦後 {pl*100:.1f}% に対し勝利後 {pw*100:.1f}%。"
-
-    need = needed_n()
-    goal = need * 2
-
     page(prefix, "chosi.html", label, "調子の分析", stamp, f"""
-  {panel("検証課題：連敗後に勝率は低下するか",
-      table([
-          ("現時点の判定", f'<span class="big {judge_cls}">{judge}</span>'),
-          ("敗戦後の勝率", f"{pl*100:.1f}%（{aft_l[0]}勝{aft_l[1]-aft_l[0]}敗）",
-           "up" if aft_l[1] >= RELIABLE_N and pl > p else "down" if aft_l[1] >= RELIABLE_N and pl < p else ""),
-          ("勝利後の勝率", f"{pw*100:.1f}%（{aft_w[0]}勝{aft_w[1]-aft_w[0]}敗）",
-           "up" if aft_w[1] >= RELIABLE_N and pw > p else "down" if aft_w[1] >= RELIABLE_N and pw < p else ""),
-          ("セッション初戦（比較から除外）", f"{pf*100:.1f}%（{aft_f[0]}勝{aft_f[1]-aft_f[0]}敗）"),
-          ("合計", f"{aft_l[1] + aft_w[1]} + {aft_f[1]} = {decided} 試合"),
-      ])
-      + f'<div class="bar"><i style="width:{min(100, decided/goal*100):.1f}%"></i></div>'
-        f'<div class="barlab"><span>必要試合数に対する進捗 {decided} / {goal}</span>'
-        f'<span>残り {max(0, goal-decided)} 試合</span></div>',
-      "", "セッションの初戦は直前の結果が存在しないため、両群のどちらにも含めない。"
-          f"そのため2群の合計は全{decided}試合より少なくなる。" + judge_note +
-          f" 勝率50%と60%の差を有意水準5%・検出力80%で検出するには、各群{need}試合を要する。")}
   {panel("直前の結果別の勝率", rate_rows(streak_items), "縦線が左にあるほど勝率が低い。")}
   {panel("連続対戦数と勝率", rate_rows(pos_items), "",
       f"前の試合から{SESSION_GAP_MINUTES}分以上の間隔があいた場合、別セッションとして数える。")}
@@ -1999,7 +2025,7 @@ def build(mode_key, prefix, label, rows, total_records):
 
     # レート
     page(prefix, "rate.html", label, "レート", stamp,
-         rate_page_body(PROFILE) + monthly_deck_panel(rows))
+         rate_page_body(PROFILE, rows) + monthly_deck_panel(rows))
 
     # 強敵
     page(prefix, "rivals.html", label, "強敵", stamp, rivals_body(rows))
@@ -2011,64 +2037,6 @@ def build(mode_key, prefix, label, rows, total_records):
       "画像にマウスを乗せるとカード名が出る。")}
 """)
 
-    # 概要
-    opp_cards = defaultdict(lambda: [0, 0])
-    for r in rows:
-        if r["result"] == "draw":
-            continue
-        for c in set(x for x in r["opp_deck"].split("|") if x):
-            opp_cards[c][1] += 1
-            if r["result"] == "win":
-                opp_cards[c][0] += 1
-    enough = {c: v for c, v in opp_cards.items() if v[1] >= MIN_CARD_N}
-    ranked = sorted(enough.items(), key=lambda kv: kv[1][0] / kv[1][1])
-
-    MIN_HL = 5
-    boxes = []
-    good_decks = [(k, w, t) for k, (w, t) in by_deck.items() if t >= MIN_HL]
-    if good_decks:
-        k, w, t = max(good_decks, key=lambda x: x[1] / x[2])
-        boxes.append(hl_box("最も勝てているデッキ", deck_grid(deck_face.get(k, [])), w, t, p))
-        if len(good_decks) > 1:
-            k, w, t = min(good_decks, key=lambda x: x[1] / x[2])
-            boxes.append(hl_box("苦戦しているデッキ", deck_grid(deck_face.get(k, [])), w, t, p))
-    if ranked:
-        c, (w, t) = ranked[0]
-        boxes.append(hl_box("苦手な相手カード", hl_card(c), w, t, p))
-        c, (w, t) = ranked[-1]
-        boxes.append(hl_box("得意な相手カード", hl_card(c), w, t, p))
-    good_hours = [(h, w, t) for h, (w, t) in by_hour.items() if t >= MIN_HL]
-    if good_hours:
-        h, w, t = max(good_hours, key=lambda x: x[1] / x[2])
-        boxes.append(hl_box("勝てている時間帯", hl_text(f"{h}時台"), w, t, p))
-        if len(good_hours) > 1:
-            h, w, t = min(good_hours, key=lambda x: x[1] / x[2])
-            boxes.append(hl_box("負けている時間帯", hl_text(f"{h}時台"), w, t, p))
-    highlights = ('<div class="hl-grid">' + "".join(boxes) + "</div>") if boxes \
-        else '<p class="empty">判定できるだけの試合数がまだない。</p>'
-
-    page(prefix, "index.html", label, "対戦記録レポート", stamp, f"""
-  {panel("現況", table([
-      ("勝率", f'<span class="big">{p*100:.1f}<span class="u">%</span></span>',
-       "up" if p > 0.5 else "down" if p < 0.5 else ""),
-      ("95%信頼区間", f"{lo*100:.1f}% 〜 {hi*100:.1f}%"),
-      ("勝敗", f'<span class="up-t">{wins}勝</span> / <span class="down-t">{decided-wins}敗</span>'),
-      ("このモードの試合", f"{len(rows)} 試合"),
-      ("記録総数（全モード）", f"{total_records} 試合"),
-      ("プレイ回数", f"{sessions} 回"),
-  ]))}
-  {panel("いま目立つところ", highlights,
-      f"{MIN_HL}試合以上あるものから選んでいる。基準はこのモードの平均 {p*100:.1f}%。",
-      "件数の少ないものは偶然で極端な値になりやすい。詳細は上のタブから。")}
-  {panel("検証課題：連敗後に勝率は低下するか", table([
-      ("現時点の判定", f'<span class="big {judge_cls}">{judge}</span>'),
-      ("敗戦後の勝率", f"{pl*100:.1f}%（{aft_l[0]}勝{aft_l[1]-aft_l[0]}敗）"),
-      ("勝利後の勝率", f"{pw*100:.1f}%（{aft_w[0]}勝{aft_w[1]-aft_w[0]}敗）"),
-      ("セッション初戦（比較から除外）", f"{pf*100:.1f}%（{aft_f[0]}勝{aft_f[1]-aft_f[0]}敗）"),
-  ]) + f'<div class="bar"><i style="width:{min(100, decided/goal*100):.1f}%"></i></div>'
-     f'<div class="barlab"><span>必要試合数に対する進捗 {decided} / {goal}</span>'
-     f'<span>残り {max(0, goal-decided)} 試合</span></div>')}
-""")
 
 
 def main():
@@ -2093,9 +2061,28 @@ def main():
         rows = all_rows if key == "all" else groups[key]
         build(key, prefix, label, rows, len(all_rows))
 
+    # 入口。概要ページを廃止したため、トップは推移へ送る
+    WRITTEN.add("index.html")
+    with open(os.path.join(SCRIPT_DIR, "index.html"), "w", encoding="utf-8") as f:
+        f.write("<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'>"
+                "<meta http-equiv='refresh' content='0; url=chart.html'>"
+                "<title>対戦記録レポート</title></head>"
+                "<body><p><a href='chart.html'>推移のページへ</a></p></body></html>")
+
+    # 今回書き出さなかった古いHTMLを片づける
+    removed = 0
+    for name in sorted(os.listdir(SCRIPT_DIR)):
+        if name.endswith(".html") and name not in WRITTEN:
+            try:
+                os.remove(os.path.join(SCRIPT_DIR, name))
+                removed += 1
+            except OSError:
+                pass
+
     counts = " / ".join(f"{lab} {len(all_rows) if k == 'all' else len(groups.get(k, []))}"
                         for k, _, lab in MODES if k in AVAILABLE)
-    print(f"モード別に出力しました（{counts}）")
+    print(f"モード別に出力しました（{counts}）"
+          + (f" 古いHTMLを{removed}件削除" if removed else ""))
 
 
 if __name__ == "__main__":
