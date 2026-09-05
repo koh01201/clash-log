@@ -153,6 +153,9 @@ html[data-layout="narrow"] .narrowonly{display:block}
 .patch{stroke:#0B57A4;stroke-width:1.2;stroke-dasharray:3 3}
 .mask{fill:#FFFFFF;opacity:.66}
 .volbar{fill:#7B8FA8}
+.volfaint{fill:#7B8FA8;opacity:.17}
+.ultband{fill:#7A3FBF;opacity:.10}
+.ultlab{font-size:9.5px;fill:#7A3FBF;font-weight:700}
 .ubtn{font-size:12px;padding:5px 14px;border:1px solid var(--line);border-radius:4px;
   background:var(--panel);color:var(--ink);cursor:pointer;font-family:inherit}
 .ubtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
@@ -211,4 +214,373 @@ function crToggle(){
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
 });
-</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="rate.html">ランク戦</a><a href="etc-rate.html" class='on'>その他</a><a href="all-rate.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="etc-chart.html">推移</a><a href="etc-mydeck.html">使用デッキ</a><a href="etc-enemy.html">対戦相手</a><a href="etc-chosi.html">調子</a><a href="etc-rate.html" class='on'>レート</a><a href="etc-rivals.html">強敵</a><a href="etc-log.html">対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>レート<span class='mtag'>その他</span></h1><p>対象期間 2026/07/31 〜 2026/08/28　更新 2026/09/05 18:25 JST</p></div><section class="panel"><h2>現在の成績</h2><p class="lead">アルティメットチャンピオンに到達するまでレートは表示されないため、それまではステージを表示する。</p><table class="kv"><tr><th>今シーズン</th><td><span class="stxt"><span class="sname">レート</span><b class="big">1,359</b><span class="lgname" style="color:#7A3FBF">Ultimate Champion</span></span></tr><tr><th>自己ベスト</th><td><span class="stxt"><span class="sname">レート</span><b class="big">2,246</b><span class="lgname" style="color:#8A939C">League 10</span><span class="sname">世界 8,026 位</span></span><span class="sname">2024年4月に達成</span></tr><tr><th>ベストとの差</th><td class="down">-887</tr><tr><th>最高順位</th><td>世界 8,026 位<span class="sname">2024年4月に達成</span></tr><tr><th>トロフィー（通常）</th><td>14,000　最高 14,000</tr><tr><th>通算成績</th><td>10,557勝 7,963敗（57.0%）</tr></table><h3 class="sub2">シーズン別の最終成績</h3><table class="kv"><tr><th>2026-08-05 時点で確認</th><td><span class="stxt"><b class="lgname big2" style="color:#C0392B">Royal Champion</b></span></td></tr></table></section><section class="panel"><h2>レートの推移</h2><svg viewBox="0 0 720 230" class="chart"><rect class="plot" x="8" y="14" width="666" height="190"/><text class="tick" x="679" y="207.5">Master II</text><line class="grid" x1="8" y1="188.0" x2="674" y2="188.0"/><text class="tick" x="679" y="191.5">Master III</text><line class="grid" x1="8" y1="172.0" x2="674" y2="172.0"/><text class="tick" x="679" y="175.5">Champion</text><line class="grid" x1="8" y1="156.0" x2="674" y2="156.0"/><text class="tick" x="679" y="159.5">Grand Champion</text><line class="grid" x1="8" y1="140.0" x2="674" y2="140.0"/><text class="tick" x="679" y="143.5">Royal Champion</text><line class="grid" x1="8" y1="124.0" x2="674" y2="124.0"/><text class="tick" x="679" y="127.5">1,181</text><line class="grid" x1="8" y1="96.5" x2="674" y2="96.5"/><text class="tick" x="679" y="100.0">1,316</text><line class="grid" x1="8" y1="69.0" x2="674" y2="69.0"/><text class="tick" x="679" y="72.5">1,452</text><line class="grid" x1="8" y1="41.5" x2="674" y2="41.5"/><text class="tick" x="679" y="45.0">1,588</text><text class="tick" x="679" y="17.5">1,723</text><line class="fifty" x1="8" y1="124.0" x2="674" y2="124.0"/><text class="tick" x="12" y="120.0">アルティメットチャンピオン到達</text><polyline class="ma" points="8.0,204.0 8.3,204.0 16.7,204.0 22.1,204.0 26.0,204.0 28.6,204.0 28.7,204.0 35.9,204.0 50.4,204.0 50.7,204.0 51.6,204.0 55.6,204.0 58.7,204.0 61.1,204.0 65.3,204.0 68.1,204.0 70.9,188.0 71.2,188.0 72.3,188.0 72.6,188.0 72.9,188.0 73.3,188.0 73.3,188.0 73.6,188.0 73.6,188.0 73.8,188.0 73.8,188.0 75.3,188.0 78.7,188.0 80.2,188.0 81.7,188.0 83.9,188.0 85.3,188.0 87.1,188.0 88.8,188.0 90.6,188.0 92.3,188.0 96.8,188.0 99.9,188.0 103.0,188.0 105.2,188.0 106.6,188.0 108.4,188.0 110.1,188.0 111.9,188.0 113.7,188.0 114.9,172.0 114.9,172.0 118.3,172.0 123.2,172.0 127.5,172.0 131.2,172.0 133.5,172.0 135.0,172.0 136.2,172.0 139.3,172.0 143.6,172.0 147.8,172.0 152.5,172.0 154.8,172.0 159.5,172.0 161.3,172.0 164.9,172.0 169.1,172.0 173.9,172.0 176.0,172.0 182.6,172.0 186.1,172.0 194.9,172.0 197.3,172.0 198.4,172.0 200.4,156.0 203.8,156.0 207.3,156.0 209.7,156.0 214.2,156.0 216.4,156.0 217.4,156.0 219.0,156.0 221.9,156.0 222.7,156.0 224.9,156.0 226.8,156.0 228.5,156.0 229.6,156.0 232.1,156.0 233.1,156.0 234.9,156.0 236.8,156.0 238.4,156.0 240.2,156.0 244.2,156.0 246.2,156.0 247.6,140.0 248.0,140.0 248.7,140.0 249.7,140.0 250.3,140.0 250.8,140.0 253.3,140.0 254.4,140.0 256.1,140.0 258.1,140.0 259.6,140.0 261.4,140.0 265.4,140.0 267.6,140.0 268.9,140.0 269.8,140.0 272.7,140.0 274.7,140.0 275.8,140.0 278.1,140.0 279.8,140.0 281.5,140.0 282.7,140.0 286.4,140.0 288.7,140.0 290.7,140.0 292.4,140.0 293.9,140.0 296.2,140.0 297.6,140.0 299.3,140.0 301.0,140.0 302.2,140.0 303.9,140.0 307.8,140.0 310.0,140.0 311.9,140.0 313.6,140.0 314.7,140.0 317.4,140.0 318.8,140.0 320.5,140.0 322.2,140.0 324.0,140.0 325.2,140.0 329.1,140.0 331.2,140.0 333.2,140.0 334.9,140.0 336.4,140.0 338.7,140.0 340.2,140.0 341.8,140.0 343.6,140.0 345.3,140.0 347.0,19.5 347.8,14.0 350.4,14.0 352.5,14.0 354.5,14.0 356.1,14.0 357.6,14.0 359.9,14.0 361.4,14.0 363.0,14.0 364.6,14.0 365.9,14.0 367.6,14.0 371.3,14.0 373.6,14.0 375.4,14.0 377.1,14.0 378.2,14.0 380.7,14.0 381.7,14.0 383.5,14.0 385.7,14.0 387.0,14.0 388.8,14.0 392.8,14.0 394.9,14.0 396.7,14.0 398.4,14.0 399.4,14.0 401.9,14.0 403.0,14.0 404.8,14.0 406.7,14.0 408.3,14.0 410.0,14.0 414.2,31.9 416.3,31.9 418.5,44.6 421.4,44.6 423.7,44.6 426.8,44.6 428.5,44.6 430.2,44.6 431.3,44.6 435.2,62.5 437.4,62.5 439.6,68.8 442.6,81.0 445.0,81.0 447.9,81.0 449.7,81.0 451.4,81.0 453.0,99.2 456.6,99.2 458.7,99.2 460.8,92.9 462.5,99.0 463.9,99.0 466.2,99.0 483.0,81.8 496.9,81.8 515.2,75.9 515.7,75.9 517.5,75.9 519.2,75.9 521.0,75.9 522.8,75.9 524.5,75.9 526.3,75.9 528.1,75.9 529.8,75.9 531.6,75.9 533.4,75.9 535.1,75.9 536.9,75.9 538.7,75.9 540.5,75.9 542.2,75.9 544.0,75.9 545.8,75.9 547.5,75.9 549.3,75.9 551.1,75.9 552.8,75.9 554.6,75.9 556.4,75.9 558.1,75.9 559.9,75.9 561.7,75.9 563.4,87.9 565.2,87.9 567.0,87.9 568.8,100.7 570.5,100.7 572.3,100.7 574.1,100.7 575.8,100.7 577.6,100.7 579.4,100.7 581.4,106.1 583.0,112.0 586.6,112.0 588.3,112.0 590.1,112.0 591.9,112.0 593.6,112.0 595.6,112.0 597.2,112.0 598.9,112.0 600.6,112.0 602.6,99.6 604.4,124.0 606.0,124.0 607.9,124.0 609.5,124.0 611.3,124.0 616.7,124.0 620.7,124.0 623.5,124.0 627.4,94.2 633.3,94.2 634.0,94.2 637.8,94.2 641.9,94.2 644.6,88.1 648.6,88.1 654.6,94.2 659.0,94.2 662.9,94.2 665.8,87.9 669.8,87.9 674.0,87.9"/><circle class="pt" cx="8.0" cy="204.0" r="2.6"><title>2026-08-05 09:27 Master II</title></circle><circle class="pt" cx="68.1" cy="204.0" r="2.6"><title>2026-08-08 05:23 Master II</title></circle><circle class="pt" cx="70.9" cy="188.0" r="2.6"><title>2026-08-08 08:33 Master III</title></circle><circle class="pt" cx="113.7" cy="188.0" r="2.6"><title>2026-08-10 08:57 Master III</title></circle><circle class="pt" cx="114.9" cy="172.0" r="2.6"><title>2026-08-10 10:16 Champion</title></circle><circle class="pt" cx="198.4" cy="172.0" r="2.6"><title>2026-08-14 08:41 Champion</title></circle><circle class="pt" cx="200.4" cy="156.0" r="2.6"><title>2026-08-14 10:58 Grand Champion</title></circle><circle class="pt" cx="246.2" cy="156.0" r="2.6"><title>2026-08-16 14:48 Grand Champion</title></circle><circle class="pt" cx="247.6" cy="140.0" r="2.6"><title>2026-08-16 16:23 Royal Champion</title></circle><circle class="pt" cx="345.3" cy="140.0" r="2.6"><title>2026-08-21 06:48 Royal Champion</title></circle><circle class="pt" cx="347.0" cy="19.5" r="2.6"><title>2026-08-21 08:41 1,696</title></circle><circle class="pt" cx="347.8" cy="14.0" r="2.6"><title>2026-08-21 09:37 1,723</title></circle><circle class="pt" cx="410.0" cy="14.0" r="2.6"><title>2026-08-24 07:58 1,723</title></circle><circle class="pt" cx="414.2" cy="31.9" r="2.6"><title>2026-08-24 12:38 1,635</title></circle><circle class="pt" cx="416.3" cy="31.9" r="2.6"><title>2026-08-24 15:06 1,635</title></circle><circle class="pt" cx="418.5" cy="44.6" r="2.6"><title>2026-08-24 17:31 1,572</title></circle><circle class="pt" cx="431.3" cy="44.6" r="2.6"><title>2026-08-25 08:04 1,572</title></circle><circle class="pt" cx="435.2" cy="62.5" r="2.6"><title>2026-08-25 12:27 1,484</title></circle><circle class="pt" cx="437.4" cy="62.5" r="2.6"><title>2026-08-25 14:57 1,484</title></circle><circle class="pt" cx="439.6" cy="68.8" r="2.6"><title>2026-08-25 17:23 1,453</title></circle><circle class="pt" cx="442.6" cy="81.0" r="2.6"><title>2026-08-25 20:49 1,393</title></circle><circle class="pt" cx="451.4" cy="81.0" r="2.6"><title>2026-08-26 06:47 1,393</title></circle><circle class="pt" cx="453.0" cy="99.2" r="2.6"><title>2026-08-26 08:35 1,303</title></circle><circle class="pt" cx="458.7" cy="99.2" r="2.6"><title>2026-08-26 15:00 1,303</title></circle><circle class="pt" cx="460.8" cy="92.9" r="2.6"><title>2026-08-26 17:24 1,334</title></circle><circle class="pt" cx="462.5" cy="99.0" r="2.6"><title>2026-08-26 19:18 1,304</title></circle><circle class="pt" cx="466.2" cy="99.0" r="2.6"><title>2026-08-26 23:30 1,304</title></circle><circle class="pt" cx="483.0" cy="81.8" r="2.6"><title>2026-08-27 18:27 1,389</title></circle><circle class="pt" cx="496.9" cy="81.8" r="2.6"><title>2026-08-28 10:10 1,389</title></circle><circle class="pt" cx="515.2" cy="75.9" r="2.6"><title>2026-08-29 06:55 1,418</title></circle><circle class="pt" cx="561.7" cy="75.9" r="2.6"><title>2026-08-31 11:25 1,418</title></circle><circle class="pt" cx="563.4" cy="87.9" r="2.6"><title>2026-08-31 13:25 1,359</title></circle><circle class="pt" cx="567.0" cy="87.9" r="2.6"><title>2026-08-31 17:26 1,359</title></circle><circle class="pt" cx="568.8" cy="100.7" r="2.6"><title>2026-08-31 19:26 1,296</title></circle><circle class="pt" cx="579.4" cy="100.7" r="2.6"><title>2026-09-01 07:26 1,296</title></circle><circle class="pt" cx="581.4" cy="106.1" r="2.6"><title>2026-09-01 09:41 1,269</title></circle><circle class="pt" cx="583.0" cy="112.0" r="2.6"><title>2026-09-01 11:30 1,240</title></circle><circle class="pt" cx="600.6" cy="112.0" r="2.6"><title>2026-09-02 07:29 1,240</title></circle><circle class="pt" cx="602.6" cy="99.6" r="2.6"><title>2026-09-02 09:38 1,301</title></circle><circle class="pt" cx="604.4" cy="124.0" r="2.6"><title>2026-09-02 11:42 1,181</title></circle><circle class="pt" cx="623.5" cy="124.0" r="2.6"><title>2026-09-03 09:20 1,181</title></circle><circle class="pt" cx="627.4" cy="94.2" r="2.6"><title>2026-09-03 13:42 1,328</title></circle><circle class="pt" cx="641.9" cy="94.2" r="2.6"><title>2026-09-04 06:07 1,328</title></circle><circle class="pt" cx="644.6" cy="88.1" r="2.6"><title>2026-09-04 09:09 1,358</title></circle><circle class="pt" cx="648.6" cy="88.1" r="2.6"><title>2026-09-04 13:42 1,358</title></circle><circle class="pt" cx="654.6" cy="94.2" r="2.6"><title>2026-09-04 20:27 1,328</title></circle><circle class="pt" cx="662.9" cy="94.2" r="2.6"><title>2026-09-05 05:49 1,328</title></circle><circle class="pt" cx="665.8" cy="87.9" r="2.6"><title>2026-09-05 09:10 1,359</title></circle><circle class="pt" cx="674.0" cy="87.9" r="2.6"><title>2026-09-05 18:25 1,359</title></circle><text class="tick" x="8.0" y="222" text-anchor="middle">08-05</text><text class="tick" x="119.0" y="222" text-anchor="middle">08-10</text><text class="tick" x="230.0" y="222" text-anchor="middle">08-15</text><text class="tick" x="341.0" y="222" text-anchor="middle">08-21</text><text class="tick" x="452.0" y="222" text-anchor="middle">08-26</text><text class="tick" x="563.0" y="222" text-anchor="middle">08-31</text><text class="tick" x="674.0" y="222" text-anchor="middle">09-05</text></svg><p class="cap">下段はステージ、上段はアルティメットチャンピオン到達後のレート。破線が到達ライン。</p></section><section class="panel"><h2>月ごとの最多使用デッキ</h2><p class="lead">シーズンの区切りはAPIから取得できないため、暦月で区切っている。</p><table class="kv"><tr><th>2026年8月<span class="sname">17試合・勝率41.2%</span></th><td><div class="mdeck"><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vD24bBgK4rSq7wx5QEbuqChtPMRFviL_ep76GwQw1yA.png" alt="Goblin Cage" title="Goblin Cage"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/jcNyYGUiXXNz3kuz8NBkHNKNREQKraXlb_Ts7rhCIdM.png" alt="Royal Recruits" title="Royal Recruits"><img src="https://api-assets.clashroyale.com/cards/300/ASSQJG_MoVq9e81HZzo4bynMnyLNpNJMfSLb3hqydOw.png" alt="Royal Hogs" title="Royal Hogs"><img src="https://api-assets.clashroyale.com/cards/300/hzKNE3QwFcrSrDDRuVW3QY_OnrDPijSiIp-PsWgFevE.png" alt="Flying Machine" title="Flying Machine"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/Flsoci-Y6y8ZFVi5uRFTmgkPnCmMyMVrU7YmmuPvSBo.png" alt="Arrows" title="Arrows"><img src="https://api-assets.clashroyale.com/cards/300/WKd4-IAFsgPpMo7dDi9sujmYjRhOMEWiE07OUJpvD9g.png" alt="Electro Spirit" title="Electro Spirit"></div><span class="sname">5試合使用（10種類中）・このデッキの勝率 60.0%</span></div></td></tr><tr><th>2026年7月<span class="sname">1試合・勝率100.0%</span></th><td><div class="mdeck"><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/98HDkG2189yOULcVG9jz2QbJKtfuhH21DIrIjkOjxI8.png" alt="Poison" title="Poison"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"></div><span class="sname">1試合使用（1種類中）・このデッキの勝率 100.0%</span></div></td></tr></table><p class="note">その月にいちばん多く使った構成を1つ表示している。</p></section><footer>battles.csv より自動生成<br>カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、Supercell は内容に関与していない。</footer></div></body></html>
+</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="rate.html">ランク戦</a><a href="etc-rate.html" class='on'>その他</a><a href="all-rate.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="etc-chart.html">推移</a><a href="etc-mydeck.html">使用デッキ</a><a href="etc-enemy.html">対戦相手</a><a href="etc-chosi.html">調子</a><a href="etc-rate.html" class='on'>レート</a><a href="etc-rivals.html">強敵</a><a href="etc-log.html">対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>レート<span class='mtag'>その他</span></h1><p>対象期間 2026/07/31 〜 2026/08/28　更新 2026/09/05 18:45 JST</p></div><section class="panel"><h2>現在の成績</h2><p class="lead">アルティメットチャンピオンに到達するまでレートは表示されないため、それまではステージを表示する。</p><table class="kv"><tr><th>今シーズン</th><td><span class="stxt"><span class="sname">レート</span><b class="big">1,359</b><span class="lgname" style="color:#7A3FBF">Ultimate Champion</span></span></tr><tr><th>自己ベスト</th><td><span class="stxt"><span class="sname">レート</span><b class="big">2,246</b><span class="lgname" style="color:#8A939C">League 10</span><span class="sname">世界 8,026 位</span></span><span class="sname">2024年4月に達成</span></tr><tr><th>ベストとの差</th><td class="down">-887</tr><tr><th>最高順位</th><td>世界 8,026 位<span class="sname">2024年4月に達成</span></tr><tr><th>トロフィー（通常）</th><td>14,000　最高 14,000</tr><tr><th>通算成績</th><td>10,557勝 7,963敗（57.0%）</tr></table><h3 class="sub2">シーズン別の最終成績</h3><table class="kv"><tr><th>2026-08-05 時点で確認</th><td><span class="stxt"><b class="lgname big2" style="color:#C0392B">Royal Champion</b></span></td></tr></table></section><section class="panel"><h2>レートと勝率の推移</h2><p class="lead">上がレート、下が勝率。横軸は共通で、つまみを動かすと両方が連動する。</p>
+    <div class="ctrl">
+      <span class="navlab" style="width:auto">期間</span>
+      <button id="p-7" class="ubtn">7日</button>
+      <button id="p-30" class="ubtn">30日</button>
+      <button id="p-90" class="ubtn">90日</button>
+      <button id="p-all" class="ubtn on">全期間</button>
+    </div>
+    <div id="rchart"></div>
+    <div class="rng">
+      <div class="rlab">表示範囲 <b id="rlab">-</b></div>
+      <input id="r1" type="range" min="0" max="0" value="0">
+      <input id="r2" type="range" min="0" max="0" value="0">
+    </div>
+    <div class="legend2">
+      <span><i class="lgline" style="border-color:#C8102E;border-top-width:3px"></i>レート・ステージ</span>
+      <span><i class="lgline" style="border-color:#3A424B"></i>勝率（30試合の移動平均）</span>
+      <span><i class="lgbox" style="background:#D6CBEA"></i>アルティメットチャンピオン</span>
+      <span><i class="lgbox" style="background:#DCE1E6"></i>試合数</span>
+    </div><p class="note">レートはランク戦の記録（全モード共通）。勝率と試合数は表示中のモードのもの。紫の帯はアルティメットチャンピオンの範囲。</p></section><section class="panel"><h2>月ごとの最多使用デッキ</h2><p class="lead">シーズンの区切りはAPIから取得できないため、暦月で区切っている。</p><table class="kv"><tr><th>2026年8月<span class="sname">17試合・勝率41.2%</span></th><td><div class="mdeck"><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vD24bBgK4rSq7wx5QEbuqChtPMRFviL_ep76GwQw1yA.png" alt="Goblin Cage" title="Goblin Cage"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/jcNyYGUiXXNz3kuz8NBkHNKNREQKraXlb_Ts7rhCIdM.png" alt="Royal Recruits" title="Royal Recruits"><img src="https://api-assets.clashroyale.com/cards/300/ASSQJG_MoVq9e81HZzo4bynMnyLNpNJMfSLb3hqydOw.png" alt="Royal Hogs" title="Royal Hogs"><img src="https://api-assets.clashroyale.com/cards/300/hzKNE3QwFcrSrDDRuVW3QY_OnrDPijSiIp-PsWgFevE.png" alt="Flying Machine" title="Flying Machine"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/Flsoci-Y6y8ZFVi5uRFTmgkPnCmMyMVrU7YmmuPvSBo.png" alt="Arrows" title="Arrows"><img src="https://api-assets.clashroyale.com/cards/300/WKd4-IAFsgPpMo7dDi9sujmYjRhOMEWiE07OUJpvD9g.png" alt="Electro Spirit" title="Electro Spirit"></div><span class="sname">5試合使用（10種類中）・このデッキの勝率 60.0%</span></div></td></tr><tr><th>2026年7月<span class="sname">1試合・勝率100.0%</span></th><td><div class="mdeck"><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/98HDkG2189yOULcVG9jz2QbJKtfuhH21DIrIjkOjxI8.png" alt="Poison" title="Poison"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"></div><span class="sname">1試合使用（1種類中）・このデッキの勝率 100.0%</span></div></td></tr></table><p class="note">その月にいちばん多く使った構成を1つ表示している。</p></section><script>(function () {
+  var MODE = "etc";
+  var LG = {"1":"Master I","2":"Master II","3":"Master III","4":"Champion","5":"Grand Champion","6":"Royal Champion","7":"Ultimate Champion"};
+  var ULT = 7;
+  var WR_WIN = 30;                 // 勝率の移動平均に使う試合数
+  var S = { prof: [], wr: [], vol: {}, days: [], lo: 0, hi: 0 };
+
+  function narrow() {
+    return document.documentElement.getAttribute("data-layout") === "narrow";
+  }
+  function esc(t) {
+    return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function parseCSV(text) {
+    var rows = [], row = [], cell = "", q = false, i, c;
+    for (i = 0; i < text.length; i++) {
+      c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else { q = false; } }
+        else { cell += c; }
+      } else if (c === '"') { q = true; }
+      else if (c === ",") { row.push(cell); cell = ""; }
+      else if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
+      else if (c !== "\r") { cell += c; }
+    }
+    if (cell.length || row.length) { row.push(cell); rows.push(row); }
+    if (!rows.length) return [];
+    var head = rows.shift().map(function (h) { return h.replace(/^\uFEFF/, "").trim(); });
+    /* profile.csv は見出しに無い列（生JSON）が付くため、過不足は切り捨てて読む */
+    return rows.filter(function (r) { return r.length >= head.length; }).map(function (r) {
+      var o = {}, k;
+      for (k = 0; k < head.length; k++) o[head[k]] = r[k];
+      return o;
+    });
+  }
+  function classify(r) {
+    var t = (r.battle_type || "").toLowerCase();
+    if (t.indexOf("pathoflegend") >= 0) return "pol";
+    return "etc";
+  }
+  function num(v) {
+    var n = parseFloat(v);
+    return isFinite(n) ? Math.round(n) : null;
+  }
+  function lname(n) { return LG[n] || ("League " + n); }
+  function fmtn(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  function ms(s) {
+    s = String(s || "").trim();
+    if (s.length < 10) return null;
+    var d = new Date(s.slice(0, 10) + "T" + (s.length >= 19 ? s.slice(11, 19) : "00:00:00"));
+    var v = d.getTime();
+    return isNaN(v) ? null : v;
+  }
+  function keyOf(d) {
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) +
+      "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function shift(key, n) {
+    var d = new Date(key + "T00:00:00");
+    d.setDate(d.getDate() + n);
+    return keyOf(d);
+  }
+  function mn(a) { var v = a[0], i; for (i = 1; i < a.length; i++) if (a[i] < v) v = a[i]; return v; }
+  function mx(a) { var v = a[0], i; for (i = 1; i < a.length; i++) if (a[i] > v) v = a[i]; return v; }
+
+  /* ---------- 描画 ---------- */
+  function draw() {
+    var box = document.getElementById("rchart");
+    if (!box) return;
+    var days = S.days, total = days.length;
+    if (!total) { box.innerHTML = '<p class="empty">記録がまだない。</p>'; return; }
+
+    var lo = Math.max(0, Math.min(S.lo, total - 1));
+    var hi = Math.max(lo, Math.min(S.hi, total - 1));
+    var nd = hi - lo + 1;
+    var dS = new Date(days[lo] + "T00:00:00").getTime();
+    var dE = new Date(shift(days[hi], 1) + "T00:00:00").getTime();
+
+    var nw = narrow();
+    var W = nw ? 380 : 720;
+    var RH = nw ? 128 : 168, WH = nw ? 92 : 120, GAP = 18;
+    var padL = 8, padR = nw ? 46 : 52, padT = 14;
+    var H = padT + RH + GAP + WH + 22;
+    var pw = W - padL - padR;
+    var ry0 = padT, ry1 = padT + RH;
+    var wy0 = ry1 + GAP, wy1 = wy0 + WH;
+    var bw = pw / nd;
+    var xs = function (t) { return padL + pw * (t - dS) / (dE - dS); };
+    var xd = function (i) { return padL + (i - lo + 0.5) * bw; };
+    var i, k, o = [];
+
+    o.push('<svg viewBox="0 0 ' + W + ' ' + H + '" class="chart">');
+    o.push('<defs><clipPath id="rcA"><rect x="' + padL + '" y="' + ry0 + '" width="' + pw +
+      '" height="' + RH + '"/></clipPath><clipPath id="rcB"><rect x="' + padL + '" y="' + wy0 +
+      '" width="' + pw + '" height="' + WH + '"/></clipPath></defs>');
+
+    /* ===== 上：レート ===== */
+    o.push('<rect class="plot" x="' + padL + '" y="' + ry0 + '" width="' + pw + '" height="' + RH + '"/>');
+
+    var Pr = S.prof, vis = [];
+    for (i = 0; i < Pr.length; i++) if (Pr[i].t >= dS && Pr[i].t <= dE) vis.push(i);
+
+    var ticks = [], yof = null, ultTop = null, ultBot = null;
+    if (vis.length) {
+      var ults = [], stgs = [];
+      for (k = 0; k < vis.length; k++) {
+        if (Pr[vis[k]].u) ults.push(Pr[vis[k]].tr); else stgs.push(Pr[vis[k]].lg);
+      }
+      if (!stgs.length) {
+        var a1 = mn(ults), b1 = mx(ults);
+        if (b1 === a1) { a1 -= 1; b1 += 1; }
+        yof = function (p) { return ry0 + RH * (1 - (p.tr - a1) / (b1 - a1)); };
+        for (k = 0; k < 5; k++)
+          ticks.push([ry0 + RH * (1 - k / 4), fmtn(Math.round(a1 + (b1 - a1) * k / 4))]);
+        ultTop = ry0; ultBot = ry1;
+      } else if (!ults.length) {
+        var a2 = mn(stgs), b2 = mx(stgs);
+        if (b2 === a2) { a2 -= 1; b2 += 1; }
+        yof = function (p) { return ry0 + RH * (1 - (p.lg - a2) / (b2 - a2)); };
+        for (k = 0; k < 5; k++)
+          ticks.push([ry0 + RH * (1 - k / 4), lname(Math.round(a2 + (b2 - a2) * k / 4))]);
+      } else {
+        var slo = mn(stgs), shi = Math.max(mx(stgs), ULT);
+        if (shi === slo) slo = shi - 1;
+        var sh = Math.min(RH * 0.5, Math.max(38, 16 * (shi - slo)));
+        var sep = ry1 - sh;
+        var rlo = mn(ults), rhi = mx(ults);
+        if (rhi === rlo) { rlo -= 1; rhi += 1; }
+        yof = function (p) {
+          return p.u ? sep - (RH - sh) * (p.tr - rlo) / (rhi - rlo)
+                     : ry1 - sh * (p.lg - slo) / (shi - slo);
+        };
+        for (k = slo; k < shi; k++) ticks.push([ry1 - sh * (k - slo) / (shi - slo), lname(k)]);
+        for (k = 0; k < 5; k++)
+          ticks.push([sep - (RH - sh) * k / 4, fmtn(Math.round(rlo + (rhi - rlo) * k / 4))]);
+        ultTop = ry0; ultBot = sep;
+      }
+    }
+
+    if (ultTop !== null && ultBot - ultTop > 2) {
+      o.push('<rect class="ultband" x="' + padL + '" y="' + ultTop.toFixed(1) + '" width="' + pw +
+        '" height="' + (ultBot - ultTop).toFixed(1) + '"/>');
+      o.push('<text class="ultlab" x="' + (padL + 6) + '" y="' + (ultTop + 12).toFixed(1) +
+        '">Ultimate Champion</text>');
+    }
+    for (k = 0; k < ticks.length; k++) {
+      if (ticks[k][0] > ry0 + 1 && ticks[k][0] < ry1 - 1) {
+        o.push('<line class="grid" x1="' + padL + '" y1="' + ticks[k][0].toFixed(1) +
+          '" x2="' + (padL + pw) + '" y2="' + ticks[k][0].toFixed(1) + '"/>');
+      }
+      o.push('<text class="tick" x="' + (padL + pw + 5) + '" y="' + (ticks[k][0] + 3.5).toFixed(1) +
+        '">' + esc(ticks[k][1]) + "</text>");
+    }
+
+    if (vis.length) {
+      var seg = [];
+      for (k = 0; k < vis.length; k++) {
+        seg.push(xs(Pr[vis[k]].t).toFixed(1) + "," + yof(Pr[vis[k]]).toFixed(1));
+      }
+      o.push('<g clip-path="url(#rcA)">');
+      if (seg.length > 1) o.push('<polyline class="ma" points="' + seg.join(" ") + '"/>');
+      for (k = 0; k < vis.length; k++) {
+        var p0 = Pr[vis[k]], yy = yof(p0);
+        if (k > 0 && k < vis.length - 1 &&
+            Math.abs(yy - yof(Pr[vis[k - 1]])) < 0.05 &&
+            Math.abs(yy - yof(Pr[vis[k + 1]])) < 0.05) continue;
+        o.push('<circle class="pt" cx="' + xs(p0.t).toFixed(1) + '" cy="' + yy.toFixed(1) +
+          '" r="2.6"><title>' + esc(p0.at) + " " +
+          esc(p0.u ? fmtn(p0.tr) : lname(p0.lg)) + "</title></circle>");
+      }
+      o.push("</g>");
+    } else {
+      o.push('<text class="tick" x="' + (padL + pw / 2).toFixed(1) + '" y="' +
+        (ry0 + RH / 2).toFixed(1) + '" text-anchor="middle">この期間はレートの記録がない</text>');
+    }
+    o.push('<text class="tick vlab" x="' + padL + '" y="' + (ry0 - 4) + '">レート</text>');
+
+    /* ===== 下：勝率＋出来高 ===== */
+    o.push('<rect class="plot" x="' + padL + '" y="' + wy0 + '" width="' + pw + '" height="' + WH + '"/>');
+    var maxv = 0;
+    for (i = lo; i <= hi; i++) if ((S.vol[days[i]] || 0) > maxv) maxv = S.vol[days[i]];
+    if (maxv > 0) {
+      for (i = lo; i <= hi; i++) {
+        var g = S.vol[days[i]] || 0;
+        if (!g) continue;
+        var bh = (WH - 2) * (g / maxv);
+        o.push('<rect class="volfaint" x="' + (padL + (i - lo) * bw + bw * 0.14).toFixed(1) +
+          '" y="' + (wy1 - bh).toFixed(1) + '" width="' + Math.max(0.8, bw * 0.72).toFixed(1) +
+          '" height="' + bh.toFixed(1) + '"><title>' + esc(days[i]) + " " + g + "試合</title></rect>");
+      }
+    }
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (v) {
+      var yy = wy1 - WH * v;
+      if (v > 0 && v < 1) o.push('<line class="grid" x1="' + padL + '" y1="' + yy.toFixed(1) +
+        '" x2="' + (padL + pw) + '" y2="' + yy.toFixed(1) + '"/>');
+      o.push('<text class="tick" x="' + (padL + pw + 5) + '" y="' + (yy + 3.5).toFixed(1) + '">' +
+        (v * 100) + (v === 1 ? "%" : "") + "</text>");
+    });
+    o.push('<line class="fifty" x1="' + padL + '" y1="' + (wy1 - WH * 0.5).toFixed(1) +
+      '" x2="' + (padL + pw) + '" y2="' + (wy1 - WH * 0.5).toFixed(1) + '"/>');
+    var wp = [];
+    for (k = 0; k < S.wr.length; k++) {
+      if (S.wr[k].t < dS || S.wr[k].t > dE) continue;
+      wp.push(xs(S.wr[k].t).toFixed(1) + "," + (wy1 - WH * S.wr[k].p).toFixed(1));
+    }
+    if (wp.length > 1) {
+      o.push('<g clip-path="url(#rcB)"><polyline class="rate" points="' + wp.join(" ") + '"/></g>');
+    } else {
+      o.push('<text class="tick" x="' + (padL + pw / 2).toFixed(1) + '" y="' +
+        (wy0 + WH / 2).toFixed(1) + '" text-anchor="middle">移動平均には' + WR_WIN +
+        '試合の蓄積が要る</text>');
+    }
+    o.push('<text class="tick vlab" x="' + padL + '" y="' + (wy0 - 4) +
+      '">勝率（' + WR_WIN + '試合の移動平均）・薄い棒は試合数</text>');
+
+    /* ===== 横軸 ===== */
+    var mb = [];
+    for (i = lo + 1; i <= hi; i++) {
+      if (days[i].slice(0, 7) !== days[i - 1].slice(0, 7)) mb.push(i);
+    }
+    for (k = 0; k < mb.length; k++) {
+      var mxx = (padL + (mb[k] - lo) * bw).toFixed(1);
+      o.push('<line class="monthsep" x1="' + mxx + '" y1="' + ry0 + '" x2="' + mxx +
+        '" y2="' + wy1 + '"/>');
+    }
+    var used = [], yl = wy1 + 14, gap = nw ? 40 : 34;
+    function room(x) {
+      var j;
+      for (j = 0; j < used.length; j++) if (Math.abs(x - used[j]) < gap) return false;
+      used.push(x); return true;
+    }
+    for (k = 0; k < mb.length; k++) {
+      var mlx = xd(mb[k]);
+      if (!room(mlx)) continue;
+      o.push('<text class="tick mon" x="' + mlx.toFixed(1) + '" y="' + yl +
+        '" text-anchor="middle">' + esc(days[mb[k]].slice(0, 7).replace("-", "/")) + "</text>");
+    }
+    var everyN = Math.max(1, Math.ceil(nd / (nw ? 4 : 9)));
+    for (i = lo; i <= hi; i += everyN) {
+      var dlx = xd(i);
+      if (!room(dlx)) continue;
+      o.push('<text class="tick" x="' + dlx.toFixed(1) + '" y="' + yl +
+        '" text-anchor="middle">' + esc(days[i].slice(5).replace("-", "/")) + "</text>");
+    }
+    o.push("</svg>");
+    box.innerHTML = o.join("");
+  }
+
+  function refreshRange() {
+    var a = document.getElementById("r1"), z = document.getElementById("r2");
+    if (!a || !z) return;
+    var n = S.days.length;
+    a.max = z.max = Math.max(0, n - 1);
+    a.value = S.lo; z.value = S.hi;
+    document.getElementById("rlab").textContent =
+      n ? S.days[S.lo] + " 〜 " + S.days[S.hi] : "-";
+  }
+
+  function bind() {
+    var a = document.getElementById("r1"), z = document.getElementById("r2");
+    if (a && z) {
+      a.oninput = function () {
+        S.lo = Math.min(+a.value, +z.value); S.hi = Math.max(+a.value, +z.value);
+        refreshRange(); draw();
+      };
+      z.oninput = a.oninput;
+    }
+    [["p-all", 0], ["p-90", 90], ["p-30", 30], ["p-7", 7]].forEach(function (q) {
+      var el = document.getElementById(q[0]);
+      if (!el) return;
+      el.onclick = function () {
+        var n = S.days.length, j;
+        S.hi = n - 1;
+        if (!q[1]) { S.lo = 0; }
+        else {
+          var cut = shift(S.days[n - 1], -(q[1] - 1));
+          S.lo = 0;
+          for (j = 0; j < n; j++) if (S.days[j] >= cut) { S.lo = j; break; }
+        }
+        ["p-all", "p-90", "p-30", "p-7"].forEach(function (id) {
+          var e2 = document.getElementById(id);
+          if (e2) e2.className = "ubtn" + (id === q[0] ? " on" : "");
+        });
+        refreshRange(); draw();
+      };
+    });
+    var btn = document.getElementById("lytbtn");
+    if (btn) btn.addEventListener("click", function () { setTimeout(draw, 0); });
+  }
+
+  function boot() {
+    if (!document.getElementById("rchart")) return;
+    var prof = [], games = [];
+    fetch("profile.csv", { cache: "no-store" }).then(function (r) { return r.text(); })
+      .then(function (t) {
+        parseCSV(t).forEach(function (r) {
+          var lg = num(r.pol_current_league), tr = num(r.pol_current_trophies);
+          var v = ms(r.checked_jst);
+          if (lg === null || v === null) return;
+          prof.push({ t: v, at: (r.checked_jst || "").slice(0, 16), lg: lg, tr: tr,
+                      u: !!(lg >= ULT && tr) });
+        });
+        prof.sort(function (x, y) { return x.t - y.t; });
+        return fetch("battles.csv", { cache: "no-store" }).then(function (r) { return r.text(); });
+      })
+      .then(function (t) {
+        parseCSV(t).forEach(function (r) {
+          if (MODE !== "all" && classify(r) !== MODE) return;
+          var v = ms(r.battle_time_jst);
+          if (v === null) return;
+          games.push({ t: v, d: (r.battle_time_jst || "").slice(0, 10), win: r.result === "win",
+                       dec: r.result !== "draw" });
+        });
+        games.sort(function (x, y) { return x.t - y.t; });
+
+        S.prof = prof;
+        S.vol = {};
+        games.forEach(function (g) { S.vol[g.d] = (S.vol[g.d] || 0) + 1; });
+
+        var dec = games.filter(function (g) { return g.dec; }), w = 0, i;
+        S.wr = [];
+        for (i = 0; i < dec.length; i++) {
+          if (dec[i].win) w++;
+          if (i >= WR_WIN && dec[i - WR_WIN].win) w--;
+          if (i >= WR_WIN - 1) S.wr.push({ t: dec[i].t, p: w / WR_WIN });
+        }
+
+        var first = null, last = null;
+        if (prof.length) { first = prof[0].at.slice(0, 10); last = prof[prof.length - 1].at.slice(0, 10); }
+        if (games.length) {
+          if (!first || games[0].d < first) first = games[0].d;
+          if (!last || games[games.length - 1].d > last) last = games[games.length - 1].d;
+        }
+        S.days = [];
+        if (first && last) {
+          var cur = first, guard = 0;
+          while (cur <= last && guard < 4000) { S.days.push(cur); cur = shift(cur, 1); guard++; }
+        }
+        S.lo = 0; S.hi = Math.max(0, S.days.length - 1);
+        bind(); refreshRange(); draw();
+      })
+      .catch(function (e) {
+        var box = document.getElementById("rchart");
+        if (box) box.innerHTML = '<p class="empty">データを読み込めなかった。' + esc(e) + "</p>";
+      });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+</script><footer>battles.csv より自動生成<br>カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、Supercell は内容に関与していない。</footer></div></body></html>

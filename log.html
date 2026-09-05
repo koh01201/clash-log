@@ -153,6 +153,9 @@ html[data-layout="narrow"] .narrowonly{display:block}
 .patch{stroke:#0B57A4;stroke-width:1.2;stroke-dasharray:3 3}
 .mask{fill:#FFFFFF;opacity:.66}
 .volbar{fill:#7B8FA8}
+.volfaint{fill:#7B8FA8;opacity:.17}
+.ultband{fill:#7A3FBF;opacity:.10}
+.ultlab{font-size:9.5px;fill:#7A3FBF;font-weight:700}
 .ubtn{font-size:12px;padding:5px 14px;border:1px solid var(--line);border-radius:4px;
   background:var(--panel);color:var(--ink);cursor:pointer;font-family:inherit}
 .ubtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
@@ -211,7 +214,7 @@ function crToggle(){
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
 });
-</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="log.html" class='on'>ランク戦</a><a href="etc-log.html">その他</a><a href="all-log.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="chart.html">推移</a><a href="mydeck.html">使用デッキ</a><a href="enemy.html">対戦相手</a><a href="chosi.html">調子</a><a href="rate.html">レート</a><a href="rivals.html">強敵</a><a href="log.html" class='on'>対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦記録<span class='mtag'>ランク戦</span></h1><p>対象期間 2026/07/31 〜 2026/09/05　更新 2026/09/05 18:25 JST</p></div>
+</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="log.html" class='on'>ランク戦</a><a href="etc-log.html">その他</a><a href="all-log.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="chart.html">推移</a><a href="mydeck.html">使用デッキ</a><a href="enemy.html">対戦相手</a><a href="chosi.html">調子</a><a href="rate.html">レート</a><a href="rivals.html">強敵</a><a href="log.html" class='on'>対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>対戦記録<span class='mtag'>ランク戦</span></h1><p>対象期間 2026/07/31 〜 2026/09/05　更新 2026/09/05 18:45 JST</p></div>
   <section class="panel"><h2>直近100試合</h2><p class="lead">左が自分、右が相手の編成。数字は残ったタワーのHP。</p><article class="log win">
   <header>
     <span class="when">09-05 09:08</span>
