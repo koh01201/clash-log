@@ -1,198 +1,285 @@
-<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>レート｜その他</title><style>
+<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>レート｜その他</title><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap'><style>
 :root{
-  --bg:#F2F3F5;--panel:#FFFFFF;--line:#DCDFE3;--ink:#1F2328;--label:#5B646E;
-  --labelbg:#F6F7F9;--up:#C8102E;--down:#0B57A4;--na:#8A939C;
-  --accent:#BF0000;--link:#0B5FBF;--upbg:#FDF0F2;--downbg:#EFF4FA;
-  --warnbg:#FFF4E5;--warnline:#F0C078;--warnink:#A85E00;
+  color-scheme:light;
+  --page:#FFFFFF;--sunk:#F3F4F6;--ink:#1C2126;--ink2:#545C66;--ink3:#868E97;
+  --rule:#E6E8EC;--rule2:#CDD2D8;
+  --accent:#BF0000;--up:#C8102E;--down:#0B57A4;--na:#98A0A9;
+  --upbg:#FBECEE;--downbg:#E9F0F9;--nabg:#EFF1F3;
+  --upband:#F3C9D0;--downband:#C6D8EE;--naband:#DEE2E6;
+  --ult:#6E3BB8;--link:#0B57A4;
+  --line:var(--rule);--label:var(--ink2);--labelbg:var(--sunk);--panel:var(--page);
+  --font:"IBM Plex Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI",
+    "Yu Gothic","Meiryo",sans-serif;
 }
 *{box-sizing:border-box}
-body{margin:0;padding:20px 16px 64px;background:var(--bg);color:var(--ink);
-  font-family:"Yu Gothic","Hiragino Kaku Gothic ProN","Noto Sans JP","Meiryo",sans-serif;
-  font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
-.wrap{max-width:900px;margin:0 auto}
-.navwrap{position:sticky;top:0;z-index:20;background:var(--bg);
-  padding:8px 0 6px;margin:-8px 0 12px;box-shadow:0 6px 8px -8px rgba(0,0,0,.28)}
-nav{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-nav.modes{margin-bottom:5px;padding-bottom:5px;border-bottom:1px dashed var(--line)}
-.navlab{font-size:10px;color:var(--label);width:34px;flex:none;letter-spacing:.08em}
-nav.modes a{background:var(--labelbg);font-weight:700}
-nav.modes a.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-nav a{text-decoration:none;background:var(--panel);color:var(--ink);font-size:13px;
-  padding:6px 14px;border:1px solid var(--line);border-radius:4px}
-nav a.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
-nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
-.head{background:var(--panel);border:1px solid var(--line);border-radius:4px;
-  padding:16px 20px;margin-bottom:12px;display:flex;justify-content:space-between;
-  align-items:flex-end;flex-wrap:wrap;gap:8px}
-.head{border-top:3px solid var(--accent)}
-.head h1{font-size:20px;font-weight:700;margin:0;display:flex;align-items:center;gap:10px}
-.mtag{font-size:11.5px;font-weight:700;color:#fff;background:var(--accent);
-  border-radius:3px;padding:2px 9px}
-.head p{margin:0;color:var(--label);font-size:12px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
-  padding:18px 20px 16px;margin-bottom:12px}
-.panel h2{font-size:15px;font-weight:700;margin:0 0 10px;padding-bottom:9px;
-  border-bottom:3px solid var(--line);position:relative}
-.panel h2::after{content:"";position:absolute;left:0;bottom:-3px;width:56px;height:3px;
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--font);
+  font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums}
+button{font-family:inherit}
+a{color:var(--link)}
+:focus-visible{outline:2px solid var(--down);outline-offset:2px;border-radius:4px}
+
+/* ---------- 上部の帯 ---------- */
+.top{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);
+  -webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);
+  border-bottom:1px solid var(--rule)}
+.bar{max-width:960px;margin:0 auto;padding:12px 24px 2px;display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:9px;color:var(--ink);text-decoration:none;
+  font-size:16px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand i{display:block;width:4px;height:18px;border-radius:1px;background:var(--accent)}
+.lyt{margin-left:auto;font-size:12px;color:var(--ink2);background:none;border:1px solid var(--rule2);
+  border-radius:6px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+.lyt:hover{color:var(--ink);border-color:var(--ink3)}
+.tabs{max-width:960px;margin:0 auto;padding:0 24px;display:flex;gap:2px;overflow-x:auto;
+  scrollbar-width:none;font-feature-settings:"palt"}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{display:block;padding:10px 12px 9px;color:var(--ink2);text-decoration:none;font-size:14px;
+  border-bottom:2px solid transparent;white-space:nowrap;letter-spacing:.02em}
+.tabs a:first-child{margin-left:-12px}
+.tabs a:hover{color:var(--ink)}
+.tabs a.on{color:var(--ink);font-weight:700;border-bottom-color:var(--accent)}
+
+/* ---------- 切り替えボタン（つながった一組） ---------- */
+.seg{display:inline-flex;align-items:center;background:var(--sunk);border-radius:8px;padding:3px;gap:2px}
+.seg a,.seg .ubtn{display:block;border:0;background:none;color:var(--ink2);font-size:12.5px;
+  line-height:1.5;padding:4px 12px;border-radius:6px;text-decoration:none;cursor:pointer;
+  white-space:nowrap}
+.seg a:hover,.seg .ubtn:hover{color:var(--ink)}
+.seg a.on,.seg .ubtn.on{background:#fff;color:var(--ink);font-weight:700;
+  box-shadow:0 1px 2px rgba(28,33,38,.14),0 0 0 1px rgba(28,33,38,.04)}
+.modes a.on{color:var(--accent)}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:10px 24px;margin:0 0 16px}
+.tgroup{display:flex;align-items:center;gap:10px}
+.tl{font-size:12px;color:var(--ink3)}
+.navlab{font-size:12px;color:var(--ink3)}
+
+/* ---------- 本文 ---------- */
+.wrap{max-width:960px;margin:0 auto;padding:32px 24px 72px}
+.head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;
+  gap:6px 20px;margin:0 0 36px}
+.head h1{margin:0;font-size:26px;line-height:1.3;font-weight:700;letter-spacing:.01em;
+  font-feature-settings:"palt"}
+.head p{margin:0;font-size:12px;color:var(--ink3)}
+.panel{margin:0 0 56px}
+.panel h2{position:relative;margin:0 0 16px;padding:0 0 10px;font-size:17px;font-weight:700;
+  line-height:1.4;letter-spacing:.02em;border-bottom:2px solid var(--rule);
+  font-feature-settings:"palt"}
+.panel h2::after{content:"";position:absolute;left:0;bottom:-2px;width:48px;height:2px;
   background:var(--accent)}
-.lead{margin:-2px 0 12px;color:var(--label);font-size:12.5px}
-.sub2{font-size:13px;font-weight:700;margin:16px 0 6px}
-.stxt{display:flex;flex-direction:column;align-items:flex-end;line-height:1.35}
-.stxt .big{font-size:26px}
-.lgname{font-size:13px;font-weight:700;letter-spacing:.01em}
-.lgname.big2{font-size:17px}
-.sname{font-size:11.5px;color:var(--label);font-weight:400;display:block}
-.mdeck{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.mdeck .deck{grid-template-columns:repeat(8,1fr);gap:3px;max-width:290px;width:100%}
-@media(max-width:520px){.mdeck .deck{grid-template-columns:repeat(4,1fr);max-width:170px}}
-.note{margin:10px 0 0;color:var(--warnink);font-size:12px;background:var(--warnbg);
-  border:1px solid var(--warnline);border-radius:3px;padding:8px 12px}
-.empty{color:var(--label);font-size:13px;margin:4px 0}
-.chart{width:100%;height:auto;display:block;overflow:visible}
-.hair{stroke:var(--line);stroke-width:1}
-.gridv{stroke:#EDF0F2;stroke-width:1}
-.gtick{font-size:9px;fill:#9AA4AE}
-.base{stroke:#B6BDC4;stroke-width:1;stroke-dasharray:3 3}
-.baselab{font-size:10px;fill:var(--label)}
-.lab{font-size:12.5px;fill:var(--ink)}
-.lab.small{font-size:11.5px}
-.noicon{fill:#E7EAED;stroke:var(--line)}
-.band.up{fill:#F7D9DE}.band.down{fill:#D6E3F3}.band.na{fill:#E7EAED}
-.mark.up{fill:var(--up)}.mark.down{fill:var(--down)}.mark.na{fill:var(--na)}
-.val{font-size:19px;font-weight:700}
-.val.up{fill:var(--up)}.val.down{fill:var(--down)}.val.na{fill:var(--na)}
-.unit{font-size:11px;font-weight:400}
-.n{font-size:11.5px;fill:var(--label)}
-table.kv{width:100%;border-collapse:collapse;margin:2px 0 0}
-table.kv th{width:190px;background:var(--labelbg);color:var(--label);font-weight:400;
-  text-align:left;padding:9px 14px;border:1px solid var(--line);font-size:12.5px}
-table.kv td{padding:9px 14px;border:1px solid var(--line);text-align:right;
-  font-size:15px;font-weight:700;background:#fff}
-table.kv tr:nth-child(even) td{background:#FCFCFD}
-table.kv td.up{background:var(--upbg);color:var(--up)}
-table.kv td.down{background:var(--downbg);color:var(--down)}
-.big{font-size:28px;font-weight:700;letter-spacing:-.01em}
-.big .u{font-size:13px;font-weight:400;color:var(--label);margin-left:2px}
+.lead{margin:-4px 0 18px;max-width:46em;color:var(--ink2);font-size:13px}
+.sub2{margin:28px 0 8px;font-size:14px;font-weight:700}
+.note{position:relative;margin:14px 0 0;padding-left:1.3em;max-width:52em;color:var(--ink3);
+  font-size:12px;line-height:1.75}
+.note::before{content:"※";position:absolute;left:0}
+.note:empty{display:none}
+.empty{margin:4px 0;color:var(--ink3);font-size:13px}
+.sname,.sub{display:block;font-size:11.5px;font-weight:400;color:var(--ink3);line-height:1.5}
+
+/* ---------- 数値の表 ---------- */
+table.kv{width:100%;border-collapse:collapse;border-top:1px solid var(--rule2)}
+table.kv th{width:34%;padding:13px 16px 13px 0;border-bottom:1px solid var(--rule);
+  color:var(--ink2);font-size:13px;font-weight:400;text-align:left;vertical-align:top}
+table.kv td{padding:13px 0;border-bottom:1px solid var(--rule);text-align:right;
+  font-size:15px;font-weight:500;vertical-align:top}
+table.kv td.up{color:var(--up)}
+table.kv td.down{color:var(--down)}
+.big{font-size:30px;font-weight:700;line-height:1.15;letter-spacing:-.01em}
+.big .u{margin-left:2px;font-size:13px;font-weight:400;color:var(--ink3)}
 .up-t{color:var(--up)}.down-t{color:var(--down)}.na-t{color:var(--na)}
-.bar{height:10px;background:#E7EAED;border-radius:2px;overflow:hidden;margin:10px 0 6px}
-.bar i{display:block;height:100%;background:var(--accent)}
-.barlab{display:flex;justify-content:space-between;font-size:12px;color:var(--label)}
-.hl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.hl{background:var(--labelbg);border:1px solid var(--line);border-radius:4px;
-  padding:12px 14px 10px;display:flex;flex-direction:column;gap:6px}
-.hl-lab{font-size:11.5px;color:var(--label)}
-.hl-val{font-size:24px;font-weight:700;line-height:1.1}
-.hl-u{font-size:12px;font-weight:400;color:var(--label);margin-left:1px}
-.hl-sub{font-size:11px;color:var(--label);margin-top:-4px}
-.hl-card{display:flex;align-items:center;gap:8px;min-height:38px}
-.hl-card img,.hl-card .noimg{width:32px;aspect-ratio:5/6;border-radius:3px;display:block}
-.hl-card .noimg{background:#E7EAED;border:1px solid var(--line)}
-.hl-card b{font-size:13px;font-weight:700}
+.stxt{display:flex;flex-direction:column;align-items:flex-end;line-height:1.35}
+.stxt .big{font-size:28px}
+.lgname{font-size:13px;font-weight:700;letter-spacing:.01em}
+.lgname.big2{font-size:18px}
+.mdeck{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.mdeck .deck{grid-template-columns:repeat(8,1fr);gap:3px;width:100%;max-width:320px}
+
+/* ---------- 横並びの勝率図 ---------- */
+.chart{display:block;width:100%;height:auto;overflow:visible}
+.hair{stroke:var(--rule);stroke-width:1}
+.gridv{stroke:var(--rule);stroke-width:1}
+.gtick{font-size:10px;fill:var(--ink3)}
+.base{stroke:var(--ink3);stroke-width:1;stroke-dasharray:2 3}
+.baselab{font-size:10.5px;font-weight:500;fill:var(--ink2)}
+.lab{font-size:13px;fill:var(--ink)}
+.lab.small{font-size:12px}
+.noicon{fill:var(--sunk);stroke:var(--rule)}
+.band.up{fill:var(--upband)}.band.down{fill:var(--downband)}.band.na{fill:var(--naband)}
+.mark{stroke:#fff;stroke-width:2}
+.mark.up{fill:var(--up)}.mark.down{fill:var(--down)}.mark.na{fill:var(--na)}
+.val{font-size:17px;font-weight:700}
+.val.up{fill:var(--up)}.val.down{fill:var(--down)}.val.na{fill:var(--na)}
+.unit{font-size:11px;font-weight:400;fill:var(--ink3)}
+.n{font-size:12px;fill:var(--ink2)}
+.keys{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:12.5px;color:var(--ink2)}
+.keys span{display:inline-flex;align-items:center;gap:8px}
+.sw{position:relative;display:inline-block;width:30px;height:12px}
+.sw::before{content:"";position:absolute;left:0;right:0;top:4px;height:5px;border-radius:3px;
+  background:var(--b)}
+.sw::after{content:"";position:absolute;left:10px;top:1px;width:10px;height:10px;border-radius:50%;
+  background:var(--c);box-shadow:0 0 0 1.5px #fff}
+.sw-up{--b:var(--upband);--c:var(--up)}
+.sw-down{--b:var(--downband);--c:var(--down)}
+.sw-na{--b:var(--naband);--c:var(--na)}
+
+/* ---------- 時系列の図 ---------- */
+.plot{fill:none;stroke:none}
+.grid{stroke:var(--rule);stroke-width:1}
+.axis{stroke:var(--rule2);stroke-width:1}
+.monthsep{stroke:var(--rule2);stroke-width:1;stroke-dasharray:2 3}
+.seasonsep{stroke:var(--ink3);stroke-width:1;stroke-dasharray:3 3}
+.seasonlab{font-size:11px;font-weight:700;fill:var(--ink2)}
+.fifty{stroke:var(--ink3);stroke-width:1;stroke-dasharray:3 3}
+.tick{font-size:10.5px;fill:var(--ink3)}
+.tick.mon{fill:var(--ink2);font-weight:500}
+.tick.vlab{font-size:11px;fill:var(--ink2)}
+.ciband{fill:#7E8892;opacity:.12}
+.cistick{stroke:#7E8892;stroke-width:6;opacity:.22;stroke-linecap:round}
+.rate{fill:none;stroke:var(--ink);stroke-width:1.25;stroke-linejoin:round}
+.pt{fill:var(--ink);stroke:#fff;stroke-width:1.5}
+.pt.last{fill:var(--up)}
+.ma{fill:none;stroke:var(--up);stroke-width:2.25;stroke-linejoin:round;stroke-linecap:round}
+.patch{stroke:var(--down);stroke-width:1;stroke-dasharray:3 3}
+.volbar{fill:#B3BECA}
+.volfaint{fill:#8796A8;opacity:.2}
+.ultband{fill:var(--ult);opacity:.075}
+.ultlab{font-size:10.5px;font-weight:500;fill:var(--ult)}
+.xhair{stroke:var(--ink);stroke-width:1;opacity:0;pointer-events:none}
+.hit{fill:transparent;cursor:crosshair}
+#crtip{position:fixed;z-index:60;max-width:270px;padding:9px 12px;border-radius:8px;
+  background:#1C2126;color:#fff;font-size:12px;line-height:1.6;white-space:pre-line;
+  pointer-events:none;opacity:0;transition:opacity .08s;
+  box-shadow:0 6px 18px rgba(28,33,38,.22)}
+.legend2{display:flex;flex-wrap:wrap;gap:6px 22px;margin:14px 0 0;font-size:12px;color:var(--ink2)}
+.legend2 span{display:inline-flex;align-items:center;gap:8px}
+.lgline{display:inline-block;width:22px;height:0;border-top-width:2px;border-top-style:solid}
+.lgbox{display:inline-block;width:14px;height:12px;border-radius:3px}
+
+/* ---------- 期間のつまみ ---------- */
+.rng{margin:18px 0 0}
+.rlab{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  margin:0 0 4px;font-size:12px;color:var(--ink3)}
+.rlab b{color:var(--ink);font-weight:500}
+.dual{position:relative;height:24px}
+.dual::before{content:"";position:absolute;left:8px;right:8px;top:10px;height:4px;
+  border-radius:2px;background:var(--rule)}
+.dual-fill{position:absolute;top:10px;height:4px;border-radius:2px;background:var(--ink);
+  left:8px;width:calc(100% - 16px)}
+.dual input{position:absolute;left:0;top:0;width:100%;height:24px;margin:0;padding:0;
+  background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+.dual input::-webkit-slider-runnable-track{height:24px;background:none}
+.dual input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;pointer-events:auto;
+  width:16px;height:16px;margin-top:4px;border-radius:50%;background:#fff;
+  border:2px solid var(--ink);box-shadow:0 1px 3px rgba(28,33,38,.2);cursor:ew-resize}
+.dual input::-moz-range-track{height:24px;background:none}
+.dual input::-moz-range-thumb{pointer-events:auto;width:12px;height:12px;border-radius:50%;
+  background:#fff;border:2px solid var(--ink);box-shadow:0 1px 3px rgba(28,33,38,.2);cursor:ew-resize}
+.dual input:focus-visible{outline:none}
+.dual input:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px rgba(11,87,164,.35)}
+
+/* ---------- 目立つところ（推移ページ下） ---------- */
+.hl-grid{display:grid;grid-template-columns:repeat(3,1fr);margin-top:24px;
+  border-top:1px solid var(--rule2);border-bottom:1px solid var(--rule)}
+.hl{display:flex;flex-direction:column;gap:8px;padding:16px 18px 18px;border-left:1px solid var(--rule)}
+.hl:first-child{padding-left:0;border-left:0}
+.hl-lab{font-size:12px;color:var(--ink2)}
+.hl-val{font-size:26px;font-weight:700;line-height:1.1}
+.hl-u{margin-left:1px;font-size:12px;font-weight:400;color:var(--ink3)}
+.hl-sub{margin-top:-4px;font-size:11.5px;color:var(--ink3)}
+.hl-card{display:flex;align-items:center;gap:10px;min-height:42px}
+.hl-card img,.hl-card .noimg{display:block;width:34px;aspect-ratio:5/6;border-radius:4px}
+.hl-card .noimg{background:var(--sunk);border:1px solid var(--rule)}
+.hl-card b{font-size:13.5px;font-weight:700}
 .hl-card b.wide{font-size:14px}
-.hl .deck{grid-template-columns:repeat(4,1fr);gap:2px;max-width:150px}
-.menu{display:grid;gap:10px}
-.menu a{display:flex;justify-content:space-between;align-items:center;gap:16px;
-  text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);
-  border-radius:4px;padding:16px 20px}
-.menu a:hover{border-color:var(--ink)}
-.menu b{display:block;font-size:15px;font-weight:700}
-.menu span{font-size:12.5px;color:var(--label)}
-.menu em{font-style:normal;font-size:12px;color:var(--link);white-space:nowrap;font-weight:700}
-.menu a:hover b{color:var(--link)}
-.cov{width:100%;height:auto;display:block}
-.covbar.some{fill:#4E7CB8}.covbar.zero{fill:#EDEFF2}
-.covn{font-size:10px;fill:var(--label)}
-.covd{font-size:10.5px;fill:var(--ink)}
-.covw{font-size:9.5px;fill:var(--label)}
-.keys{display:flex;flex-wrap:wrap;gap:18px;font-size:12.5px;color:var(--label);margin:2px 0 0}
-.keys span{display:inline-flex;align-items:center;gap:6px}
-.sw{width:22px;height:11px;border-radius:2px;display:inline-block}
-.sw-up{background:#F7D9DE;border-left:3px solid var(--up)}
-.sw-down{background:#D6E3F3;border-left:3px solid var(--down)}
-.sw-na{background:#E7EAED;border-left:3px solid var(--na)}
-.log{background:var(--panel);border:1px solid var(--line);border-radius:4px;
-  margin-bottom:8px;padding:10px 14px 12px;border-left:4px solid var(--na)}
-.log.win{border-left-color:var(--up)}
-.log.lose{border-left-color:var(--down)}
-.log header{display:flex;align-items:center;gap:12px;font-size:11.5px;color:var(--label);
-  margin-bottom:8px}
-.log header .mode{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.log header .tro{font-weight:700}
-.duel{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.hl .deck{grid-template-columns:repeat(4,1fr);gap:3px;max-width:156px}
+
+/* ---------- カード画像 ---------- */
 .deck{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.deck img,.deck .noimg{display:block;width:100%;aspect-ratio:5/6;border-radius:4px}
+.deck .noimg{background:var(--sunk);border:1px solid var(--rule)}
+
+/* ---------- 対戦記録 ---------- */
+.log{position:relative;padding:16px 0 18px 16px;border-bottom:1px solid var(--rule)}
+.log:first-child{border-top:1px solid var(--rule2)}
+.log::before{content:"";position:absolute;left:0;top:16px;bottom:18px;width:3px;border-radius:2px;
+  background:var(--na)}
+.log.win::before{background:var(--up)}
+.log.lose::before{background:var(--down)}
+.log header{display:flex;align-items:baseline;gap:14px;margin:0 0 4px;font-size:12px;color:var(--ink3)}
+.log header .when{color:var(--ink2);font-weight:500}
+.log header .mode{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log header .tro{font-weight:700}
+.oppinfo{display:flex;flex-wrap:wrap;align-items:center;gap:2px 14px;margin:0 0 12px;
+  font-size:12px;color:var(--ink2)}
+.oppinfo b{color:var(--ink);font-weight:700}
+.rivaltag{display:inline-block;padding:0 7px;border-radius:4px;background:var(--upbg);
+  color:var(--up);font-size:11px;font-weight:700;line-height:1.7}
+.duel{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center}
 html[data-layout="wide"] .log .deck{grid-template-columns:repeat(8,1fr);gap:2px}
-.deck img,.deck .noimg{width:100%;aspect-ratio:5/6;display:block;border-radius:3px}
-.deck .noimg{background:#E7EAED;border:1px solid var(--line)}
-.hp{margin:6px 0 0;font-size:10.5px;color:var(--label);text-align:center}
-.mid{text-align:center;min-width:74px}
-.badge{display:block;font-size:19px;font-weight:700;color:#fff;border-radius:3px;
-  padding:2px 0;background:var(--na)}
-.badge.win{background:var(--up)}.badge.lose{background:var(--down)}
-.crowns{display:block;font-size:15px;font-weight:700;margin-top:4px}
+.hp{margin:6px 0 0;font-size:11px;color:var(--ink3);text-align:center}
+.mid{min-width:72px;text-align:center}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:44px;height:30px;
+  border-radius:7px;background:var(--nabg);color:var(--na);font-size:15px;font-weight:700}
+.badge.win{background:var(--upbg);color:var(--up)}
+.badge.lose{background:var(--downbg);color:var(--down)}
+.crowns{display:block;margin-top:6px;font-size:16px;font-weight:700;letter-spacing:.04em}
+
+/* ---------- 強敵 ---------- */
+.rivalwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.rivals{width:100%;border-collapse:collapse;font-size:13px}
+table.rivals th{padding:0 10px 9px;border-bottom:1px solid var(--rule2);color:var(--ink2);
+  font-size:11.5px;font-weight:500;line-height:1.4;text-align:right;vertical-align:bottom;
+  white-space:nowrap}
+table.rivals th.l{text-align:left}
+table.rivals td{padding:12px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.rivals tbody tr:hover td{background:#FAFBFC}
+table.rivals .rk{width:30px;padding-left:0;color:var(--ink3);font-size:12px}
+table.rivals .who{min-width:150px}
+table.rivals .who b{font-weight:700}
+table.rivals .num{text-align:right;white-space:nowrap;color:var(--ink2)}
+table.rivals .num.key{color:var(--ink);font-weight:700}
+table.rivals .topc b{display:block;color:var(--ink);font-size:15px;font-weight:700}
+table.rivals .topc .sub{white-space:nowrap}
+table.rivals .dt{font-size:12px;white-space:nowrap;color:var(--ink2)}
+
+/* ---------- 表示の切り替え ---------- */
 .narrowonly{display:none}
 html[data-layout="narrow"] .wideonly{display:none}
 html[data-layout="narrow"] .narrowonly{display:block}
-.basenote{margin:0 0 6px;font-size:11px;color:var(--label)}
-.lyt{margin-left:auto;font-size:11.5px;color:var(--label);background:var(--panel);
-  border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;
-  font-family:inherit}
-.lyt:hover{border-color:var(--link);color:var(--link)}
-@media print{.navwrap{display:none}}
-.plot{fill:#FCFCFD;stroke:#C3CAD1;stroke-width:1}
-.grid{stroke:#E9ECEF;stroke-width:1}
-.monthsep{stroke:#C3CAD1;stroke-width:1}
-.fifty{stroke:#E4A6AE;stroke-width:1;stroke-dasharray:4 3}
-.tick{font-size:9.5px;fill:var(--label)}
-.tick.mon{fill:var(--ink);font-weight:700}
-.tick.vlab{font-size:9px}
-.ciband{fill:#8A939C;opacity:.13}
-.cistick{stroke:#8A939C;stroke-width:6;opacity:.28}
-.rate{fill:none;stroke:#3A424B;stroke-width:1.1;stroke-linejoin:round}
-.pt{fill:#3A424B}
-.ma{fill:none;stroke:var(--up);stroke-width:2.2;stroke-linejoin:round}
-.patch{stroke:#0B57A4;stroke-width:1.2;stroke-dasharray:3 3}
-.mask{fill:#FFFFFF;opacity:.66}
-.volbar{fill:#7B8FA8}
-.volfaint{fill:#7B8FA8;opacity:.17}
-.ultband{fill:#7A3FBF;opacity:.10}
-.ultlab{font-size:9.5px;fill:#7A3FBF;font-weight:700}
-.ubtn{font-size:12px;padding:5px 14px;border:1px solid var(--line);border-radius:4px;
-  background:var(--panel);color:var(--ink);cursor:pointer;font-family:inherit}
-.ubtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
-.ctrl{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 0 10px}
-.ctrl.foot{margin:10px 0 0;justify-content:center}
-.rng{margin:10px 0 0;padding-top:10px;border-top:1px solid var(--line)}
-.rng input{width:100%;margin:1px 0;accent-color:var(--ink)}
-.rlab{font-size:12px;color:var(--label);margin-bottom:2px}
-.rlab b{color:var(--ink)}
-.legend2{display:flex;flex-wrap:wrap;gap:18px;font-size:12px;color:var(--label);
-  margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
-.legend2 span{display:inline-flex;align-items:center;gap:7px}
-.lgline{display:inline-block;width:22px;height:0;border-top-width:2px;border-top-style:solid}
-.lgbox{display:inline-block;width:20px;height:11px;border-radius:2px}
-.oppinfo{margin:0 0 8px;font-size:11.5px;color:var(--label);
-  display:flex;flex-wrap:wrap;gap:0 4px;align-items:center}
-.oppinfo b{color:var(--ink)}
-.rivaltag{background:var(--up);color:#fff;border-radius:3px;padding:1px 7px;
-  font-size:10.5px;font-weight:700}
-.rivalwrap{overflow-x:auto}
-table.rivals{width:100%;border-collapse:collapse;font-size:13px}
-table.rivals th{background:var(--labelbg);color:var(--label);font-weight:400;font-size:11.5px;
-  padding:8px 10px;border:1px solid var(--line);text-align:left;white-space:nowrap}
-table.rivals td{padding:8px 10px;border:1px solid var(--line);vertical-align:top}
-table.rivals tr:nth-child(even) td{background:#FCFCFD}
-table.rivals .rk{width:34px;color:var(--label);font-size:12px}
-table.rivals .num{text-align:right;font-weight:700;white-space:nowrap}
-table.rivals .dt{font-size:12px;white-space:nowrap}
-footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
-@media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
-  nav a{font-size:12px;padding:6px 11px}
-  .navlab{width:100%;margin-bottom:2px}
-  table.kv th{width:130px}
-  .hl-grid{grid-template-columns:1fr 1fr}
-  .duel{grid-template-columns:1fr auto 1fr;gap:8px}
-  .mid{min-width:52px}.badge{font-size:15px}.crowns{font-size:13px}
-  .hp{font-size:9px}}
+.basenote{margin:0 0 6px;font-size:11px;color:var(--ink3)}
+
+footer{max-width:960px;margin:0 auto;padding:18px 24px 48px;border-top:1px solid var(--rule);
+  color:var(--ink3);font-size:11.5px;line-height:1.8}
+
+html[data-layout="narrow"] .bar{padding:10px 14px 0;gap:10px}
+html[data-layout="narrow"] .brand{font-size:15px}
+html[data-layout="narrow"] .seg.modes a{padding:4px 9px;font-size:12px}
+html[data-layout="narrow"] .lyt{font-size:11px;padding:4px 8px}
+html[data-layout="narrow"] .brand span{display:none}
+html[data-layout="narrow"] .tabs{padding:0 14px}
+html[data-layout="narrow"] .tabs a{padding:10px 10px 9px;font-size:13.5px}
+html[data-layout="narrow"] .tabs a:first-child{margin-left:-10px}
+html[data-layout="narrow"] .wrap{padding:24px 14px 56px}
+html[data-layout="narrow"] .head{margin-bottom:28px}
+html[data-layout="narrow"] .head h1{font-size:22px}
+html[data-layout="narrow"] .panel{margin-bottom:44px}
+html[data-layout="narrow"] table.kv th{width:40%}
+html[data-layout="narrow"] .hl-grid{grid-template-columns:1fr 1fr}
+html[data-layout="narrow"] .hl{padding:14px 12px 16px}
+html[data-layout="narrow"] .hl:nth-child(odd){padding-left:0;border-left:0}
+html[data-layout="narrow"] .hl:nth-child(n+3){border-top:1px solid var(--rule)}
+html[data-layout="narrow"] .duel{gap:10px}
+html[data-layout="narrow"] .mid{min-width:52px}
+html[data-layout="narrow"] .badge{width:38px;height:26px;font-size:14px}
+html[data-layout="narrow"] .crowns{font-size:14px}
+html[data-layout="narrow"] .hp{font-size:9.5px}
+html[data-layout="narrow"] footer{padding:16px 14px 40px}
+@media(max-width:560px){
+  .bar{padding:10px 14px 0;gap:10px}.tabs{padding:0 14px}.wrap{padding:24px 14px 56px}
+  .brand span{display:none}footer{padding:16px 14px 40px}}
+@media print{.top{position:static}.rng,.toolbar,.lyt{display:none}}
+@media(prefers-reduced-motion:reduce){#crtip{transition:none}}
 </style><script>
 function crLayout(m){
   document.documentElement.setAttribute('data-layout', m);
@@ -213,31 +300,76 @@ function crToggle(){
 })();
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
+  var tabs = document.querySelector('.tabs'), on = tabs && tabs.querySelector('a.on');
+  if(on && on.offsetLeft + on.offsetWidth > tabs.clientWidth) tabs.scrollLeft = on.offsetLeft - 24;
 });
-</script></head><body><div class='wrap'><div class="navwrap"><nav class="modes"><span class="navlab">モード</span><a href="rate.html">ランク戦</a><a href="etc-rate.html" class='on'>その他</a><a href="all-rate.html">すべて</a></nav><nav class="pages"><span class="navlab">表示</span><a href="etc-chart.html">推移</a><a href="etc-mydeck.html">使用デッキ</a><a href="etc-enemy.html">対戦相手</a><a href="etc-chosi.html">調子</a><a href="etc-rate.html" class='on'>レート</a><a href="etc-rivals.html">強敵</a><a href="etc-log.html">対戦記録</a><button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav></div><div class='head'><h1>レート<span class='mtag'>その他</span></h1><p>対象期間 2026/07/31 〜 2026/10/02　更新 2026/10/04 08:46 JST</p></div><section class="panel"><h2>現在の成績</h2><p class="lead">アルティメットチャンピオンに到達するまでレートは表示されないため、それまではステージを表示する。</p><table class="kv"><tr><th>今シーズン</th><td><span class="stxt"><span class="sname">レート</span><b class="big">1,745</b><span class="lgname" style="color:#7A3FBF">Ultimate Champion</span></span></tr><tr><th>自己ベスト</th><td><span class="stxt"><span class="sname">レート</span><b class="big">2,246</b><span class="lgname" style="color:#8A939C">League 10</span><span class="sname">世界 8,026 位</span></span><span class="sname">2024年4月に達成</span></tr><tr><th>ベストとの差</th><td class="down">-501</tr><tr><th>最高順位</th><td>世界 8,026 位<span class="sname">2024年4月に達成</span></tr><tr><th>トロフィー（通常）</th><td>14,000　最高 14,000</tr><tr><th>通算成績</th><td>10,721勝 8,070敗（57.1%）</tr></table><h3 class="sub2">シーズン別の最終成績</h3><table class="kv"><tr><th>2026-09-08 時点で確認</th><td><span class="stxt"><span class="sname">レート</span><b class="big">1,449</b><span class="lgname" style="color:#7A3FBF">Ultimate Champion</span></span></td></tr><tr><th>2026-08-05 時点で確認</th><td><span class="stxt"><b class="lgname big2" style="color:#C0392B">Royal Champion</b></span></td></tr></table></section><section class="panel"><h2>レートと勝率の推移</h2><p class="lead">上がレート、下が勝率。横軸は共通で、つまみを動かすと両方が連動する。</p>
-    <div class="ctrl">
-      <span class="navlab" style="width:auto">期間</span>
-      <button id="p-7" class="ubtn">7日</button>
-      <button id="p-30" class="ubtn">30日</button>
-      <button id="p-90" class="ubtn">90日</button>
-      <button id="p-all" class="ubtn on">全期間</button>
-    </div>
+function crFill(){
+  var a = document.getElementById('r1'), z = document.getElementById('r2'),
+      f = document.getElementById('rfill');
+  if(!a || !z || !f) return;
+  var m = +a.max || 0, lo = Math.min(+a.value, +z.value), hi = Math.max(+a.value, +z.value);
+  var p = function(v){ return m ? v / m : 0; };
+  f.style.left = 'calc(8px + (100% - 16px) * ' + p(lo) + ')';
+  f.style.width = 'calc((100% - 16px) * ' + Math.max(0, p(hi) - p(lo)) + ')';
+}
+document.addEventListener('input', function(e){
+  var t = e.target;
+  if(t && (t.id === 'r1' || t.id === 'r2')){
+    crFill();
+    var g = document.querySelectorAll('[id^="p-"]');
+    for(var i = 0; i < g.length; i++) g[i].classList.remove('on');
+  }
+});
+(function(){
+  var tip = null, cur = null, hair = null;
+  function hide(){
+    if(tip) tip.style.opacity = 0;
+    if(hair) hair.style.opacity = 0;
+    cur = null; hair = null;
+  }
+  function show(el, x, y){
+    if(!tip){ tip = document.createElement('div'); tip.id = 'crtip'; document.body.appendChild(tip); }
+    if(cur !== el){
+      tip.textContent = el.getAttribute('data-tip');
+      if(hair) hair.style.opacity = 0;
+      var svg = el.ownerSVGElement, cx = el.getAttribute('data-cx');
+      hair = svg ? svg.querySelector('.xhair') : null;
+      if(hair && cx){ hair.setAttribute('x1', cx); hair.setAttribute('x2', cx); hair.style.opacity = .4; }
+      cur = el;
+    }
+    var w = tip.offsetWidth, h = tip.offsetHeight, vw = window.innerWidth;
+    var left = x + 16; if(left + w > vw - 8) left = x - w - 16; if(left < 8) left = 8;
+    var top = y - h - 14; if(top < 8) top = y + 18;
+    tip.style.left = left + 'px'; tip.style.top = top + 'px'; tip.style.opacity = 1;
+  }
+  function move(e){
+    var el = e.target && e.target.closest ? e.target.closest('[data-tip]') : null;
+    if(el) show(el, e.clientX, e.clientY); else if(cur) hide();
+  }
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerdown', move);
+  document.addEventListener('pointerleave', hide);
+  window.addEventListener('scroll', hide, {passive: true});
+})();
+</script></head><body><header class="top"><div class="bar"><a class="brand" href="etc-chart.html"><i></i>Clash Log<span></span></a><nav class="seg modes" aria-label="モード"><a href="rate.html">ランク戦</a><a href="etc-rate.html" class='on'>その他</a><a href="all-rate.html">すべて</a></nav><button id="lytbtn" class="lyt" onclick="crToggle()"></button></div><nav class="tabs" aria-label="表示"><a href="etc-chart.html">推移</a><a href="etc-mydeck.html">使用デッキ</a><a href="etc-enemy.html">対戦相手</a><a href="etc-chosi.html">調子</a><a href="etc-rate.html" class='on'>レート</a><a href="etc-rivals.html">強敵</a><a href="etc-log.html">対戦記録</a></nav></header><main class='wrap'><div class='head'><h1>レート</h1><p>その他　対象期間 2026/07/31 〜 2026/10/02　更新 2026/10/04 10:52 JST</p></div><section class="panel"><h2>現在の成績</h2><p class="lead">アルティメットチャンピオンに到達するまでレートは表示されないため、それまではステージを表示する。</p><table class="kv"><tr><th>今シーズン（シーズン87）</th><td><span class="stxt"><span class="sname">レート</span><b class="big">1,684</b><span class="lgname" style="color:#7A3FBF">Ultimate Champion</span></span></tr><tr><th>自己ベスト</th><td><span class="stxt"><span class="sname">レート</span><b class="big">2,246</b><span class="lgname" style="color:#8A939C">League 10</span><span class="sname">世界 8,026 位</span></span><span class="sname">2024年4月に達成</span></tr><tr><th>ベストとの差</th><td class="down">-562</tr><tr><th>最高順位</th><td>世界 8,026 位<span class="sname">2024年4月に達成</span></tr><tr><th>トロフィー（通常）</th><td>14,000　最高 14,000</tr><tr><th>通算成績</th><td>10,723勝 8,074敗（57.0%）</tr></table><h3 class="sub2">シーズン別の最終成績</h3><table class="kv"><tr><th>シーズン86<span class="sname">2026-09-08 に確認</span></th><td><span class="stxt"><span class="sname">レート</span><b class="big">1,449</b><span class="lgname" style="color:#7A3FBF">Ultimate Champion</span></span></td></tr><tr><th>シーズン85<span class="sname">2026-08-05 に確認</span></th><td><span class="stxt"><b class="lgname big2" style="color:#C0392B">Royal Champion</b></span></td></tr></table></section><section class="panel"><h2>レートと勝率の推移</h2><p class="lead">上がレート、下が勝率。横軸は共通で、つまみを動かすと両方が連動する。</p>
+    <div class="toolbar"><div class="tgroup"><span class="tl">期間</span><div class="seg"><button id="p-7" class="ubtn">7日</button><button id="p-30" class="ubtn">30日</button><button id="p-90" class="ubtn">90日</button><button id="p-all" class="ubtn on">全期間</button></div></div></div>
     <div id="rchart"></div>
     <div class="rng">
-      <div class="rlab">表示範囲 <b id="rlab">-</b></div>
-      <input id="r1" type="range" min="0" max="0" value="0">
-      <input id="r2" type="range" min="0" max="0" value="0">
+      <div class="rlab"><span>表示範囲</span><b id="rlab">-</b></div>
+      <div class="dual"><div class="dual-fill" id="rfill"></div><input id="r1" type="range" min="0" max="0" value="0" aria-label="表示範囲の始まり"><input id="r2" type="range" min="0" max="0" value="0" aria-label="表示範囲の終わり"></div>
     </div>
     <div class="legend2">
-      <span><i class="lgline" style="border-color:#C8102E;border-top-width:3px"></i>レート・ステージ</span>
-      <span><i class="lgline" style="border-color:#3A424B"></i>勝率（30試合の移動平均）</span>
-      <span><i class="lgbox" style="background:#D6CBEA"></i>アルティメットチャンピオン</span>
-      <span><i class="lgbox" style="background:#DCE1E6"></i>試合数</span>
-    </div><p class="note">レートはランク戦の記録（全モード共通）。勝率と試合数は表示中のモードのもの。紫の帯はアルティメットチャンピオンの範囲。</p></section><section class="panel"><h2>月ごとの最多使用デッキ</h2><p class="lead">シーズンの区切りはAPIから取得できないため、暦月で区切っている。</p><table class="kv"><tr><th>2026年10月<span class="sname">1試合・勝率100.0%</span></th><td><div class="mdeck"><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/WJd207D0O1sN-l1FTb8P9KhYL2oF5jY26vRUfTUW3FQ.png" alt="Golden Knight" title="Golden Knight"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/X0dTFs7OGUavreDEzOtYd_YNZ8Zly6qgAE-dd-bNfWU.png" alt="Ronin" title="Ronin"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/iqbDiG7yYRIzvCPXdt9zPb3IvMt7F7Gi4wIPnh2x4aI.png" alt="Furnace" title="Furnace"><img src="https://api-assets.clashroyale.com/cards/300/Flsoci-Y6y8ZFVi5uRFTmgkPnCmMyMVrU7YmmuPvSBo.png" alt="Arrows" title="Arrows"></div><span class="sname">1試合使用（1種類中）・このデッキの勝率 100.0%</span></div></td></tr><tr><th>2026年9月<span class="sname">28試合・勝率75.0%</span></th><td><div class="mdeck"><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vCB4DWCcrGbTkarjcOiVz4aNDx6GWLm0yUepg9E1MGo.png" alt="Skeleton Barrel" title="Skeleton Barrel"><img src="https://api-assets.clashroyale.com/cards/300/NA6W8S1JBYBlOPwD3dNvJLFvVDKq-UuBs_J3i3ewLFI.png" alt="Berserker" title="Berserker"><img src="https://api-assets.clashroyale.com/cards/300/lPOSw6H7YOHq2miSCrf7ZDL3ANjhJdPPDYOTujdNrVE.png" alt="Mortar" title="Mortar"><img src="https://api-assets.clashroyale.com/cards/300/aqwxRz8HXzqlMCO4WMXNA1txynjXTsLinknqsgZLbok.png" alt="Cannon Cart" title="Cannon Cart"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/yHGpoEnmUWPGV_hBbhn-Kk-Bs838OjGzWzJJlQpQKQA.png" alt="Minions" title="Minions"><img src="https://api-assets.clashroyale.com/cards/300/KV48DfwVHKx9XCjzBdk3daT_Eb52Me4VgjVO7WctRc4.png" alt="Rascals" title="Rascals"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div><span class="sname">2試合使用（8種類中）・このデッキの勝率 100.0%</span></div></td></tr><tr><th>2026年8月<span class="sname">17試合・勝率41.2%</span></th><td><div class="mdeck"><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vD24bBgK4rSq7wx5QEbuqChtPMRFviL_ep76GwQw1yA.png" alt="Goblin Cage" title="Goblin Cage"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/jcNyYGUiXXNz3kuz8NBkHNKNREQKraXlb_Ts7rhCIdM.png" alt="Royal Recruits" title="Royal Recruits"><img src="https://api-assets.clashroyale.com/cards/300/ASSQJG_MoVq9e81HZzo4bynMnyLNpNJMfSLb3hqydOw.png" alt="Royal Hogs" title="Royal Hogs"><img src="https://api-assets.clashroyale.com/cards/300/hzKNE3QwFcrSrDDRuVW3QY_OnrDPijSiIp-PsWgFevE.png" alt="Flying Machine" title="Flying Machine"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/Flsoci-Y6y8ZFVi5uRFTmgkPnCmMyMVrU7YmmuPvSBo.png" alt="Arrows" title="Arrows"><img src="https://api-assets.clashroyale.com/cards/300/WKd4-IAFsgPpMo7dDi9sujmYjRhOMEWiE07OUJpvD9g.png" alt="Electro Spirit" title="Electro Spirit"></div><span class="sname">5試合使用（10種類中）・このデッキの勝率 60.0%</span></div></td></tr><tr><th>2026年7月<span class="sname">1試合・勝率100.0%</span></th><td><div class="mdeck"><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/98HDkG2189yOULcVG9jz2QbJKtfuhH21DIrIjkOjxI8.png" alt="Poison" title="Poison"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"></div><span class="sname">1試合使用（1種類中）・このデッキの勝率 100.0%</span></div></td></tr></table><p class="note">その月にいちばん多く使った構成を1つ表示している。</p></section><script>(function () {
+      <span><i class="lgline" style="border-color:#C8102E;border-top-width:2.5px"></i>レート・ステージ</span>
+      <span><i class="lgline" style="border-color:#1C2126;border-top-width:1.5px"></i>勝率（30試合の移動平均）</span>
+      <span><i class="lgbox" style="background:#EFE9F7;box-shadow:inset 0 0 0 1px #D9CCEE"></i>アルティメットチャンピオン</span>
+      <span><i class="lgbox" style="background:#E4E8ED"></i>試合数</span>
+      <span><i class="lgline" style="border-color:#868E97;border-top-width:1.5px;border-top-style:dashed"></i>シーズンの区切り</span>
+    </div><p class="note">レートはランク戦の記録（全モード共通）。勝率と試合数は表示中のモードのもの。紫の帯はアルティメットチャンピオンの範囲。</p></section><section class="panel"><h2>シーズンごとの最多使用デッキ</h2><p class="lead">レート戦がいちばん下のステージに戻った時点を、シーズンの切り替わりとしている。</p><table class="kv"><tr><th>シーズン87<span class="sname">09/19〜10/02・27試合・勝率74.1%</span></th><td><div class="mdeck"><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vCB4DWCcrGbTkarjcOiVz4aNDx6GWLm0yUepg9E1MGo.png" alt="Skeleton Barrel" title="Skeleton Barrel"><img src="https://api-assets.clashroyale.com/cards/300/NA6W8S1JBYBlOPwD3dNvJLFvVDKq-UuBs_J3i3ewLFI.png" alt="Berserker" title="Berserker"><img src="https://api-assets.clashroyale.com/cards/300/lPOSw6H7YOHq2miSCrf7ZDL3ANjhJdPPDYOTujdNrVE.png" alt="Mortar" title="Mortar"><img src="https://api-assets.clashroyale.com/cards/300/aqwxRz8HXzqlMCO4WMXNA1txynjXTsLinknqsgZLbok.png" alt="Cannon Cart" title="Cannon Cart"><img src="https://api-assets.clashroyale.com/cards/300/lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc.png" alt="Fireball" title="Fireball"><img src="https://api-assets.clashroyale.com/cards/300/yHGpoEnmUWPGV_hBbhn-Kk-Bs838OjGzWzJJlQpQKQA.png" alt="Minions" title="Minions"><img src="https://api-assets.clashroyale.com/cards/300/KV48DfwVHKx9XCjzBdk3daT_Eb52Me4VgjVO7WctRc4.png" alt="Rascals" title="Rascals"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"></div><span class="sname">2試合使用（7種類中）・このデッキの勝率 100.0%</span></div></td></tr><tr><th>シーズン86<span class="sname">08/04〜09/06・15試合・勝率53.3%</span></th><td><div class="mdeck"><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/vD24bBgK4rSq7wx5QEbuqChtPMRFviL_ep76GwQw1yA.png" alt="Goblin Cage" title="Goblin Cage"><img src="https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png" alt="Barbarian Barrel" title="Barbarian Barrel"><img src="https://api-assets.clashroyale.com/cards/300/jcNyYGUiXXNz3kuz8NBkHNKNREQKraXlb_Ts7rhCIdM.png" alt="Royal Recruits" title="Royal Recruits"><img src="https://api-assets.clashroyale.com/cards/300/ASSQJG_MoVq9e81HZzo4bynMnyLNpNJMfSLb3hqydOw.png" alt="Royal Hogs" title="Royal Hogs"><img src="https://api-assets.clashroyale.com/cards/300/hzKNE3QwFcrSrDDRuVW3QY_OnrDPijSiIp-PsWgFevE.png" alt="Flying Machine" title="Flying Machine"><img src="https://api-assets.clashroyale.com/cards/300/QZfHRpLRmutZbCr5fpLnTpIp89vLI6NrAwzGZ8tHEc4.png" alt="Zappies" title="Zappies"><img src="https://api-assets.clashroyale.com/cards/300/Flsoci-Y6y8ZFVi5uRFTmgkPnCmMyMVrU7YmmuPvSBo.png" alt="Arrows" title="Arrows"><img src="https://api-assets.clashroyale.com/cards/300/WKd4-IAFsgPpMo7dDi9sujmYjRhOMEWiE07OUJpvD9g.png" alt="Electro Spirit" title="Electro Spirit"></div><span class="sname">5試合使用（8種類中）・このデッキの勝率 60.0%</span></div></td></tr><tr><th>シーズン85<span class="sname">07/31〜08/03・5試合・勝率40.0%</span></th><td><div class="mdeck"><div class="deck"><img src="https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png" alt="Battle Ram" title="Battle Ram"><img src="https://api-assets.clashroyale.com/cards/300/Avli3W7BxU9HQ2SoLiXnBgGx25FoNXUSFm7OcAk68ek.png" alt="Magic Archer" title="Magic Archer"><img src="https://api-assets.clashroyale.com/cards/300/3En2cz0ISQAaMTHY3hj3rTveFN2kJYq-H4VxvdJNvCM.png" alt="Royal Ghost" title="Royal Ghost"><img src="https://api-assets.clashroyale.com/cards/300/98HDkG2189yOULcVG9jz2QbJKtfuhH21DIrIjkOjxI8.png" alt="Poison" title="Poison"><img src="https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png" alt="Electro Wizard" title="Electro Wizard"><img src="https://api-assets.clashroyale.com/cards/300/7dxh2-yCBy1x44GrBaL29vjqnEEeJXHEAlsi5g6D1eY.png" alt="Zap" title="Zap"><img src="https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png" alt="Bandit" title="Bandit"><img src="https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png" alt="P.E.K.K.A" title="P.E.K.K.A"></div><span class="sname">2試合使用（4種類中）・このデッキの勝率 100.0%</span></div></td></tr></table><p class="note">番号は2026年10月4日時点のシーズンを87として数えている。日付はそのシーズンで試合の記録がある範囲。いちばん多く使った構成を1つ表示している。</p></section><script>(function () {
   var MODE = "etc";
   var LG = {"1":"Master I","2":"Master II","3":"Master III","4":"Champion","5":"Grand Champion","6":"Royal Champion","7":"Ultimate Champion"};
   var ULT = 7;
   var WR_WIN = 30;                 // 勝率の移動平均に使う試合数
+  var SEASONS = [{"f": "", "n": 85}, {"f": "2026-08-04 08:04:30", "n": 86}, {"f": "2026-09-08 08:41:21", "n": 87}];       // [{f: このシーズンの最初の時刻, n: 番号}] 古い順
   var S = { prof: [], wr: [], vol: {}, days: [], lo: 0, hi: 0 };
 
   function narrow() {
@@ -314,8 +446,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
     var nw = narrow();
     var W = nw ? 380 : 720;
-    var RH = nw ? 128 : 168, WH = nw ? 92 : 120, GAP = 18;
-    var padL = 8, padR = nw ? 46 : 52, padT = 14;
+    var RH = nw ? 128 : 168, WH = nw ? 92 : 120, GAP = 34;
+    var padL = 8, padR = nw ? 84 : 104, padT = 40;
     var H = padT + RH + GAP + WH + 22;
     var pw = W - padL - padR;
     var ry0 = padT, ry1 = padT + RH;
@@ -395,21 +527,33 @@ document.addEventListener('DOMContentLoaded', function(){
       }
       o.push('<g clip-path="url(#rcA)">');
       if (seg.length > 1) o.push('<polyline class="ma" points="' + seg.join(" ") + '"/>');
-      for (k = 0; k < vis.length; k++) {
-        var p0 = Pr[vis[k]], yy = yof(p0);
-        if (k > 0 && k < vis.length - 1 &&
-            Math.abs(yy - yof(Pr[vis[k - 1]])) < 0.05 &&
-            Math.abs(yy - yof(Pr[vis[k + 1]])) < 0.05) continue;
-        o.push('<circle class="pt" cx="' + xs(p0.t).toFixed(1) + '" cy="' + yy.toFixed(1) +
-          '" r="2.6"><title>' + esc(p0.at) + " " +
-          esc(p0.u ? fmtn(p0.tr) : lname(p0.lg)) + "</title></circle>");
-      }
+      // 印は表示範囲の最後の記録だけ（途中の値はなぞると出る）
+      var pl = Pr[vis[vis.length - 1]];
+      o.push('<circle class="pt last" cx="' + xs(pl.t).toFixed(1) + '" cy="' + yof(pl).toFixed(1) +
+        '" r="3.5"/>');
       o.push("</g>");
     } else {
       o.push('<text class="tick" x="' + (padL + pw / 2).toFixed(1) + '" y="' +
         (ry0 + RH / 2).toFixed(1) + '" text-anchor="middle">この期間はレートの記録がない</text>');
     }
-    o.push('<text class="tick vlab" x="' + padL + '" y="' + (ry0 - 4) + '">レート</text>');
+    o.push('<line class="axis" x1="' + padL + '" y1="' + ry1 + '" x2="' + (padL + pw) + '" y2="' + ry1 + '"/>');
+    o.push('<text class="tick vlab" x="' + padL + '" y="' + (ry0 - 6) + '">レート</text>');
+
+    /* ===== シーズンの区切りと上の帯 ===== */
+    var sst = [];
+    for (k = 0; k < SEASONS.length; k++) {
+      var sf = SEASONS[k].f ? ms(SEASONS[k].f) : -Infinity;
+      var se = k + 1 < SEASONS.length ? ms(SEASONS[k + 1].f) : Infinity;
+      if (se <= dS || sf >= dE) continue;
+      sst.push({ a: Math.max(sf, dS), b: Math.min(se, dE), n: SEASONS[k].n, cut: sf > dS });
+    }
+    for (k = 0; k < sst.length; k++) {
+      var sx0 = xs(sst[k].a), sx1 = xs(sst[k].b), sw = sx1 - sx0;
+      if (sst[k].cut) o.push('<line class="seasonsep" x1="' + sx0.toFixed(1) + '" y1="' + (ry0 - 34) +
+        '" x2="' + sx0.toFixed(1) + '" y2="' + wy1 + '"/>');
+      if (sw >= 26) o.push('<text class="seasonlab" x="' + ((sx0 + sx1) / 2).toFixed(1) + '" y="' + (ry0 - 22) +
+        '" text-anchor="middle">' + (sw >= 72 ? "シーズン" : "S") + sst[k].n + "</text>");
+    }
 
     /* ===== 下：勝率＋出来高 ===== */
     o.push('<rect class="plot" x="' + padL + '" y="' + wy0 + '" width="' + pw + '" height="' + WH + '"/>');
@@ -422,13 +566,13 @@ document.addEventListener('DOMContentLoaded', function(){
         var bh = (WH - 2) * (g / maxv);
         o.push('<rect class="volfaint" x="' + (padL + (i - lo) * bw + bw * 0.14).toFixed(1) +
           '" y="' + (wy1 - bh).toFixed(1) + '" width="' + Math.max(0.8, bw * 0.72).toFixed(1) +
-          '" height="' + bh.toFixed(1) + '"><title>' + esc(days[i]) + " " + g + "試合</title></rect>");
+          '" height="' + bh.toFixed(1) + '" rx="' + Math.min(2, bw * 0.2).toFixed(1) + '"/>');
       }
     }
     [0, 0.25, 0.5, 0.75, 1].forEach(function (v) {
       var yy = wy1 - WH * v;
-      if (v > 0 && v < 1) o.push('<line class="grid" x1="' + padL + '" y1="' + yy.toFixed(1) +
-        '" x2="' + (padL + pw) + '" y2="' + yy.toFixed(1) + '"/>');
+      if (v !== 0.5) o.push('<line class="' + (v === 0 ? "axis" : "grid") + '" x1="' + padL + '" y1="' +
+        yy.toFixed(1) + '" x2="' + (padL + pw) + '" y2="' + yy.toFixed(1) + '"/>');
       o.push('<text class="tick" x="' + (padL + pw + 5) + '" y="' + (yy + 3.5).toFixed(1) + '">' +
         (v * 100) + (v === 1 ? "%" : "") + "</text>");
     });
@@ -446,30 +590,15 @@ document.addEventListener('DOMContentLoaded', function(){
         (wy0 + WH / 2).toFixed(1) + '" text-anchor="middle">移動平均には' + WR_WIN +
         '試合の蓄積が要る</text>');
     }
-    o.push('<text class="tick vlab" x="' + padL + '" y="' + (wy0 - 4) +
+    o.push('<text class="tick vlab" x="' + padL + '" y="' + (wy0 - 6) +
       '">勝率（' + WR_WIN + '試合の移動平均）・薄い棒は試合数</text>');
 
     /* ===== 横軸 ===== */
-    var mb = [];
-    for (i = lo + 1; i <= hi; i++) {
-      if (days[i].slice(0, 7) !== days[i - 1].slice(0, 7)) mb.push(i);
-    }
-    for (k = 0; k < mb.length; k++) {
-      var mxx = (padL + (mb[k] - lo) * bw).toFixed(1);
-      o.push('<line class="monthsep" x1="' + mxx + '" y1="' + ry0 + '" x2="' + mxx +
-        '" y2="' + wy1 + '"/>');
-    }
     var used = [], yl = wy1 + 14, gap = nw ? 40 : 34;
     function room(x) {
       var j;
       for (j = 0; j < used.length; j++) if (Math.abs(x - used[j]) < gap) return false;
       used.push(x); return true;
-    }
-    for (k = 0; k < mb.length; k++) {
-      var mlx = xd(mb[k]);
-      if (!room(mlx)) continue;
-      o.push('<text class="tick mon" x="' + mlx.toFixed(1) + '" y="' + yl +
-        '" text-anchor="middle">' + esc(days[mb[k]].slice(0, 7).replace("-", "/")) + "</text>");
     }
     var everyN = Math.max(1, Math.ceil(nd / (nw ? 4 : 9)));
     for (i = lo; i <= hi; i += everyN) {
@@ -477,6 +606,25 @@ document.addEventListener('DOMContentLoaded', function(){
       if (!room(dlx)) continue;
       o.push('<text class="tick" x="' + dlx.toFixed(1) + '" y="' + yl +
         '" text-anchor="middle">' + esc(days[i].slice(5).replace("-", "/")) + "</text>");
+    }
+    o.push('<line class="xhair" x1="0" y1="' + ry0 + '" x2="0" y2="' + wy1 + '"/>');
+    var pi = -1, wi = -1;
+    for (i = lo; i <= hi; i++) {
+      var dEnd = new Date(shift(days[i], 1) + "T00:00:00").getTime();
+      while (pi + 1 < Pr.length && Pr[pi + 1].t < dEnd) pi++;
+      while (wi + 1 < S.wr.length && S.wr[wi + 1].t < dEnd) wi++;
+      var dsn = null;
+      for (k = 0; k < SEASONS.length; k++) if (!SEASONS[k].f || ms(SEASONS[k].f) < dEnd) dsn = SEASONS[k].n;
+      var tl = [days[i].replace(/-/g, "/") + (dsn !== null ? "（シーズン" + dsn + "）" : "")];
+      if (pi >= 0) {
+        var pp = Pr[pi];
+        tl.push(pp.u ? "レート " + fmtn(pp.tr) + "（" + lname(pp.lg) + "）" : "ステージ " + lname(pp.lg));
+      }
+      if (wi >= 0) tl.push("勝率 " + (S.wr[wi].p * 100).toFixed(1) + "%（直近" + WR_WIN + "試合）");
+      tl.push("この日の試合 " + (S.vol[days[i]] || 0));
+      o.push('<rect class="hit" x="' + (padL + (i - lo) * bw).toFixed(1) + '" y="' + ry0 +
+        '" width="' + bw.toFixed(2) + '" height="' + (wy1 - ry0) + '" data-cx="' + xd(i).toFixed(1) +
+        '" data-tip="' + esc(tl.join("\n")) + '"/>');
     }
     o.push("</svg>");
     box.innerHTML = o.join("");
@@ -490,6 +638,7 @@ document.addEventListener('DOMContentLoaded', function(){
     a.value = S.lo; z.value = S.hi;
     document.getElementById("rlab").textContent =
       n ? S.days[S.lo] + " 〜 " + S.days[S.hi] : "-";
+    if (window.crFill) crFill();
   }
 
   function bind() {
@@ -583,4 +732,4 @@ document.addEventListener('DOMContentLoaded', function(){
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 })();
-</script><footer>battles.csv より自動生成<br>カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、Supercell は内容に関与していない。</footer></div></body></html>
+</script></main><footer>battles.csv より自動生成<br>カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、Supercell は内容に関与していない。</footer></body></html>
