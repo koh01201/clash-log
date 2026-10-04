@@ -250,6 +250,9 @@ LEAGUES = {
 }
 ULTIMATE = 7
 
+# シーズン番号の基準：この時刻に遊んでいたシーズンの番号（2026-10-04 に本人確認）
+SEASON_ANCHOR = ("2026-10-04 08:00:00", 87)
+
 # 記録開始より前に達成した自己ベストの時期（APIから取得できないため手で持つ）
 BEST_ACHIEVED_BEFORE = "2024年4月"
 
@@ -300,16 +303,90 @@ def stage_cell(league, trophies, rank, size=40):
 
 
 
-def monthly_decks(rows):
-    """暦月ごとの最多使用デッキと成績。シーズン区切りの目安として使う。"""
-    by_month = defaultdict(lambda: {"w": 0, "n": 0, "decks": defaultdict(lambda: [0, 0]), "face": {}})
+SEASONS = []        # [(このシーズンの最初の時刻, 番号), ...] 古い順。先頭の時刻は ""
+SEASONS_JS = "[]"
+
+
+def _plus1s(t):
+    try:
+        d = datetime.datetime.strptime(t[:19], "%Y-%m-%d %H:%M:%S")
+        return (d + datetime.timedelta(seconds=1)).strftime("%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return t
+
+
+def detect_seasons(rows, prof):
+    """シーズンの切り替わりを探して番号を振る。
+
+    切り替わりの判定はレートの記録（profile.csv）。前シーズンの最終成績が更新されたか、
+    ステージがいちばん下まで戻った時点を切り替わりとみなす。
+    正確な時刻は、ランク戦の対戦場の名前が変わった最初の試合で決める
+    （シーズンごとに NewArena / NewArena2 が入れ替わる）。
+    レートの記録が始まる前の切り替わりは、対戦場の名前の変化だけで判定する。
+    """
+    # レートの記録から：(旧シーズン最後の記録, 新シーズン最初の記録)
+    pairs, prev = [], None
+    for r in prof:
+        t = (r.get("checked_jst") or "").strip()[:19]
+        lg = _num(r.get("pol_current_league"))
+        last = (r.get("pol_last_league"), r.get("pol_last_trophies"), r.get("pol_last_rank"))
+        if not t or lg is None:
+            continue
+        if prev and (last != prev[2] or (lg < prev[1] and lg <= 2)):
+            pairs.append((prev[0], t))
+        prev = (t, lg, last)
+
+    # 試合から：ランク戦の対戦場の名前が変わった試合
+    flips, pm = [], None
+    for r in sorted((x for x in rows if "pathoflegend" in (x.get("battle_type") or "").lower()),
+                    key=lambda x: x["battle_time_jst"]):
+        gm = (r.get("game_mode") or "").strip()
+        if not gm:
+            continue
+        if pm is not None and gm != pm:
+            flips.append(r["battle_time_jst"][:19])
+        pm = gm
+
+    first_prof = next(((r.get("checked_jst") or "").strip()[:19] for r in prof
+                       if (r.get("checked_jst") or "").strip()), None)
+    starts = [f for f in flips if first_prof is None or f < first_prof]
+    for a, b in pairs:
+        hit = [f for f in flips if a < f <= b]
+        starts.append(hit[0] if hit else _plus1s(a))
+    starts = sorted(set(starts))
+
+    segs = [""] + starts
+    at = SEASON_ANCHOR[0]
+    idx = max(i for i, f in enumerate(segs) if f <= at)
+    return [(f, SEASON_ANCHOR[1] + i - idx) for i, f in enumerate(segs)]
+
+
+def season_of(t):
+    """その時刻のシーズン番号。"""
+    n = None
+    for f, num in SEASONS:
+        if f <= (t or "")[:19]:
+            n = num
+    return n
+
+
+def season_decks(rows):
+    """シーズンごとの最多使用デッキと成績。"""
+    by = defaultdict(lambda: {"w": 0, "n": 0, "d0": None, "d1": None,
+                              "decks": defaultdict(lambda: [0, 0]), "face": {}})
     for r in rows:
         if r["result"] == "draw":
             continue
-        m = by_month[r["_dt"].strftime("%Y-%m")]
+        sn = season_of(r["battle_time_jst"])
+        if sn is None:
+            continue
+        m = by[sn]
         m["n"] += 1
         if r["result"] == "win":
             m["w"] += 1
+        d = r["battle_time_jst"][:10]
+        m["d0"] = d if m["d0"] is None or d < m["d0"] else m["d0"]
+        m["d1"] = d if m["d1"] is None or d > m["d1"] else m["d1"]
         cards = [c for c in r["my_deck"].split("|") if c]
         if not cards:
             continue
@@ -320,37 +397,39 @@ def monthly_decks(rows):
         m["face"].setdefault(k, cards[:8])
 
     out = []
-    for month in sorted(by_month, reverse=True):
-        m = by_month[month]
+    for sn in sorted(by, reverse=True):
+        m = by[sn]
         if not m["decks"]:
             continue
         k = max(m["decks"], key=lambda x: m["decks"][x][1])
         dw, dn = m["decks"][k]
         out.append({
-            "month": month, "n": m["n"], "w": m["w"],
+            "season": sn, "n": m["n"], "w": m["w"], "d0": m["d0"], "d1": m["d1"],
             "cards": m["face"].get(k, []), "dw": dw, "dn": dn,
             "kinds": len(m["decks"]),
         })
     return out
 
 
-def monthly_deck_panel(rows):
-    data = monthly_decks(rows)
+def season_deck_panel(rows):
+    data = season_decks(rows)
     if not data:
         return ""
     body = []
     for d in data:
         wr = d["w"] / d["n"] * 100 if d["n"] else 0
         dwr = d["dw"] / d["dn"] * 100 if d["dn"] else 0
-        y, mo = d["month"].split("-")
+        span = f'{d["d0"][5:].replace("-", "/")}〜{d["d1"][5:].replace("-", "/")}'
         body.append(
-            f'<tr><th>{y}年{int(mo)}月<span class="sname">{d["n"]}試合・勝率{wr:.1f}%</span></th>'
+            f'<tr><th>シーズン{d["season"]}<span class="sname">{span}・{d["n"]}試合・勝率{wr:.1f}%</span></th>'
             f'<td><div class="mdeck">{deck_grid(d["cards"])}'
             f'<span class="sname">{d["dn"]}試合使用（{d["kinds"]}種類中）・このデッキの勝率 {dwr:.1f}%</span>'
             "</div></td></tr>")
-    return panel("月ごとの最多使用デッキ", f'<table class="kv">{"".join(body)}</table>',
-                 "シーズンの区切りはAPIから取得できないため、暦月で区切っている。",
-                 "その月にいちばん多く使った構成を1つ表示している。")
+    return panel("シーズンごとの最多使用デッキ", f'<table class="kv">{"".join(body)}</table>',
+                 "レート戦がいちばん下のステージに戻った時点を、シーズンの切り替わりとしている。",
+                 f"番号は{SEASON_ANCHOR[0][:4]}年{int(SEASON_ANCHOR[0][5:7])}月"
+                 f"{int(SEASON_ANCHOR[0][8:10])}日時点のシーズンを{SEASON_ANCHOR[1]}として数えている。"
+                 "日付はそのシーズンで試合の記録がある範囲。いちばん多く使った構成を1つ表示している。")
 
 
 def achieved_note(prof, key, value):
@@ -382,6 +461,7 @@ RATE_PANEL = """
       <span><i class="lgline" style="border-color:#1C2126;border-top-width:1.5px"></i>勝率（30試合の移動平均）</span>
       <span><i class="lgbox" style="background:#EFE9F7;box-shadow:inset 0 0 0 1px #D9CCEE"></i>アルティメットチャンピオン</span>
       <span><i class="lgbox" style="background:#E4E8ED"></i>試合数</span>
+      <span><i class="lgline" style="border-color:#868E97;border-top-width:1.5px;border-top-style:dashed"></i>シーズンの区切り</span>
     </div>"""
 
 
@@ -403,7 +483,8 @@ def rate_page_body(prof):
             if v and (best_rank is None or v < best_rank):
                 best_rank = v
 
-    kv = [("今シーズン", stage_cell(cl, ct, cr))]
+    cur_sn = season_of((cur.get("checked_jst") or "").strip())
+    kv = [(f"今シーズン（シーズン{cur_sn}）" if cur_sn else "今シーズン", stage_cell(cl, ct, cr))]
     if bl is not None:
         kv.append(("自己ベスト", stage_cell(bl, bt, br)
                    + achieved_note(prof, "pol_best_trophies", bt)))
@@ -429,11 +510,16 @@ def rate_page_body(prof):
         if key == seen or _num(key[0]) is None:
             continue
         seen = key
-        seasons.append((r.get("checked_jst", "")[:10], _num(key[0]), _num(key[1]), _num(key[2])))
+        seasons.append((r.get("checked_jst", "")[:10], _num(key[0]), _num(key[1]), _num(key[2]),
+                        season_of((r.get("checked_jst") or "").strip())))
+
+    def sname(sn, d):
+        lab = f"シーズン{sn - 1}" if sn else "前シーズン"
+        return f'{lab}<span class="sname">{esc(d)} に確認</span>'
 
     if seasons:
-        body = "".join(f"<tr><th>{esc(d)} 時点で確認</th><td>{stage_cell(lg, tr, rk, 32)}</td></tr>"
-                       for d, lg, tr, rk in reversed(seasons))
+        body = "".join(f"<tr><th>{sname(sn, d)}</th><td>{stage_cell(lg, tr, rk, 32)}</td></tr>"
+                       for d, lg, tr, rk, sn in reversed(seasons))
         hist = f'<h3 class="sub2">シーズン別の最終成績</h3><table class="kv">{body}</table>'
     else:
         hist = ('<p class="note">シーズンが切り替わると、ここに前シーズンの最終成績が積み上がる。'
@@ -623,6 +709,7 @@ CHART_JS = """(function () {
   var MODE = "__MODE__";
   var PATCHES = [];          // 例: ["2026-08-15"] を足すと縦線が入る
   var MA_WIN = 4;            // 移動平均の窓（バケット数）
+  var SEASONS = __SEASONS__; // [{f: このシーズンの最初の時刻, n: 番号}] 古い順
   var RELIABLE_N = 20;
   var S = { unit: "week", lo: 0, hi: 0, rows: [], buckets: [], icons: {} };
 
@@ -677,19 +764,31 @@ CHART_JS = """(function () {
     if (unit === "month") return s.slice(0, 7) + "-01";
     return weekKey(s);
   }
+  function seasonOf(t) {
+    var n = null, j;
+    for (j = 0; j < SEASONS.length; j++) if (SEASONS[j].f <= t) n = SEASONS[j].n;
+    return n;
+  }
   function bucketize(rows, unit) {
     var map = {}, order = [], i, k, r;
     for (i = 0; i < rows.length; i++) {
       r = rows[i];
       k = keyOf(r.battle_time_jst, unit);
-      if (!map[k]) { map[k] = { key: k, w: 0, n: 0, games: 0 }; order.push(k); }
+      if (!map[k]) { map[k] = { key: k, w: 0, n: 0, games: 0, sc: {} }; order.push(k); }
       map[k].games++;
+      var sn = seasonOf(r.battle_time_jst);
+      if (sn !== null) map[k].sc[sn] = (map[k].sc[sn] || 0) + 1;
       if (r.result === "draw") continue;
       map[k].n++;
       if (r.result === "win") map[k].w++;
     }
     order.sort();
-    return order.map(function (k) { return map[k]; });
+    return order.map(function (k) {
+      var b = map[k], best = null, s2;
+      for (s2 in b.sc) if (best === null || b.sc[s2] > b.sc[best]) best = s2;
+      b.season = best === null ? null : +best;   // その期間でいちばん多く遊んだシーズン
+      return b;
+    });
   }
   function movingAvg(b, win) {
     return b.map(function (_, i) {
@@ -721,7 +820,7 @@ CHART_JS = """(function () {
     var nw = narrow();
     var W = nw ? 380 : 720;
     var MH = nw ? 132 : 172, VH = nw ? 44 : 58, GAP = 30;
-    var padL = 8, padR = nw ? 34 : 40, padT = 10;
+    var padL = 8, padR = nw ? 34 : 40, padT = 30;
     var H = padT + MH + GAP + VH + 20;
     var pw = W - padL - padR;
     var step = pw / nb;
@@ -750,15 +849,22 @@ CHART_JS = """(function () {
     o.push('<line class="fifty" x1="' + padL + '" y1="' + y(0.5).toFixed(1) +
       '" x2="' + (padL + pw) + '" y2="' + y(0.5).toFixed(1) + '"/>');
 
-    // 月の区切り（期間内のみ）
+    // シーズンの区切り（期間内のみ）と、上の帯のシーズン名
     var i, mb = [];
     for (i = lo + 1; i <= hi; i++) {
-      if (all[i].key.slice(0, 7) !== all[i - 1].key.slice(0, 7)) mb.push(i);
+      if (all[i].season !== null && all[i - 1].season !== null && all[i].season !== all[i - 1].season) mb.push(i);
     }
     mb.forEach(function (i2) {
       var mx = xe(i2).toFixed(1);
-      o.push('<line class="monthsep" x1="' + mx + '" y1="' + padT + '" x2="' + mx + '" y2="' + vy1 + '"/>');
+      o.push('<line class="seasonsep" x1="' + mx + '" y1="' + (padT - 22) + '" x2="' + mx + '" y2="' + vy1 + '"/>');
     });
+    var edges = [lo].concat(mb).concat([hi + 1]);
+    for (var e = 0; e + 1 < edges.length; e++) {
+      var sx0 = xe(edges[e]), sx1 = xe(edges[e + 1]), sw = sx1 - sx0, snum = all[edges[e]].season;
+      if (snum === null || sw < 26) continue;
+      o.push('<text class="seasonlab" x="' + ((sx0 + sx1) / 2).toFixed(1) + '" y="' + (padT - 10) +
+        '" text-anchor="middle">' + (sw >= 72 ? "シーズン" : "S") + snum + "</text>");
+    }
 
     // 信頼区間
     var up = [], dn = [], lohi = {};
@@ -818,17 +924,12 @@ CHART_JS = """(function () {
         '" height="' + bh.toFixed(1) + '" rx="' + Math.min(2, step * 0.2).toFixed(1) + '"/>');
     }
 
-    // 横軸ラベル（月の区切りを優先）
+    // 横軸ラベル
     var used = [], yl = vy1 + 15, gap = nw ? 44 : 40;
     function room(px0) {
       for (var j = 0; j < used.length; j++) if (Math.abs(px0 - used[j]) < gap) return false;
       used.push(px0); return true;
     }
-    mb.forEach(function (i2) {
-      if (!room(x(i2))) return;
-      o.push('<text class="tick mon" x="' + x(i2).toFixed(1) + '" y="' + yl +
-        '" text-anchor="middle">' + esc(all[i2].key.slice(0, 7).replace("-", "/")) + "</text>");
-    });
     var everyN = Math.max(1, Math.ceil(nb / (nw ? 4 : 9)));
     for (i = lo; i <= hi; i += everyN) {
       if (!room(x(i))) continue;
@@ -842,7 +943,8 @@ CHART_JS = """(function () {
     var unitLab = S.unit === "week" ? "の週" : "";
     for (i = lo; i <= hi; i++) {
       var b0 = all[i], ci = lohi[i];
-      var lines = [(S.unit === "month" ? b0.key.slice(0, 7) : b0.key) + unitLab];
+      var lines = [(S.unit === "month" ? b0.key.slice(0, 7) : b0.key) + unitLab +
+        (b0.season !== null ? "（シーズン" + b0.season + "）" : "")];
       if (b0.n) {
         lines.push("勝率 " + (b0.w / b0.n * 100).toFixed(1) + "%（" + b0.w + "勝" + (b0.n - b0.w) + "敗）");
         lines.push("95%信頼区間 " + (ci[1] * 100).toFixed(1) + "〜" + (ci[2] * 100).toFixed(1) + "%");
@@ -1511,6 +1613,8 @@ table.kv td.down{color:var(--down)}
 .grid{stroke:var(--rule);stroke-width:1}
 .axis{stroke:var(--rule2);stroke-width:1}
 .monthsep{stroke:var(--rule2);stroke-width:1;stroke-dasharray:2 3}
+.seasonsep{stroke:var(--ink3);stroke-width:1;stroke-dasharray:3 3}
+.seasonlab{font-size:11px;font-weight:700;fill:var(--ink2)}
 .fifty{stroke:var(--ink3);stroke-width:1;stroke-dasharray:3 3}
 .tick{font-size:10.5px;fill:var(--ink3)}
 .tick.mon{fill:var(--ink2);font-weight:500}
@@ -1671,6 +1775,7 @@ RATE_JS = """(function () {
   var LG = __LEAGUES__;
   var ULT = __ULT__;
   var WR_WIN = 30;                 // 勝率の移動平均に使う試合数
+  var SEASONS = __SEASONS__;       // [{f: このシーズンの最初の時刻, n: 番号}] 古い順
   var S = { prof: [], wr: [], vol: {}, days: [], lo: 0, hi: 0 };
 
   function narrow() {
@@ -1748,7 +1853,7 @@ RATE_JS = """(function () {
     var nw = narrow();
     var W = nw ? 380 : 720;
     var RH = nw ? 128 : 168, WH = nw ? 92 : 120, GAP = 34;
-    var padL = 8, padR = nw ? 84 : 104, padT = 18;
+    var padL = 8, padR = nw ? 84 : 104, padT = 40;
     var H = padT + RH + GAP + WH + 22;
     var pw = W - padL - padR;
     var ry0 = padT, ry1 = padT + RH;
@@ -1840,6 +1945,22 @@ RATE_JS = """(function () {
     o.push('<line class="axis" x1="' + padL + '" y1="' + ry1 + '" x2="' + (padL + pw) + '" y2="' + ry1 + '"/>');
     o.push('<text class="tick vlab" x="' + padL + '" y="' + (ry0 - 6) + '">レート</text>');
 
+    /* ===== シーズンの区切りと上の帯 ===== */
+    var sst = [];
+    for (k = 0; k < SEASONS.length; k++) {
+      var sf = SEASONS[k].f ? ms(SEASONS[k].f) : -Infinity;
+      var se = k + 1 < SEASONS.length ? ms(SEASONS[k + 1].f) : Infinity;
+      if (se <= dS || sf >= dE) continue;
+      sst.push({ a: Math.max(sf, dS), b: Math.min(se, dE), n: SEASONS[k].n, cut: sf > dS });
+    }
+    for (k = 0; k < sst.length; k++) {
+      var sx0 = xs(sst[k].a), sx1 = xs(sst[k].b), sw = sx1 - sx0;
+      if (sst[k].cut) o.push('<line class="seasonsep" x1="' + sx0.toFixed(1) + '" y1="' + (ry0 - 34) +
+        '" x2="' + sx0.toFixed(1) + '" y2="' + wy1 + '"/>');
+      if (sw >= 26) o.push('<text class="seasonlab" x="' + ((sx0 + sx1) / 2).toFixed(1) + '" y="' + (ry0 - 22) +
+        '" text-anchor="middle">' + (sw >= 72 ? "シーズン" : "S") + sst[k].n + "</text>");
+    }
+
     /* ===== 下：勝率＋出来高 ===== */
     o.push('<rect class="plot" x="' + padL + '" y="' + wy0 + '" width="' + pw + '" height="' + WH + '"/>');
     var maxv = 0;
@@ -1879,26 +2000,11 @@ RATE_JS = """(function () {
       '">勝率（' + WR_WIN + '試合の移動平均）・薄い棒は試合数</text>');
 
     /* ===== 横軸 ===== */
-    var mb = [];
-    for (i = lo + 1; i <= hi; i++) {
-      if (days[i].slice(0, 7) !== days[i - 1].slice(0, 7)) mb.push(i);
-    }
-    for (k = 0; k < mb.length; k++) {
-      var mxx = (padL + (mb[k] - lo) * bw).toFixed(1);
-      o.push('<line class="monthsep" x1="' + mxx + '" y1="' + ry0 + '" x2="' + mxx +
-        '" y2="' + wy1 + '"/>');
-    }
     var used = [], yl = wy1 + 14, gap = nw ? 40 : 34;
     function room(x) {
       var j;
       for (j = 0; j < used.length; j++) if (Math.abs(x - used[j]) < gap) return false;
       used.push(x); return true;
-    }
-    for (k = 0; k < mb.length; k++) {
-      var mlx = xd(mb[k]);
-      if (!room(mlx)) continue;
-      o.push('<text class="tick mon" x="' + mlx.toFixed(1) + '" y="' + yl +
-        '" text-anchor="middle">' + esc(days[mb[k]].slice(0, 7).replace("-", "/")) + "</text>");
     }
     var everyN = Math.max(1, Math.ceil(nd / (nw ? 4 : 9)));
     for (i = lo; i <= hi; i += everyN) {
@@ -1913,7 +2019,9 @@ RATE_JS = """(function () {
       var dEnd = new Date(shift(days[i], 1) + "T00:00:00").getTime();
       while (pi + 1 < Pr.length && Pr[pi + 1].t < dEnd) pi++;
       while (wi + 1 < S.wr.length && S.wr[wi + 1].t < dEnd) wi++;
-      var tl = [days[i].replace(/-/g, "/")];
+      var dsn = null;
+      for (k = 0; k < SEASONS.length; k++) if (!SEASONS[k].f || ms(SEASONS[k].f) < dEnd) dsn = SEASONS[k].n;
+      var tl = [days[i].replace(/-/g, "/") + (dsn !== null ? "（シーズン" + dsn + "）" : "")];
       if (pi >= 0) {
         var pp = Pr[pi];
         tl.push(pp.u ? "レート " + fmtn(pp.tr) + "（" + lname(pp.lg) + "）" : "ステージ " + lname(pp.lg));
@@ -2442,6 +2550,7 @@ def build(mode_key, prefix, label, rows, total_records):
       <span><i class="lgline" style="border-color:#C8102E;border-top-width:2.5px"></i>移動平均（4期間）</span>
       <span><i class="lgbox" style="background:#E5E7EA"></i>95%信頼区間</span>
       <span><i class="lgbox" style="background:#B3BECA"></i>プレイ回数</span>
+      <span><i class="lgline" style="border-color:#868E97;border-top-width:1.5px;border-top-style:dashed"></i>シーズンの区切り</span>
     </div>
     <p class="note">試合数が少ない期間ほど信頼区間は広くなる。灰色の帯が広い区間の上下動は、
       実力の変化ではなく偶然の可能性が高い。</p>
@@ -2450,13 +2559,13 @@ def build(mode_key, prefix, label, rows, total_records):
     <p class="lead">上のつまみやボタンで期間を絞ると、ここが連動して変わる。</p>
     <div id="sum"></div>
   </section>
-  <script>""" + CHART_JS.replace("__MODE__", mode_key) + """</script>
+  <script>""" + CHART_JS.replace("__MODE__", mode_key).replace("__SEASONS__", SEASONS_JS) + """</script>
 """)
 
     # レート
     page(prefix, "rate.html", label, "レート", stamp,
-         rate_page_body(PROFILE) + monthly_deck_panel(rows)
-         + "<script>" + RATE_JS.replace("__MODE__", mode_key)
+         rate_page_body(PROFILE) + season_deck_panel(rows)
+         + "<script>" + RATE_JS.replace("__MODE__", mode_key).replace("__SEASONS__", SEASONS_JS)
                                .replace("__LEAGUES__", LEAGUE_JS)
                                .replace("__ULT__", str(ULTIMATE)) + "</script>")
 
@@ -2480,6 +2589,10 @@ def main():
     GT_RANKS = load_gt()
     all_rows = add_sessions(load_rows())
     prev_state(all_rows)
+
+    global SEASONS, SEASONS_JS
+    SEASONS = detect_seasons(all_rows, PROFILE)
+    SEASONS_JS = json.dumps([{"f": f, "n": n} for f, n in SEASONS])
 
     groups = defaultdict(list)
     for r in all_rows:
