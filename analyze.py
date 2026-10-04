@@ -161,6 +161,22 @@ GT_FILE = os.path.join(SCRIPT_DIR, "gt_ranks.csv")
 RIVAL_POL_RANK = 10000     # レート戦の過去最高順位がこれ以内
 RIVAL_GT_RANK = 1000       # グローバルトーナメントの最高順位がこれ以内
 RIVAL_LADDER_RANK = 10000  # Top Ladder の最高順位がこれ以内
+RIVAL_RT_RANK = 1000       # グローバルトーナメント Top1000（APIは「1,000位以内に入った回数」しか返さない）
+# グローバルトーナメント1,000位以内で付くバッジ（ゲーム内で剣の絵に最高順位が出るもの）。
+# APIの名前は LadderTournamentTop1000。最高順位の数字はAPIに含まれず、回数だけが返る。
+RT_BADGE = "LadderTournamentTop1000"
+
+
+def _rt_top1000(raw):
+    """グローバルトーナメントで1,000位以内に入った回数。バッジが無ければ None。"""
+    try:
+        j = json.loads(raw or "")
+    except (TypeError, ValueError):
+        return None
+    for b in j.get("badges") or []:
+        if b.get("name") == RT_BADGE:
+            return _num(b.get("progress")) or _num(b.get("level")) or 1
+    return None
 
 
 def load_opponents():
@@ -168,8 +184,15 @@ def load_opponents():
     if not os.path.exists(OPPONENTS_FILE):
         return {}
     try:
+        csv.field_size_limit(1 << 30)
+        out = {}
         with open(OPPONENTS_FILE, encoding="utf-8-sig", newline="") as f:
-            return {r["tag"]: r for r in csv.DictReader(f) if r.get("tag")}
+            for r in csv.DictReader(f):
+                if not r.get("tag"):
+                    continue
+                r["_rt"] = _rt_top1000(r.pop("raw_json", ""))
+                out[r["tag"]] = r
+        return out
     except Exception:
         return {}
 
@@ -195,14 +218,25 @@ def opp_ranks(tag):
         "best": _num(o.get("pol_best_trophies")),
         "ladder": _num(o.get("ladder_best_rank")),
         "ladder_season": (o.get("ladder_best_season") or "").strip(),
+        "rt": o.get("_rt"),
         "battles": _num(o.get("battle_count")),
     }
 
 
-def is_rival(pol, gt, ladder=None):
+def is_rival(pol, gt, ladder=None, rt=None):
     return ((pol is not None and pol <= RIVAL_POL_RANK)
             or (gt is not None and gt <= RIVAL_GT_RANK)
-            or (ladder is not None and ladder <= RIVAL_LADDER_RANK))
+            or (ladder is not None and ladder <= RIVAL_LADDER_RANK)
+            or bool(rt))
+
+
+def best_rank(pol, gt, ladder, rt):
+    """条件に使う順位のうち最も良いものと、その出どころ。"""
+    cands = [(v, lab) for v, lab in ((pol, "レート戦"), (gt, "グローバルトーナメント"),
+                                     (ladder, "Top Ladder"),
+                                     (RIVAL_RT_RANK if rt else None, "GT Top1000"))
+             if v is not None]
+    return min(cands, key=lambda c: c[0]) if cands else (None, "")
 
 
 LEAGUES = {
@@ -337,24 +371,17 @@ def achieved_note(prof, key, value):
 
 
 RATE_PANEL = """
-    <div class="ctrl">
-      <span class="navlab" style="width:auto">期間</span>
-      <button id="p-7" class="ubtn">7日</button>
-      <button id="p-30" class="ubtn">30日</button>
-      <button id="p-90" class="ubtn">90日</button>
-      <button id="p-all" class="ubtn on">全期間</button>
-    </div>
+    <div class="toolbar"><div class="tgroup"><span class="tl">期間</span><div class="seg"><button id="p-7" class="ubtn">7日</button><button id="p-30" class="ubtn">30日</button><button id="p-90" class="ubtn">90日</button><button id="p-all" class="ubtn on">全期間</button></div></div></div>
     <div id="rchart"></div>
     <div class="rng">
-      <div class="rlab">表示範囲 <b id="rlab">-</b></div>
-      <input id="r1" type="range" min="0" max="0" value="0">
-      <input id="r2" type="range" min="0" max="0" value="0">
+      <div class="rlab"><span>表示範囲</span><b id="rlab">-</b></div>
+      <div class="dual"><div class="dual-fill" id="rfill"></div><input id="r1" type="range" min="0" max="0" value="0" aria-label="表示範囲の始まり"><input id="r2" type="range" min="0" max="0" value="0" aria-label="表示範囲の終わり"></div>
     </div>
     <div class="legend2">
-      <span><i class="lgline" style="border-color:#C8102E;border-top-width:3px"></i>レート・ステージ</span>
-      <span><i class="lgline" style="border-color:#3A424B"></i>勝率（30試合の移動平均）</span>
-      <span><i class="lgbox" style="background:#D6CBEA"></i>アルティメットチャンピオン</span>
-      <span><i class="lgbox" style="background:#DCE1E6"></i>試合数</span>
+      <span><i class="lgline" style="border-color:#C8102E;border-top-width:2.5px"></i>レート・ステージ</span>
+      <span><i class="lgline" style="border-color:#1C2126;border-top-width:1.5px"></i>勝率（30試合の移動平均）</span>
+      <span><i class="lgbox" style="background:#EFE9F7;box-shadow:inset 0 0 0 1px #D9CCEE"></i>アルティメットチャンピオン</span>
+      <span><i class="lgbox" style="background:#E4E8ED"></i>試合数</span>
     </div>"""
 
 
@@ -491,8 +518,8 @@ def _chart_wide(items, baseline, baseline_label, icon_mode):
             out.append(f'<text class="lab" x="40" y="{y+5:.1f}">{esc(label)}</text>')
         else:
             out.append(f'<text class="lab" x="0" y="{y+5:.1f}">{esc(label)}</text>')
-        out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{y-8:.1f}" width="{w:.1f}" height="16" rx="2"/>')
-        out.append(f'<rect class="mark {cls}" x="{px(p)-1.5:.1f}" y="{y-13:.1f}" width="3" height="26"/>')
+        out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{y-4:.1f}" width="{w:.1f}" height="8" rx="4"/>')
+        out.append(f'<circle class="mark {cls}" cx="{px(p):.1f}" cy="{y:.1f}" r="5.5"/>')
         out.append(f'<text class="val {cls}" x="600" y="{y+7:.1f}" text-anchor="end">{p*100:.1f}<tspan class="unit">%</tspan></text>')
         out.append(f'<text class="n" x="{W}" y="{y+5:.1f}" text-anchor="end">{wins}勝{total-wins}敗</text>')
     out.append("</svg>")
@@ -552,8 +579,8 @@ def _chart_narrow(items, baseline, baseline_label, icon_mode):
                 by = base_y + 20 + 18
 
         w = max(8.0, px(hi) - px(lo))
-        out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{by-8:.1f}" width="{w:.1f}" height="16" rx="2"/>')
-        out.append(f'<rect class="mark {cls}" x="{px(p)-1.5:.1f}" y="{by-12:.1f}" width="3" height="24"/>')
+        out.append(f'<rect class="band {cls}" x="{px(lo):.1f}" y="{by-4:.1f}" width="{w:.1f}" height="8" rx="4"/>')
+        out.append(f'<circle class="mark {cls}" cx="{px(p):.1f}" cy="{by:.1f}" r="5.5"/>')
         out.append(f'<text class="val {cls}" x="{W}" y="{by+7:.1f}" text-anchor="end">{p*100:.1f}<tspan class="unit">%</tspan></text>')
         out.append(f'<line class="hair" x1="0" y1="{base_y+row_h-12:.1f}" x2="{W}" y2="{base_y+row_h-12:.1f}"/>')
     out.append("</svg>")
@@ -693,7 +720,7 @@ CHART_JS = """(function () {
 
     var nw = narrow();
     var W = nw ? 380 : 720;
-    var MH = nw ? 132 : 172, VH = nw ? 44 : 58, GAP = 12;
+    var MH = nw ? 132 : 172, VH = nw ? 44 : 58, GAP = 30;
     var padL = 8, padR = nw ? 34 : 40, padT = 10;
     var H = padT + MH + GAP + VH + 20;
     var pw = W - padL - padR;
@@ -712,8 +739,8 @@ CHART_JS = """(function () {
 
     // 横罫と右軸
     [0, 0.25, 0.5, 0.75, 1].forEach(function (v) {
-      if (v > 0 && v < 1) {
-        o.push('<line class="grid" x1="' + padL + '" y1="' + y(v).toFixed(1) +
+      if (v !== 0.5) {
+        o.push('<line class="' + (v === 0 ? "axis" : "grid") + '" x1="' + padL + '" y1="' + y(v).toFixed(1) +
           '" x2="' + (padL + pw) + '" y2="' + y(v).toFixed(1) + '"/>');
       }
       o.push('<text class="tick" x="' + (padL + pw + 5) + '" y="' + (y(v) + 3.5).toFixed(1) + '">' +
@@ -751,10 +778,9 @@ CHART_JS = """(function () {
       pts.push(x(i).toFixed(1) + "," + y(all[i].n ? all[i].w / all[i].n : 0).toFixed(1));
     }
     if (nb > 1) o.push('<polyline class="rate" points="' + pts.join(" ") + '"/>');
-    for (i = lo; i <= hi; i++) {
+    if (nb <= 40) for (i = lo; i <= hi; i++) {
       o.push('<circle class="pt" cx="' + x(i).toFixed(1) + '" cy="' +
-        y(all[i].n ? all[i].w / all[i].n : 0).toFixed(1) + '" r="' + (nw ? 2 : 2.6) + '"><title>' +
-        esc(all[i].key) + " " + all[i].w + "勝" + (all[i].n - all[i].w) + "敗</title></circle>");
+        y(all[i].n ? all[i].w / all[i].n : 0).toFixed(1) + '" r="' + (nw ? 2.4 : 3) + '"/>');
     }
 
     // 移動平均（赤の太線）：期間外も含めて計算し、描くのは期間内だけ
@@ -780,7 +806,7 @@ CHART_JS = """(function () {
     for (i = lo; i <= hi; i++) if (all[i].games > maxg) maxg = all[i].games;
     [0, 0.5, 1].forEach(function (t) {
       var yy = vy1 - VH * t;
-      if (t > 0) o.push('<line class="grid" x1="' + padL + '" y1="' + yy.toFixed(1) +
+      o.push('<line class="' + (t === 0 ? "axis" : "grid") + '" x1="' + padL + '" y1="' + yy.toFixed(1) +
         '" x2="' + (padL + pw) + '" y2="' + yy.toFixed(1) + '"/>');
       o.push('<text class="tick" x="' + (padL + pw + 5) + '" y="' + (yy + 3.5).toFixed(1) + '">' +
         Math.round(maxg * t) + "</text>");
@@ -789,23 +815,44 @@ CHART_JS = """(function () {
       var bh = VH * (all[i].games / maxg);
       o.push('<rect class="volbar" x="' + (xe(i) + step * 0.18).toFixed(1) +
         '" y="' + (vy1 - bh).toFixed(1) + '" width="' + Math.max(1, step * 0.64).toFixed(1) +
-        '" height="' + bh.toFixed(1) + '"><title>' + esc(all[i].key) + " " + all[i].games + "試合</title></rect>");
+        '" height="' + bh.toFixed(1) + '" rx="' + Math.min(2, step * 0.2).toFixed(1) + '"/>');
     }
 
     // 横軸ラベル（月の区切りを優先）
-    var labeled = {}, yl = vy1 + 13;
+    var used = [], yl = vy1 + 15, gap = nw ? 44 : 40;
+    function room(px0) {
+      for (var j = 0; j < used.length; j++) if (Math.abs(px0 - used[j]) < gap) return false;
+      used.push(px0); return true;
+    }
     mb.forEach(function (i2) {
-      labeled[i2] = 1;
+      if (!room(x(i2))) return;
       o.push('<text class="tick mon" x="' + x(i2).toFixed(1) + '" y="' + yl +
         '" text-anchor="middle">' + esc(all[i2].key.slice(0, 7).replace("-", "/")) + "</text>");
     });
     var everyN = Math.max(1, Math.ceil(nb / (nw ? 4 : 9)));
     for (i = lo; i <= hi; i += everyN) {
-      if (labeled[i]) continue;
+      if (!room(x(i))) continue;
       o.push('<text class="tick" x="' + x(i).toFixed(1) + '" y="' + yl +
         '" text-anchor="middle">' + esc(fmtDate(all[i].key, S.unit)) + "</text>");
     }
-    o.push('<text class="tick vlab" x="' + padL + '" y="' + (vy0 - 3) + '">プレイ回数</text>');
+    o.push('<text class="tick vlab" x="' + padL + '" y="' + (vy0 - 8) + '">プレイ回数</text>');
+
+    // なぞると数字が出る
+    o.push('<line class="xhair" x1="0" y1="' + padT + '" x2="0" y2="' + vy1 + '"/>');
+    var unitLab = S.unit === "week" ? "の週" : "";
+    for (i = lo; i <= hi; i++) {
+      var b0 = all[i], ci = lohi[i];
+      var lines = [(S.unit === "month" ? b0.key.slice(0, 7) : b0.key) + unitLab];
+      if (b0.n) {
+        lines.push("勝率 " + (b0.w / b0.n * 100).toFixed(1) + "%（" + b0.w + "勝" + (b0.n - b0.w) + "敗）");
+        lines.push("95%信頼区間 " + (ci[1] * 100).toFixed(1) + "〜" + (ci[2] * 100).toFixed(1) + "%");
+      }
+      if (ma[i] !== null) lines.push("移動平均 " + (ma[i] * 100).toFixed(1) + "%");
+      lines.push("プレイ回数 " + b0.games);
+      o.push('<rect class="hit" x="' + xe(i).toFixed(1) + '" y="' + padT + '" width="' + step.toFixed(1) +
+        '" height="' + (vy1 - padT) + '" data-cx="' + x(i).toFixed(1) + '" data-tip="' +
+        esc(lines.join("\\n")) + '"/>');
+    }
     o.push("</svg>");
 
     document.getElementById("chart").innerHTML = o.join("");
@@ -892,6 +939,7 @@ CHART_JS = """(function () {
     a.value = S.lo; z.value = S.hi;
     document.getElementById("rlab").textContent =
       nb ? S.buckets[S.lo].key + " 〜 " + S.buckets[S.hi].key : "-";
+    if (window.crFill) crFill();
   }
 
   function rebuild(keepRange) {
@@ -929,6 +977,10 @@ CHART_JS = """(function () {
       var el = document.getElementById(q[0]);
       if (!el) return;
       el.onclick = function () {
+        ["p-all", "p-90", "p-30", "p-7"].forEach(function (id) {
+          var e2 = document.getElementById(id);
+          if (e2) e2.className = "ubtn" + (id === q[0] ? " on" : "");
+        });
         var nb = S.buckets.length;
         S.hi = nb - 1;
         if (!q[1]) { S.lo = 0; }
@@ -1054,10 +1106,10 @@ RANK_JS = """(function () {
       } else {
         o.push('<text class="lab" x="0" y="' + (y + 5).toFixed(1) + '">' + esc(it.label) + "</text>");
       }
-      o.push('<rect class="band ' + cls + '" x="' + px(r[1]).toFixed(1) + '" y="' + (y - 8).toFixed(1) +
-        '" width="' + Math.max(10, px(r[2]) - px(r[1])).toFixed(1) + '" height="16" rx="2"/>');
-      o.push('<rect class="mark ' + cls + '" x="' + (px(r[0]) - 1.5).toFixed(1) + '" y="' +
-        (y - 13).toFixed(1) + '" width="3" height="26"/>');
+      o.push('<rect class="band ' + cls + '" x="' + px(r[1]).toFixed(1) + '" y="' + (y - 4).toFixed(1) +
+        '" width="' + Math.max(10, px(r[2]) - px(r[1])).toFixed(1) + '" height="8" rx="4"/>');
+      o.push('<circle class="mark ' + cls + '" cx="' + px(r[0]).toFixed(1) + '" cy="' +
+        y.toFixed(1) + '" r="5.5"/>');
       o.push('<text class="val ' + cls + '" x="600" y="' + (y + 7).toFixed(1) +
         '" text-anchor="end">' + (r[0] * 100).toFixed(1) + '<tspan class="unit">%</tspan></text>');
       o.push('<text class="n" x="' + W + '" y="' + (y + 5).toFixed(1) + '" text-anchor="end">' +
@@ -1110,10 +1162,10 @@ RANK_JS = """(function () {
         o.push('<text class="val ' + cls + '" x="' + W + '" y="' + (by + 7) +
           '" text-anchor="end">' + (r[0] * 100).toFixed(1) + '<tspan class="unit">%</tspan></text>');
       }
-      o.push('<rect class="band ' + cls + '" x="' + px(r[1]).toFixed(1) + '" y="' + (by - 8) +
-        '" width="' + Math.max(8, px(r[2]) - px(r[1])).toFixed(1) + '" height="16" rx="2"/>');
-      o.push('<rect class="mark ' + cls + '" x="' + (px(r[0]) - 1.5).toFixed(1) + '" y="' +
-        (by - 12) + '" width="3" height="24"/>');
+      o.push('<rect class="band ' + cls + '" x="' + px(r[1]).toFixed(1) + '" y="' + (by - 4) +
+        '" width="' + Math.max(8, px(r[2]) - px(r[1])).toFixed(1) + '" height="8" rx="4"/>');
+      o.push('<circle class="mark ' + cls + '" cx="' + px(r[0]).toFixed(1) + '" cy="' +
+        by + '" r="5.5"/>');
       o.push('<line class="hair" x1="0" y1="' + (by0 + rh - 14) + '" x2="' + W +
         '" y2="' + (by0 + rh - 14) + '"/>');
     });
@@ -1195,6 +1247,7 @@ RANK_JS = """(function () {
     var a = document.getElementById("r1"), z = document.getElementById("r2");
     a.max = z.max = Math.max(0, S.days.length - 1);
     a.value = S.lo; z.value = S.hi;
+    if (window.crFill) crFill();
     render();
   }
 
@@ -1209,6 +1262,10 @@ RANK_JS = """(function () {
       var el = document.getElementById(q[0]);
       if (!el) return;
       el.onclick = function () {
+        ["p-all", "p-90", "p-30", "p-7"].forEach(function (id) {
+          var e2 = document.getElementById(id);
+          if (e2) e2.className = "ubtn" + (id === q[0] ? " on" : "");
+        });
         S.hi = S.days.length - 1;
         if (!q[1]) { S.lo = 0; }
         else {
@@ -1271,206 +1328,340 @@ function crToggle(){
 })();
 document.addEventListener('DOMContentLoaded', function(){
   crLayout(document.documentElement.getAttribute('data-layout'));
+  var tabs = document.querySelector('.tabs'), on = tabs && tabs.querySelector('a.on');
+  if(on && on.offsetLeft + on.offsetWidth > tabs.clientWidth) tabs.scrollLeft = on.offsetLeft - 24;
 });
+function crFill(){
+  var a = document.getElementById('r1'), z = document.getElementById('r2'),
+      f = document.getElementById('rfill');
+  if(!a || !z || !f) return;
+  var m = +a.max || 0, lo = Math.min(+a.value, +z.value), hi = Math.max(+a.value, +z.value);
+  var p = function(v){ return m ? v / m : 0; };
+  f.style.left = 'calc(8px + (100% - 16px) * ' + p(lo) + ')';
+  f.style.width = 'calc((100% - 16px) * ' + Math.max(0, p(hi) - p(lo)) + ')';
+}
+document.addEventListener('input', function(e){
+  var t = e.target;
+  if(t && (t.id === 'r1' || t.id === 'r2')){
+    crFill();
+    var g = document.querySelectorAll('[id^="p-"]');
+    for(var i = 0; i < g.length; i++) g[i].classList.remove('on');
+  }
+});
+(function(){
+  var tip = null, cur = null, hair = null;
+  function hide(){
+    if(tip) tip.style.opacity = 0;
+    if(hair) hair.style.opacity = 0;
+    cur = null; hair = null;
+  }
+  function show(el, x, y){
+    if(!tip){ tip = document.createElement('div'); tip.id = 'crtip'; document.body.appendChild(tip); }
+    if(cur !== el){
+      tip.textContent = el.getAttribute('data-tip');
+      if(hair) hair.style.opacity = 0;
+      var svg = el.ownerSVGElement, cx = el.getAttribute('data-cx');
+      hair = svg ? svg.querySelector('.xhair') : null;
+      if(hair && cx){ hair.setAttribute('x1', cx); hair.setAttribute('x2', cx); hair.style.opacity = .4; }
+      cur = el;
+    }
+    var w = tip.offsetWidth, h = tip.offsetHeight, vw = window.innerWidth;
+    var left = x + 16; if(left + w > vw - 8) left = x - w - 16; if(left < 8) left = 8;
+    var top = y - h - 14; if(top < 8) top = y + 18;
+    tip.style.left = left + 'px'; tip.style.top = top + 'px'; tip.style.opacity = 1;
+  }
+  function move(e){
+    var el = e.target && e.target.closest ? e.target.closest('[data-tip]') : null;
+    if(el) show(el, e.clientX, e.clientY); else if(cur) hide();
+  }
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerdown', move);
+  document.addEventListener('pointerleave', hide);
+  window.addEventListener('scroll', hide, {passive: true});
+})();
 """
 
 CSS = """
 :root{
-  --bg:#F2F3F5;--panel:#FFFFFF;--line:#DCDFE3;--ink:#1F2328;--label:#5B646E;
-  --labelbg:#F6F7F9;--up:#C8102E;--down:#0B57A4;--na:#8A939C;
-  --accent:#BF0000;--link:#0B5FBF;--upbg:#FDF0F2;--downbg:#EFF4FA;
-  --warnbg:#FFF4E5;--warnline:#F0C078;--warnink:#A85E00;
+  color-scheme:light;
+  --page:#FFFFFF;--sunk:#F3F4F6;--ink:#1C2126;--ink2:#545C66;--ink3:#868E97;
+  --rule:#E6E8EC;--rule2:#CDD2D8;
+  --accent:#BF0000;--up:#C8102E;--down:#0B57A4;--na:#98A0A9;
+  --upbg:#FBECEE;--downbg:#E9F0F9;--nabg:#EFF1F3;
+  --upband:#F3C9D0;--downband:#C6D8EE;--naband:#DEE2E6;
+  --ult:#6E3BB8;--link:#0B57A4;
+  --line:var(--rule);--label:var(--ink2);--labelbg:var(--sunk);--panel:var(--page);
+  --font:"IBM Plex Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI",
+    "Yu Gothic","Meiryo",sans-serif;
 }
 *{box-sizing:border-box}
-body{margin:0;padding:20px 16px 64px;background:var(--bg);color:var(--ink);
-  font-family:"Yu Gothic","Hiragino Kaku Gothic ProN","Noto Sans JP","Meiryo",sans-serif;
-  font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
-.wrap{max-width:900px;margin:0 auto}
-.navwrap{position:sticky;top:0;z-index:20;background:var(--bg);
-  padding:8px 0 6px;margin:-8px 0 12px;box-shadow:0 6px 8px -8px rgba(0,0,0,.28)}
-nav{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-nav.modes{margin-bottom:5px;padding-bottom:5px;border-bottom:1px dashed var(--line)}
-.navlab{font-size:10px;color:var(--label);width:34px;flex:none;letter-spacing:.08em}
-nav.modes a{background:var(--labelbg);font-weight:700}
-nav.modes a.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-nav a{text-decoration:none;background:var(--panel);color:var(--ink);font-size:13px;
-  padding:6px 14px;border:1px solid var(--line);border-radius:4px}
-nav a.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
-nav a:not(.on):hover{border-color:var(--link);color:var(--link)}
-.head{background:var(--panel);border:1px solid var(--line);border-radius:4px;
-  padding:16px 20px;margin-bottom:12px;display:flex;justify-content:space-between;
-  align-items:flex-end;flex-wrap:wrap;gap:8px}
-.head{border-top:3px solid var(--accent)}
-.head h1{font-size:20px;font-weight:700;margin:0;display:flex;align-items:center;gap:10px}
-.mtag{font-size:11.5px;font-weight:700;color:#fff;background:var(--accent);
-  border-radius:3px;padding:2px 9px}
-.head p{margin:0;color:var(--label);font-size:12px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;
-  padding:18px 20px 16px;margin-bottom:12px}
-.panel h2{font-size:15px;font-weight:700;margin:0 0 10px;padding-bottom:9px;
-  border-bottom:3px solid var(--line);position:relative}
-.panel h2::after{content:"";position:absolute;left:0;bottom:-3px;width:56px;height:3px;
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--font);
+  font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums}
+button{font-family:inherit}
+a{color:var(--link)}
+:focus-visible{outline:2px solid var(--down);outline-offset:2px;border-radius:4px}
+
+/* ---------- 上部の帯 ---------- */
+.top{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);
+  -webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);
+  border-bottom:1px solid var(--rule)}
+.bar{max-width:960px;margin:0 auto;padding:12px 24px 2px;display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:9px;color:var(--ink);text-decoration:none;
+  font-size:16px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand i{display:block;width:4px;height:18px;border-radius:1px;background:var(--accent)}
+.lyt{margin-left:auto;font-size:12px;color:var(--ink2);background:none;border:1px solid var(--rule2);
+  border-radius:6px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+.lyt:hover{color:var(--ink);border-color:var(--ink3)}
+.tabs{max-width:960px;margin:0 auto;padding:0 24px;display:flex;gap:2px;overflow-x:auto;
+  scrollbar-width:none;font-feature-settings:"palt"}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{display:block;padding:10px 12px 9px;color:var(--ink2);text-decoration:none;font-size:14px;
+  border-bottom:2px solid transparent;white-space:nowrap;letter-spacing:.02em}
+.tabs a:first-child{margin-left:-12px}
+.tabs a:hover{color:var(--ink)}
+.tabs a.on{color:var(--ink);font-weight:700;border-bottom-color:var(--accent)}
+
+/* ---------- 切り替えボタン（つながった一組） ---------- */
+.seg{display:inline-flex;align-items:center;background:var(--sunk);border-radius:8px;padding:3px;gap:2px}
+.seg a,.seg .ubtn{display:block;border:0;background:none;color:var(--ink2);font-size:12.5px;
+  line-height:1.5;padding:4px 12px;border-radius:6px;text-decoration:none;cursor:pointer;
+  white-space:nowrap}
+.seg a:hover,.seg .ubtn:hover{color:var(--ink)}
+.seg a.on,.seg .ubtn.on{background:#fff;color:var(--ink);font-weight:700;
+  box-shadow:0 1px 2px rgba(28,33,38,.14),0 0 0 1px rgba(28,33,38,.04)}
+.modes a.on{color:var(--accent)}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:10px 24px;margin:0 0 16px}
+.tgroup{display:flex;align-items:center;gap:10px}
+.tl{font-size:12px;color:var(--ink3)}
+.navlab{font-size:12px;color:var(--ink3)}
+
+/* ---------- 本文 ---------- */
+.wrap{max-width:960px;margin:0 auto;padding:32px 24px 72px}
+.head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;
+  gap:6px 20px;margin:0 0 36px}
+.head h1{margin:0;font-size:26px;line-height:1.3;font-weight:700;letter-spacing:.01em;
+  font-feature-settings:"palt"}
+.head p{margin:0;font-size:12px;color:var(--ink3)}
+.panel{margin:0 0 56px}
+.panel h2{position:relative;margin:0 0 16px;padding:0 0 10px;font-size:17px;font-weight:700;
+  line-height:1.4;letter-spacing:.02em;border-bottom:2px solid var(--rule);
+  font-feature-settings:"palt"}
+.panel h2::after{content:"";position:absolute;left:0;bottom:-2px;width:48px;height:2px;
   background:var(--accent)}
-.lead{margin:-2px 0 12px;color:var(--label);font-size:12.5px}
-.sub2{font-size:13px;font-weight:700;margin:16px 0 6px}
-.stxt{display:flex;flex-direction:column;align-items:flex-end;line-height:1.35}
-.stxt .big{font-size:26px}
-.lgname{font-size:13px;font-weight:700;letter-spacing:.01em}
-.lgname.big2{font-size:17px}
-.sname{font-size:11.5px;color:var(--label);font-weight:400;display:block}
-.mdeck{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.mdeck .deck{grid-template-columns:repeat(8,1fr);gap:3px;max-width:290px;width:100%}
-@media(max-width:520px){.mdeck .deck{grid-template-columns:repeat(4,1fr);max-width:170px}}
-.note{margin:10px 0 0;color:var(--warnink);font-size:12px;background:var(--warnbg);
-  border:1px solid var(--warnline);border-radius:3px;padding:8px 12px}
-.empty{color:var(--label);font-size:13px;margin:4px 0}
-.chart{width:100%;height:auto;display:block;overflow:visible}
-.hair{stroke:var(--line);stroke-width:1}
-.gridv{stroke:#EDF0F2;stroke-width:1}
-.gtick{font-size:9px;fill:#9AA4AE}
-.base{stroke:#B6BDC4;stroke-width:1;stroke-dasharray:3 3}
-.baselab{font-size:10px;fill:var(--label)}
-.lab{font-size:12.5px;fill:var(--ink)}
-.lab.small{font-size:11.5px}
-.noicon{fill:#E7EAED;stroke:var(--line)}
-.band.up{fill:#F7D9DE}.band.down{fill:#D6E3F3}.band.na{fill:#E7EAED}
-.mark.up{fill:var(--up)}.mark.down{fill:var(--down)}.mark.na{fill:var(--na)}
-.val{font-size:19px;font-weight:700}
-.val.up{fill:var(--up)}.val.down{fill:var(--down)}.val.na{fill:var(--na)}
-.unit{font-size:11px;font-weight:400}
-.n{font-size:11.5px;fill:var(--label)}
-table.kv{width:100%;border-collapse:collapse;margin:2px 0 0}
-table.kv th{width:190px;background:var(--labelbg);color:var(--label);font-weight:400;
-  text-align:left;padding:9px 14px;border:1px solid var(--line);font-size:12.5px}
-table.kv td{padding:9px 14px;border:1px solid var(--line);text-align:right;
-  font-size:15px;font-weight:700;background:#fff}
-table.kv tr:nth-child(even) td{background:#FCFCFD}
-table.kv td.up{background:var(--upbg);color:var(--up)}
-table.kv td.down{background:var(--downbg);color:var(--down)}
-.big{font-size:28px;font-weight:700;letter-spacing:-.01em}
-.big .u{font-size:13px;font-weight:400;color:var(--label);margin-left:2px}
+.lead{margin:-4px 0 18px;max-width:46em;color:var(--ink2);font-size:13px}
+.sub2{margin:28px 0 8px;font-size:14px;font-weight:700}
+.note{position:relative;margin:14px 0 0;padding-left:1.3em;max-width:52em;color:var(--ink3);
+  font-size:12px;line-height:1.75}
+.note::before{content:"※";position:absolute;left:0}
+.note:empty{display:none}
+.empty{margin:4px 0;color:var(--ink3);font-size:13px}
+.sname,.sub{display:block;font-size:11.5px;font-weight:400;color:var(--ink3);line-height:1.5}
+
+/* ---------- 数値の表 ---------- */
+table.kv{width:100%;border-collapse:collapse;border-top:1px solid var(--rule2)}
+table.kv th{width:34%;padding:13px 16px 13px 0;border-bottom:1px solid var(--rule);
+  color:var(--ink2);font-size:13px;font-weight:400;text-align:left;vertical-align:top}
+table.kv td{padding:13px 0;border-bottom:1px solid var(--rule);text-align:right;
+  font-size:15px;font-weight:500;vertical-align:top}
+table.kv td.up{color:var(--up)}
+table.kv td.down{color:var(--down)}
+.big{font-size:30px;font-weight:700;line-height:1.15;letter-spacing:-.01em}
+.big .u{margin-left:2px;font-size:13px;font-weight:400;color:var(--ink3)}
 .up-t{color:var(--up)}.down-t{color:var(--down)}.na-t{color:var(--na)}
-.bar{height:10px;background:#E7EAED;border-radius:2px;overflow:hidden;margin:10px 0 6px}
-.bar i{display:block;height:100%;background:var(--accent)}
-.barlab{display:flex;justify-content:space-between;font-size:12px;color:var(--label)}
-.hl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.hl{background:var(--labelbg);border:1px solid var(--line);border-radius:4px;
-  padding:12px 14px 10px;display:flex;flex-direction:column;gap:6px}
-.hl-lab{font-size:11.5px;color:var(--label)}
-.hl-val{font-size:24px;font-weight:700;line-height:1.1}
-.hl-u{font-size:12px;font-weight:400;color:var(--label);margin-left:1px}
-.hl-sub{font-size:11px;color:var(--label);margin-top:-4px}
-.hl-card{display:flex;align-items:center;gap:8px;min-height:38px}
-.hl-card img,.hl-card .noimg{width:32px;aspect-ratio:5/6;border-radius:3px;display:block}
-.hl-card .noimg{background:#E7EAED;border:1px solid var(--line)}
-.hl-card b{font-size:13px;font-weight:700}
+.stxt{display:flex;flex-direction:column;align-items:flex-end;line-height:1.35}
+.stxt .big{font-size:28px}
+.lgname{font-size:13px;font-weight:700;letter-spacing:.01em}
+.lgname.big2{font-size:18px}
+.mdeck{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.mdeck .deck{grid-template-columns:repeat(8,1fr);gap:3px;width:100%;max-width:320px}
+
+/* ---------- 横並びの勝率図 ---------- */
+.chart{display:block;width:100%;height:auto;overflow:visible}
+.hair{stroke:var(--rule);stroke-width:1}
+.gridv{stroke:var(--rule);stroke-width:1}
+.gtick{font-size:10px;fill:var(--ink3)}
+.base{stroke:var(--ink3);stroke-width:1;stroke-dasharray:2 3}
+.baselab{font-size:10.5px;font-weight:500;fill:var(--ink2)}
+.lab{font-size:13px;fill:var(--ink)}
+.lab.small{font-size:12px}
+.noicon{fill:var(--sunk);stroke:var(--rule)}
+.band.up{fill:var(--upband)}.band.down{fill:var(--downband)}.band.na{fill:var(--naband)}
+.mark{stroke:#fff;stroke-width:2}
+.mark.up{fill:var(--up)}.mark.down{fill:var(--down)}.mark.na{fill:var(--na)}
+.val{font-size:17px;font-weight:700}
+.val.up{fill:var(--up)}.val.down{fill:var(--down)}.val.na{fill:var(--na)}
+.unit{font-size:11px;font-weight:400;fill:var(--ink3)}
+.n{font-size:12px;fill:var(--ink2)}
+.keys{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:12.5px;color:var(--ink2)}
+.keys span{display:inline-flex;align-items:center;gap:8px}
+.sw{position:relative;display:inline-block;width:30px;height:12px}
+.sw::before{content:"";position:absolute;left:0;right:0;top:4px;height:5px;border-radius:3px;
+  background:var(--b)}
+.sw::after{content:"";position:absolute;left:10px;top:1px;width:10px;height:10px;border-radius:50%;
+  background:var(--c);box-shadow:0 0 0 1.5px #fff}
+.sw-up{--b:var(--upband);--c:var(--up)}
+.sw-down{--b:var(--downband);--c:var(--down)}
+.sw-na{--b:var(--naband);--c:var(--na)}
+
+/* ---------- 時系列の図 ---------- */
+.plot{fill:none;stroke:none}
+.grid{stroke:var(--rule);stroke-width:1}
+.axis{stroke:var(--rule2);stroke-width:1}
+.monthsep{stroke:var(--rule2);stroke-width:1;stroke-dasharray:2 3}
+.fifty{stroke:var(--ink3);stroke-width:1;stroke-dasharray:3 3}
+.tick{font-size:10.5px;fill:var(--ink3)}
+.tick.mon{fill:var(--ink2);font-weight:500}
+.tick.vlab{font-size:11px;fill:var(--ink2)}
+.ciband{fill:#7E8892;opacity:.12}
+.cistick{stroke:#7E8892;stroke-width:6;opacity:.22;stroke-linecap:round}
+.rate{fill:none;stroke:var(--ink);stroke-width:1.25;stroke-linejoin:round}
+.pt{fill:var(--ink);stroke:#fff;stroke-width:1.5}
+.pt.last{fill:var(--up)}
+.ma{fill:none;stroke:var(--up);stroke-width:2.25;stroke-linejoin:round;stroke-linecap:round}
+.patch{stroke:var(--down);stroke-width:1;stroke-dasharray:3 3}
+.volbar{fill:#B3BECA}
+.volfaint{fill:#8796A8;opacity:.2}
+.ultband{fill:var(--ult);opacity:.075}
+.ultlab{font-size:10.5px;font-weight:500;fill:var(--ult)}
+.xhair{stroke:var(--ink);stroke-width:1;opacity:0;pointer-events:none}
+.hit{fill:transparent;cursor:crosshair}
+#crtip{position:fixed;z-index:60;max-width:270px;padding:9px 12px;border-radius:8px;
+  background:#1C2126;color:#fff;font-size:12px;line-height:1.6;white-space:pre-line;
+  pointer-events:none;opacity:0;transition:opacity .08s;
+  box-shadow:0 6px 18px rgba(28,33,38,.22)}
+.legend2{display:flex;flex-wrap:wrap;gap:6px 22px;margin:14px 0 0;font-size:12px;color:var(--ink2)}
+.legend2 span{display:inline-flex;align-items:center;gap:8px}
+.lgline{display:inline-block;width:22px;height:0;border-top-width:2px;border-top-style:solid}
+.lgbox{display:inline-block;width:14px;height:12px;border-radius:3px}
+
+/* ---------- 期間のつまみ ---------- */
+.rng{margin:18px 0 0}
+.rlab{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  margin:0 0 4px;font-size:12px;color:var(--ink3)}
+.rlab b{color:var(--ink);font-weight:500}
+.dual{position:relative;height:24px}
+.dual::before{content:"";position:absolute;left:8px;right:8px;top:10px;height:4px;
+  border-radius:2px;background:var(--rule)}
+.dual-fill{position:absolute;top:10px;height:4px;border-radius:2px;background:var(--ink);
+  left:8px;width:calc(100% - 16px)}
+.dual input{position:absolute;left:0;top:0;width:100%;height:24px;margin:0;padding:0;
+  background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+.dual input::-webkit-slider-runnable-track{height:24px;background:none}
+.dual input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;pointer-events:auto;
+  width:16px;height:16px;margin-top:4px;border-radius:50%;background:#fff;
+  border:2px solid var(--ink);box-shadow:0 1px 3px rgba(28,33,38,.2);cursor:ew-resize}
+.dual input::-moz-range-track{height:24px;background:none}
+.dual input::-moz-range-thumb{pointer-events:auto;width:12px;height:12px;border-radius:50%;
+  background:#fff;border:2px solid var(--ink);box-shadow:0 1px 3px rgba(28,33,38,.2);cursor:ew-resize}
+.dual input:focus-visible{outline:none}
+.dual input:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px rgba(11,87,164,.35)}
+
+/* ---------- 目立つところ（推移ページ下） ---------- */
+.hl-grid{display:grid;grid-template-columns:repeat(3,1fr);margin-top:24px;
+  border-top:1px solid var(--rule2);border-bottom:1px solid var(--rule)}
+.hl{display:flex;flex-direction:column;gap:8px;padding:16px 18px 18px;border-left:1px solid var(--rule)}
+.hl:first-child{padding-left:0;border-left:0}
+.hl-lab{font-size:12px;color:var(--ink2)}
+.hl-val{font-size:26px;font-weight:700;line-height:1.1}
+.hl-u{margin-left:1px;font-size:12px;font-weight:400;color:var(--ink3)}
+.hl-sub{margin-top:-4px;font-size:11.5px;color:var(--ink3)}
+.hl-card{display:flex;align-items:center;gap:10px;min-height:42px}
+.hl-card img,.hl-card .noimg{display:block;width:34px;aspect-ratio:5/6;border-radius:4px}
+.hl-card .noimg{background:var(--sunk);border:1px solid var(--rule)}
+.hl-card b{font-size:13.5px;font-weight:700}
 .hl-card b.wide{font-size:14px}
-.hl .deck{grid-template-columns:repeat(4,1fr);gap:2px;max-width:150px}
-.menu{display:grid;gap:10px}
-.menu a{display:flex;justify-content:space-between;align-items:center;gap:16px;
-  text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);
-  border-radius:4px;padding:16px 20px}
-.menu a:hover{border-color:var(--ink)}
-.menu b{display:block;font-size:15px;font-weight:700}
-.menu span{font-size:12.5px;color:var(--label)}
-.menu em{font-style:normal;font-size:12px;color:var(--link);white-space:nowrap;font-weight:700}
-.menu a:hover b{color:var(--link)}
-.cov{width:100%;height:auto;display:block}
-.covbar.some{fill:#4E7CB8}.covbar.zero{fill:#EDEFF2}
-.covn{font-size:10px;fill:var(--label)}
-.covd{font-size:10.5px;fill:var(--ink)}
-.covw{font-size:9.5px;fill:var(--label)}
-.keys{display:flex;flex-wrap:wrap;gap:18px;font-size:12.5px;color:var(--label);margin:2px 0 0}
-.keys span{display:inline-flex;align-items:center;gap:6px}
-.sw{width:22px;height:11px;border-radius:2px;display:inline-block}
-.sw-up{background:#F7D9DE;border-left:3px solid var(--up)}
-.sw-down{background:#D6E3F3;border-left:3px solid var(--down)}
-.sw-na{background:#E7EAED;border-left:3px solid var(--na)}
-.log{background:var(--panel);border:1px solid var(--line);border-radius:4px;
-  margin-bottom:8px;padding:10px 14px 12px;border-left:4px solid var(--na)}
-.log.win{border-left-color:var(--up)}
-.log.lose{border-left-color:var(--down)}
-.log header{display:flex;align-items:center;gap:12px;font-size:11.5px;color:var(--label);
-  margin-bottom:8px}
-.log header .mode{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.log header .tro{font-weight:700}
-.duel{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.hl .deck{grid-template-columns:repeat(4,1fr);gap:3px;max-width:156px}
+
+/* ---------- カード画像 ---------- */
 .deck{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.deck img,.deck .noimg{display:block;width:100%;aspect-ratio:5/6;border-radius:4px}
+.deck .noimg{background:var(--sunk);border:1px solid var(--rule)}
+
+/* ---------- 対戦記録 ---------- */
+.log{position:relative;padding:16px 0 18px 16px;border-bottom:1px solid var(--rule)}
+.log:first-child{border-top:1px solid var(--rule2)}
+.log::before{content:"";position:absolute;left:0;top:16px;bottom:18px;width:3px;border-radius:2px;
+  background:var(--na)}
+.log.win::before{background:var(--up)}
+.log.lose::before{background:var(--down)}
+.log header{display:flex;align-items:baseline;gap:14px;margin:0 0 4px;font-size:12px;color:var(--ink3)}
+.log header .when{color:var(--ink2);font-weight:500}
+.log header .mode{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log header .tro{font-weight:700}
+.oppinfo{display:flex;flex-wrap:wrap;align-items:center;gap:2px 14px;margin:0 0 12px;
+  font-size:12px;color:var(--ink2)}
+.oppinfo b{color:var(--ink);font-weight:700}
+.rivaltag{display:inline-block;padding:0 7px;border-radius:4px;background:var(--upbg);
+  color:var(--up);font-size:11px;font-weight:700;line-height:1.7}
+.duel{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center}
 html[data-layout="wide"] .log .deck{grid-template-columns:repeat(8,1fr);gap:2px}
-.deck img,.deck .noimg{width:100%;aspect-ratio:5/6;display:block;border-radius:3px}
-.deck .noimg{background:#E7EAED;border:1px solid var(--line)}
-.hp{margin:6px 0 0;font-size:10.5px;color:var(--label);text-align:center}
-.mid{text-align:center;min-width:74px}
-.badge{display:block;font-size:19px;font-weight:700;color:#fff;border-radius:3px;
-  padding:2px 0;background:var(--na)}
-.badge.win{background:var(--up)}.badge.lose{background:var(--down)}
-.crowns{display:block;font-size:15px;font-weight:700;margin-top:4px}
+.hp{margin:6px 0 0;font-size:11px;color:var(--ink3);text-align:center}
+.mid{min-width:72px;text-align:center}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:44px;height:30px;
+  border-radius:7px;background:var(--nabg);color:var(--na);font-size:15px;font-weight:700}
+.badge.win{background:var(--upbg);color:var(--up)}
+.badge.lose{background:var(--downbg);color:var(--down)}
+.crowns{display:block;margin-top:6px;font-size:16px;font-weight:700;letter-spacing:.04em}
+
+/* ---------- 強敵 ---------- */
+.rivalwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.rivals{width:100%;border-collapse:collapse;font-size:13px}
+table.rivals th{padding:0 10px 9px;border-bottom:1px solid var(--rule2);color:var(--ink2);
+  font-size:11.5px;font-weight:500;line-height:1.4;text-align:right;vertical-align:bottom;
+  white-space:nowrap}
+table.rivals th.l{text-align:left}
+table.rivals td{padding:12px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.rivals tbody tr:hover td{background:#FAFBFC}
+table.rivals .rk{width:30px;padding-left:0;color:var(--ink3);font-size:12px}
+table.rivals .who{min-width:150px}
+table.rivals .who b{font-weight:700}
+table.rivals .num{text-align:right;white-space:nowrap;color:var(--ink2)}
+table.rivals .num.key{color:var(--ink);font-weight:700}
+table.rivals .topc b{display:block;color:var(--ink);font-size:15px;font-weight:700}
+table.rivals .topc .sub{white-space:nowrap}
+table.rivals .dt{font-size:12px;white-space:nowrap;color:var(--ink2)}
+
+/* ---------- 表示の切り替え ---------- */
 .narrowonly{display:none}
 html[data-layout="narrow"] .wideonly{display:none}
 html[data-layout="narrow"] .narrowonly{display:block}
-.basenote{margin:0 0 6px;font-size:11px;color:var(--label)}
-.lyt{margin-left:auto;font-size:11.5px;color:var(--label);background:var(--panel);
-  border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;
-  font-family:inherit}
-.lyt:hover{border-color:var(--link);color:var(--link)}
-@media print{.navwrap{display:none}}
-.plot{fill:#FCFCFD;stroke:#C3CAD1;stroke-width:1}
-.grid{stroke:#E9ECEF;stroke-width:1}
-.monthsep{stroke:#C3CAD1;stroke-width:1}
-.fifty{stroke:#E4A6AE;stroke-width:1;stroke-dasharray:4 3}
-.tick{font-size:9.5px;fill:var(--label)}
-.tick.mon{fill:var(--ink);font-weight:700}
-.tick.vlab{font-size:9px}
-.ciband{fill:#8A939C;opacity:.13}
-.cistick{stroke:#8A939C;stroke-width:6;opacity:.28}
-.rate{fill:none;stroke:#3A424B;stroke-width:1.1;stroke-linejoin:round}
-.pt{fill:#3A424B}
-.ma{fill:none;stroke:var(--up);stroke-width:2.2;stroke-linejoin:round}
-.patch{stroke:#0B57A4;stroke-width:1.2;stroke-dasharray:3 3}
-.mask{fill:#FFFFFF;opacity:.66}
-.volbar{fill:#7B8FA8}
-.volfaint{fill:#7B8FA8;opacity:.17}
-.ultband{fill:#7A3FBF;opacity:.10}
-.ultlab{font-size:9.5px;fill:#7A3FBF;font-weight:700}
-.ubtn{font-size:12px;padding:5px 14px;border:1px solid var(--line);border-radius:4px;
-  background:var(--panel);color:var(--ink);cursor:pointer;font-family:inherit}
-.ubtn.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
-.ctrl{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 0 10px}
-.ctrl.foot{margin:10px 0 0;justify-content:center}
-.rng{margin:10px 0 0;padding-top:10px;border-top:1px solid var(--line)}
-.rng input{width:100%;margin:1px 0;accent-color:var(--ink)}
-.rlab{font-size:12px;color:var(--label);margin-bottom:2px}
-.rlab b{color:var(--ink)}
-.legend2{display:flex;flex-wrap:wrap;gap:18px;font-size:12px;color:var(--label);
-  margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
-.legend2 span{display:inline-flex;align-items:center;gap:7px}
-.lgline{display:inline-block;width:22px;height:0;border-top-width:2px;border-top-style:solid}
-.lgbox{display:inline-block;width:20px;height:11px;border-radius:2px}
-.oppinfo{margin:0 0 8px;font-size:11.5px;color:var(--label);
-  display:flex;flex-wrap:wrap;gap:0 4px;align-items:center}
-.oppinfo b{color:var(--ink)}
-.rivaltag{background:var(--up);color:#fff;border-radius:3px;padding:1px 7px;
-  font-size:10.5px;font-weight:700}
-.rivalwrap{overflow-x:auto}
-table.rivals{width:100%;border-collapse:collapse;font-size:13px}
-table.rivals th{background:var(--labelbg);color:var(--label);font-weight:400;font-size:11.5px;
-  padding:8px 10px;border:1px solid var(--line);text-align:left;white-space:nowrap}
-table.rivals td{padding:8px 10px;border:1px solid var(--line);vertical-align:top}
-table.rivals tr:nth-child(even) td{background:#FCFCFD}
-table.rivals .rk{width:34px;color:var(--label);font-size:12px}
-table.rivals .num{text-align:right;font-weight:700;white-space:nowrap}
-table.rivals .dt{font-size:12px;white-space:nowrap}
-footer{color:var(--label);font-size:11.5px;margin-top:18px;text-align:right}
-@media(max-width:640px){body{padding:14px 8px 48px}.panel,.head{padding:14px 12px}
-  nav a{font-size:12px;padding:6px 11px}
-  .navlab{width:100%;margin-bottom:2px}
-  table.kv th{width:130px}
-  .hl-grid{grid-template-columns:1fr 1fr}
-  .duel{grid-template-columns:1fr auto 1fr;gap:8px}
-  .mid{min-width:52px}.badge{font-size:15px}.crowns{font-size:13px}
-  .hp{font-size:9px}}
-"""
+.basenote{margin:0 0 6px;font-size:11px;color:var(--ink3)}
 
+footer{max-width:960px;margin:0 auto;padding:18px 24px 48px;border-top:1px solid var(--rule);
+  color:var(--ink3);font-size:11.5px;line-height:1.8}
+
+html[data-layout="narrow"] .bar{padding:10px 14px 0;gap:10px}
+html[data-layout="narrow"] .brand{font-size:15px}
+html[data-layout="narrow"] .seg.modes a{padding:4px 9px;font-size:12px}
+html[data-layout="narrow"] .lyt{font-size:11px;padding:4px 8px}
+html[data-layout="narrow"] .brand span{display:none}
+html[data-layout="narrow"] .tabs{padding:0 14px}
+html[data-layout="narrow"] .tabs a{padding:10px 10px 9px;font-size:13.5px}
+html[data-layout="narrow"] .tabs a:first-child{margin-left:-10px}
+html[data-layout="narrow"] .wrap{padding:24px 14px 56px}
+html[data-layout="narrow"] .head{margin-bottom:28px}
+html[data-layout="narrow"] .head h1{font-size:22px}
+html[data-layout="narrow"] .panel{margin-bottom:44px}
+html[data-layout="narrow"] table.kv th{width:40%}
+html[data-layout="narrow"] .hl-grid{grid-template-columns:1fr 1fr}
+html[data-layout="narrow"] .hl{padding:14px 12px 16px}
+html[data-layout="narrow"] .hl:nth-child(odd){padding-left:0;border-left:0}
+html[data-layout="narrow"] .hl:nth-child(n+3){border-top:1px solid var(--rule)}
+html[data-layout="narrow"] .duel{gap:10px}
+html[data-layout="narrow"] .mid{min-width:52px}
+html[data-layout="narrow"] .badge{width:38px;height:26px;font-size:14px}
+html[data-layout="narrow"] .crowns{font-size:14px}
+html[data-layout="narrow"] .hp{font-size:9.5px}
+html[data-layout="narrow"] footer{padding:16px 14px 40px}
+@media(max-width:560px){
+  .bar{padding:10px 14px 0;gap:10px}.tabs{padding:0 14px}.wrap{padding:24px 14px 56px}
+  .brand span{display:none}footer{padding:16px 14px 40px}}
+@media print{.top{position:static}.rng,.toolbar,.lyt{display:none}}
+@media(prefers-reduced-motion:reduce){#crtip{transition:none}}
+"""
 
 LEAGUE_JS = "{" + ",".join(f'"{k}":"{v[0]}"' for k, v in sorted(LEAGUES.items())) + "}"
 
@@ -1556,8 +1747,8 @@ RATE_JS = """(function () {
 
     var nw = narrow();
     var W = nw ? 380 : 720;
-    var RH = nw ? 128 : 168, WH = nw ? 92 : 120, GAP = 18;
-    var padL = 8, padR = nw ? 46 : 52, padT = 14;
+    var RH = nw ? 128 : 168, WH = nw ? 92 : 120, GAP = 34;
+    var padL = 8, padR = nw ? 84 : 104, padT = 18;
     var H = padT + RH + GAP + WH + 22;
     var pw = W - padL - padR;
     var ry0 = padT, ry1 = padT + RH;
@@ -1637,21 +1828,17 @@ RATE_JS = """(function () {
       }
       o.push('<g clip-path="url(#rcA)">');
       if (seg.length > 1) o.push('<polyline class="ma" points="' + seg.join(" ") + '"/>');
-      for (k = 0; k < vis.length; k++) {
-        var p0 = Pr[vis[k]], yy = yof(p0);
-        if (k > 0 && k < vis.length - 1 &&
-            Math.abs(yy - yof(Pr[vis[k - 1]])) < 0.05 &&
-            Math.abs(yy - yof(Pr[vis[k + 1]])) < 0.05) continue;
-        o.push('<circle class="pt" cx="' + xs(p0.t).toFixed(1) + '" cy="' + yy.toFixed(1) +
-          '" r="2.6"><title>' + esc(p0.at) + " " +
-          esc(p0.u ? fmtn(p0.tr) : lname(p0.lg)) + "</title></circle>");
-      }
+      // 印は表示範囲の最後の記録だけ（途中の値はなぞると出る）
+      var pl = Pr[vis[vis.length - 1]];
+      o.push('<circle class="pt last" cx="' + xs(pl.t).toFixed(1) + '" cy="' + yof(pl).toFixed(1) +
+        '" r="3.5"/>');
       o.push("</g>");
     } else {
       o.push('<text class="tick" x="' + (padL + pw / 2).toFixed(1) + '" y="' +
         (ry0 + RH / 2).toFixed(1) + '" text-anchor="middle">この期間はレートの記録がない</text>');
     }
-    o.push('<text class="tick vlab" x="' + padL + '" y="' + (ry0 - 4) + '">レート</text>');
+    o.push('<line class="axis" x1="' + padL + '" y1="' + ry1 + '" x2="' + (padL + pw) + '" y2="' + ry1 + '"/>');
+    o.push('<text class="tick vlab" x="' + padL + '" y="' + (ry0 - 6) + '">レート</text>');
 
     /* ===== 下：勝率＋出来高 ===== */
     o.push('<rect class="plot" x="' + padL + '" y="' + wy0 + '" width="' + pw + '" height="' + WH + '"/>');
@@ -1664,13 +1851,13 @@ RATE_JS = """(function () {
         var bh = (WH - 2) * (g / maxv);
         o.push('<rect class="volfaint" x="' + (padL + (i - lo) * bw + bw * 0.14).toFixed(1) +
           '" y="' + (wy1 - bh).toFixed(1) + '" width="' + Math.max(0.8, bw * 0.72).toFixed(1) +
-          '" height="' + bh.toFixed(1) + '"><title>' + esc(days[i]) + " " + g + "試合</title></rect>");
+          '" height="' + bh.toFixed(1) + '" rx="' + Math.min(2, bw * 0.2).toFixed(1) + '"/>');
       }
     }
     [0, 0.25, 0.5, 0.75, 1].forEach(function (v) {
       var yy = wy1 - WH * v;
-      if (v > 0 && v < 1) o.push('<line class="grid" x1="' + padL + '" y1="' + yy.toFixed(1) +
-        '" x2="' + (padL + pw) + '" y2="' + yy.toFixed(1) + '"/>');
+      if (v !== 0.5) o.push('<line class="' + (v === 0 ? "axis" : "grid") + '" x1="' + padL + '" y1="' +
+        yy.toFixed(1) + '" x2="' + (padL + pw) + '" y2="' + yy.toFixed(1) + '"/>');
       o.push('<text class="tick" x="' + (padL + pw + 5) + '" y="' + (yy + 3.5).toFixed(1) + '">' +
         (v * 100) + (v === 1 ? "%" : "") + "</text>");
     });
@@ -1688,7 +1875,7 @@ RATE_JS = """(function () {
         (wy0 + WH / 2).toFixed(1) + '" text-anchor="middle">移動平均には' + WR_WIN +
         '試合の蓄積が要る</text>');
     }
-    o.push('<text class="tick vlab" x="' + padL + '" y="' + (wy0 - 4) +
+    o.push('<text class="tick vlab" x="' + padL + '" y="' + (wy0 - 6) +
       '">勝率（' + WR_WIN + '試合の移動平均）・薄い棒は試合数</text>');
 
     /* ===== 横軸 ===== */
@@ -1720,6 +1907,23 @@ RATE_JS = """(function () {
       o.push('<text class="tick" x="' + dlx.toFixed(1) + '" y="' + yl +
         '" text-anchor="middle">' + esc(days[i].slice(5).replace("-", "/")) + "</text>");
     }
+    o.push('<line class="xhair" x1="0" y1="' + ry0 + '" x2="0" y2="' + wy1 + '"/>');
+    var pi = -1, wi = -1;
+    for (i = lo; i <= hi; i++) {
+      var dEnd = new Date(shift(days[i], 1) + "T00:00:00").getTime();
+      while (pi + 1 < Pr.length && Pr[pi + 1].t < dEnd) pi++;
+      while (wi + 1 < S.wr.length && S.wr[wi + 1].t < dEnd) wi++;
+      var tl = [days[i].replace(/-/g, "/")];
+      if (pi >= 0) {
+        var pp = Pr[pi];
+        tl.push(pp.u ? "レート " + fmtn(pp.tr) + "（" + lname(pp.lg) + "）" : "ステージ " + lname(pp.lg));
+      }
+      if (wi >= 0) tl.push("勝率 " + (S.wr[wi].p * 100).toFixed(1) + "%（直近" + WR_WIN + "試合）");
+      tl.push("この日の試合 " + (S.vol[days[i]] || 0));
+      o.push('<rect class="hit" x="' + (padL + (i - lo) * bw).toFixed(1) + '" y="' + ry0 +
+        '" width="' + bw.toFixed(2) + '" height="' + (wy1 - ry0) + '" data-cx="' + xd(i).toFixed(1) +
+        '" data-tip="' + esc(tl.join("\\n")) + '"/>');
+    }
     o.push("</svg>");
     box.innerHTML = o.join("");
   }
@@ -1732,6 +1936,7 @@ RATE_JS = """(function () {
     a.value = S.lo; z.value = S.hi;
     document.getElementById("rlab").textContent =
       n ? S.days[S.lo] + " 〜 " + S.days[S.hi] : "-";
+    if (window.crFill) crFill();
   }
 
   function bind() {
@@ -1855,26 +2060,30 @@ def nav(prefix, base):
         f'<a href="{prefix}{f}"{" class=\'on\'" if f == base else ""}>{esc(l)}</a>'
         for f, l in PAGES
     )
-    return ('<div class="navwrap">'
-            f'<nav class="modes"><span class="navlab">モード</span>{modes}</nav>'
-            f'<nav class="pages"><span class="navlab">表示</span>{pages}'
-            '<button id="lytbtn" class="lyt" onclick="crToggle()"></button></nav>'
-            "</div>")
+    return ('<header class="top"><div class="bar">'
+            f'<a class="brand" href="{prefix}chart.html"><i></i>Clash Log<span></span></a>'
+            f'<nav class="seg modes" aria-label="モード">{modes}</nav>'
+            '<button id="lytbtn" class="lyt" onclick="crToggle()"></button></div>'
+            f'<nav class="tabs" aria-label="表示">{pages}</nav></header>')
 
 
 def page(prefix, base, label, title, subtitle, body):
     doc = ("<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'>"
            "<meta name='viewport' content='width=device-width,initial-scale=1'>"
            f"<title>{esc(title)}｜{esc(label)}</title>"
+           "<link rel='preconnect' href='https://fonts.googleapis.com'>"
+           "<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>"
+           "<link rel='stylesheet' href='https://fonts.googleapis.com/css2?"
+           "family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap'>"
            f"<style>{CSS}</style><script>{SCRIPT}</script></head>"
-           "<body><div class='wrap'>"
+           "<body>"
            + nav(prefix, base)
-           + f"<div class='head'><h1>{esc(title)}<span class='mtag'>{esc(label)}</span></h1>"
-             f"<p>{esc(subtitle)}</p></div>"
+           + "<main class='wrap'>"
+           + f"<div class='head'><h1>{esc(title)}</h1><p>{esc(label)}　{esc(subtitle)}</p></div>"
            + body
-           + "<footer>battles.csv より自動生成<br>"
+           + "</main><footer>battles.csv より自動生成<br>"
              "カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、"
-             "Supercell は内容に関与していない。</footer></div></body></html>")
+             "Supercell は内容に関与していない。</footer></body></html>")
     name = prefix + base
     WRITTEN.add(name)
     with open(os.path.join(SCRIPT_DIR, name), "w", encoding="utf-8") as f:
@@ -1883,17 +2092,10 @@ def page(prefix, base, label, title, subtitle, body):
 
 def range_ui():
     return """
-    <div class="ctrl">
-      <span class="navlab" style="width:auto">期間</span>
-      <button id="p-7" class="ubtn">7日</button>
-      <button id="p-30" class="ubtn">30日</button>
-      <button id="p-90" class="ubtn">90日</button>
-      <button id="p-all" class="ubtn on">全期間</button>
-    </div>
-    <div class="rng" style="border:0;padding-top:0;margin-top:0">
+    <div class="toolbar"><div class="tgroup"><span class="tl">期間</span><div class="seg"><button id="p-7" class="ubtn">7日</button><button id="p-30" class="ubtn">30日</button><button id="p-90" class="ubtn">90日</button><button id="p-all" class="ubtn on">全期間</button></div></div></div>
+    <div class="rng" style="margin-top:0">
       <div class="rlab"><b id="rlab">-</b></div>
-      <input id="r1" type="range" min="0" max="0" value="0">
-      <input id="r2" type="range" min="0" max="0" value="0">
+      <div class="dual"><div class="dual-fill" id="rfill"></div><input id="r1" type="range" min="0" max="0" value="0" aria-label="表示範囲の始まり"><input id="r2" type="range" min="0" max="0" value="0" aria-label="表示範囲の終わり"></div>
     </div>"""
 
 
@@ -1903,7 +2105,7 @@ def legend_panel(extra=""):
             '<span><i class="sw sw-down"></i>基準を下回る</span>'
             f'<span><i class="sw sw-na"></i>判定不可（{RELIABLE_N}試合未満）</span>'
             "</div>")
-    note = ("縦線が推定値、帯が95%信頼区間。帯が長いほど推定の幅が大きい。"
+    note = ("点が推定値、帯が95%信頼区間。帯が長いほど推定の幅が大きい。"
             "帯どうしが重なる範囲では、差があるとは言えない。" + extra)
     return panel("凡例と注意", keys, "", note)
 
@@ -1947,11 +2149,13 @@ def opp_line(r):
     if ladder is not None:
         season = o["ladder_season"]
         bits.append(f"Top Ladder 最高 {ladder:,} 位" + (f"（{esc(season)}）" if season else ""))
+    if o["rt"]:
+        bits.append(f"グローバルトーナメント Top1000 {o['rt']}回")
     if o["battles"] is not None:
         bits.append(f"通算 {o['battles']:,} 戦")
-    if is_rival(pol, gt, ladder):
+    if is_rival(pol, gt, ladder, o["rt"]):
         bits.append('<span class="rivaltag">強敵</span>')
-    return "　".join(bits) if bits else ""
+    return "".join(f"<span>{b}</span>" for b in bits)
 
 
 def battle_log(rows, limit=100):
@@ -2048,68 +2252,85 @@ def coverage_strip(rows):
 # ---------------- 本体 ----------------
 
 def rivals_body(rows):
-    """勝った相手のうち、上位実績を持つ者を順位順に並べる。"""
+    """勝った相手のうち、上位実績を持つ者を最上位の順位順に並べる。"""
     items = []
     for r in rows:
         if r.get("result") != "win":
             continue
         tag = (r.get("opp_tag") or "").strip()
         o = opp_ranks(tag)
-        name, pol, gt, best, ladder = o["name"], o["pol"], o["gt"], o["best"], o["ladder"]
-        if not is_rival(pol, gt, ladder):
+        name, pol, gt, best, ladder, rt = (o["name"], o["pol"], o["gt"], o["best"],
+                                           o["ladder"], o["rt"])
+        if not is_rival(pol, gt, ladder, rt):
             continue
+        top, basis = best_rank(pol, gt, ladder, rt)
         items.append({
             "date": r["battle_time_jst"][:16],
             "name": name or r.get("opp_name") or "-",
             "tag": tag,
             "mode": r.get("game_mode") or r.get("battle_type") or "",
-            "pol": pol, "gt": gt, "best": best, "ladder": ladder,
+            "pol": pol, "gt": gt, "best": best, "ladder": ladder, "rt": rt,
+            "top": top, "basis": basis,
             "battles": o["battles"],
         })
-    items.sort(key=lambda x: (x["pol"] if x["pol"] is not None else 10 ** 9,
-                             x["gt"] if x["gt"] is not None else 10 ** 9,
-                             x["ladder"] if x["ladder"] is not None else 10 ** 9))
+    big = 10 ** 9
+    items.sort(key=lambda x: (x["top"] if x["top"] is not None else big,
+                              x["pol"] if x["pol"] is not None else big,
+                              x["ladder"] if x["ladder"] is not None else big,
+                              x["date"]))
+
+    crit = (f"レート戦の過去最高順位{RIVAL_POL_RANK:,}位以内、"
+            f"グローバルトーナメント{RIVAL_RT_RANK:,}位以内、"
+            f"または Top Ladder {RIVAL_LADDER_RANK:,}位以内の相手が対象。")
 
     if not OPPONENTS:
         return panel("強敵", '<p class="empty">相手の情報がまだ集まっていない。'
                      "収集が回ると順に貯まる。</p>",
                      "対戦相手のプレイヤー情報を別途取得して判定している。")
     if not items:
-        return panel("強敵", '<p class="empty">条件を満たす相手にまだ勝っていない。</p>',
-                     f"レート戦の過去最高順位が{RIVAL_POL_RANK:,}位以内、"
-                     f"グローバルトーナメント{RIVAL_GT_RANK:,}位以内、"
-                 f"または Top Ladder {RIVAL_LADDER_RANK:,}位以内の相手が対象。")
+        return panel("強敵", '<p class="empty">条件を満たす相手にまだ勝っていない。</p>', "", crit)
 
     # 値が1件も無い列は出さない
     has_gt = any(x["gt"] is not None for x in items)
+    has_rt = any(x["rt"] for x in items)
 
-    def num_cell(v, suffix=""):
-        return f'<td class="num">{"-" if v is None else f"{v:,}{suffix}"}</td>'
+    def num_cell(v, suffix="", key=False):
+        cls = "num key" if key else "num"
+        return f'<td class="{cls}">{"-" if v is None else f"{v:,}{suffix}"}</td>'
+
+    def rt_cell(x):
+        if not x["rt"]:
+            return '<td class="num">-</td>'
+        key = " key" if x["basis"] == "GT Top1000" else ""
+        return f'<td class="num{key}">{x["rt"]} 回</td>'
 
     body = "".join(
-        f'<tr><td class="rk">{i}</td><td><b>{esc(x["name"])}</b>'
-        f'<span class="sname">{esc(x["tag"])}</span></td>'
+        f'<tr><td class="rk">{i}</td>'
+        f'<td class="who"><b>{esc(x["name"])}</b><span class="sub">{esc(x["tag"])}</span></td>'
         + num_cell(x["best"])
-        + num_cell(x["pol"], " 位")
-        + (num_cell(x["gt"], " 位") if has_gt else "")
-        + num_cell(x["ladder"], " 位")
+        + num_cell(x["pol"], " 位", x["basis"] == "レート戦")
+        + (num_cell(x["gt"], " 位", x["basis"] == "グローバルトーナメント") if has_gt else "")
+        + (rt_cell(x) if has_rt else "")
+        + num_cell(x["ladder"], " 位", x["basis"] == "Top Ladder")
         + num_cell(x["battles"])
-        + f'<td class="dt">{esc(x["date"])}<span class="sname">{esc(x["mode"])}</span></td></tr>'
+        + f'<td class="dt">{esc(x["date"])}<span class="sub">{esc(x["mode"])}</span></td></tr>'
         for i, x in enumerate(items, 1))
 
     table_html = (
         '<div class="rivalwrap"><table class="rivals">'
-        "<thead><tr><th>#</th><th>相手</th><th>最高<br>レート</th><th>レート戦<br>最高順位</th>"
+        '<thead><tr><th class="rk">#</th><th class="l">相手</th>'
+        "<th>最高<br>レート</th><th>レート戦<br>最高順位</th>"
         + ("<th>グローバル<br>トーナメント<br>最高順位</th>" if has_gt else "")
+        + ("<th>グローバル<br>トーナメント<br>Top1000</th>" if has_rt else "")
         + "<th>Top Ladder<br>最高順位</th><th>通算<br>試合数</th>"
-        "<th>撃破した試合</th></tr></thead>"
+        '<th class="l">撃破した試合</th></tr></thead>'
         f"<tbody>{body}</tbody></table></div>")
 
     return panel(f"勝利した強敵 {len(items)} 件", table_html,
-                 "レート戦の過去最高順位が高い順。同じ相手に複数回勝っていれば、その回数だけ並ぶ。",
-                 f"対象はレート戦の過去最高順位{RIVAL_POL_RANK:,}位以内、"
-                 + (f"グローバルトーナメント{RIVAL_GT_RANK:,}位以内、" if has_gt else "")
-                 + f"または Top Ladder {RIVAL_LADDER_RANK:,}位以内の相手。")
+                 "それぞれの相手が持つ順位のうち、最も良いものが高い順。"
+                 "同じ相手に複数回勝っていれば、その回数だけ並ぶ。",
+                 crit + "グローバルトーナメントはAPIから「1,000位以内に入った回数」しか取れないため、"
+                 "回数を表示し、並べ替えでは1,000位として扱う。太字が並べ替えの基準にした順位。")
 
 
 def build(mode_key, prefix, label, rows, total_records):
@@ -2142,7 +2363,7 @@ def build(mode_key, prefix, label, rows, total_records):
     wd_items = [(WEEKDAY_JA[k] + "曜", w, t) for k, (w, t) in sorted(by_wd.items())]
 
     page(prefix, "chosi.html", label, "調子の分析", stamp, f"""
-  {panel("直前の結果別の勝率", rate_rows(streak_items), "縦線が左にあるほど勝率が低い。")}
+  {panel("直前の結果別の勝率", rate_rows(streak_items), "点が左にあるほど勝率が低い。")}
   {panel("連続対戦数と勝率", rate_rows(pos_items), "",
       f"前の試合から{SESSION_GAP_MINUTES}分以上の間隔があいた場合、別セッションとして数える。")}
   {panel("時間帯別の勝率", rate_rows(hour_items))}
@@ -2178,7 +2399,7 @@ def build(mode_key, prefix, label, rows, total_records):
     fixed_n = len(my_cards) - len(varying)
 
     page(prefix, "mydeck.html", label, "使用デッキ別の勝率", stamp, """
-  <section class="panel"><h2>期間の指定</h2>""" + range_ui() + """</section>
+  <section class="panel">""" + range_ui() + """</section>
   <section class="panel"><h2>デッキ構成別の勝率</h2>
     <p class="lead">左に並ぶ8枚がその構成。基準線は指定期間の平均。</p>
     <div id="s1"></div><p class="note" id="n1"></p></section>
@@ -2191,7 +2412,7 @@ def build(mode_key, prefix, label, rows, total_records):
 
     # 対戦相手
     page(prefix, "enemy.html", label, "対戦相手のカード別の勝率", stamp, """
-  <section class="panel"><h2>期間の指定</h2>""" + range_ui() + """</section>
+  <section class="panel">""" + range_ui() + """</section>
   <section class="panel"><h2>勝率の低いカード</h2>
     <p class="lead">相手の編成に当該カードが含まれていた試合における、自分の勝率。</p>
     <div id="s1"></div><p class="note" id="n1"></p></section>
@@ -2204,29 +2425,23 @@ def build(mode_key, prefix, label, rows, total_records):
     # 推移
     page(prefix, "chart.html", label, "勝率の推移", stamp, """
   <section class="panel"><h2>勝率の推移</h2>
-    <div class="ctrl">
-      <span class="navlab" style="width:auto">粒度</span>
-      <button id="u-day" class="ubtn">日</button>
-      <button id="u-week" class="ubtn on">週</button>
-      <button id="u-month" class="ubtn">月</button>
+    <div class="toolbar">
+      <div class="tgroup"><span class="tl">粒度</span><div class="seg">
+        <button id="u-day" class="ubtn">日</button>
+        <button id="u-week" class="ubtn on">週</button>
+        <button id="u-month" class="ubtn">月</button></div></div>
+      <div class="tgroup"><span class="tl">期間</span><div class="seg"><button id="p-7" class="ubtn">7日</button><button id="p-30" class="ubtn">30日</button><button id="p-90" class="ubtn">90日</button><button id="p-all" class="ubtn on">全期間</button></div></div>
     </div>
     <div id="chart"></div>
-    <div class="ctrl foot">
-      <button id="p-7" class="ubtn">7日</button>
-      <button id="p-30" class="ubtn">30日</button>
-      <button id="p-90" class="ubtn">90日</button>
-      <button id="p-all" class="ubtn on">全期間</button>
-    </div>
     <div class="rng">
-      <div class="rlab">表示範囲 <b id="rlab">-</b></div>
-      <input id="r1" type="range" min="0" max="0" value="0">
-      <input id="r2" type="range" min="0" max="0" value="0">
+      <div class="rlab"><span>表示範囲</span><b id="rlab">-</b></div>
+      <div class="dual"><div class="dual-fill" id="rfill"></div><input id="r1" type="range" min="0" max="0" value="0" aria-label="表示範囲の始まり"><input id="r2" type="range" min="0" max="0" value="0" aria-label="表示範囲の終わり"></div>
     </div>
     <div class="legend2">
-      <span><i class="lgline" style="border-color:#3A424B"></i>実測</span>
-      <span><i class="lgline" style="border-color:#C8102E;border-top-width:3px"></i>移動平均（4期間）</span>
-      <span><i class="lgbox" style="background:#D9DCDF"></i>95%信頼区間</span>
-      <span><i class="lgbox" style="background:#7B8FA8"></i>プレイ回数</span>
+      <span><i class="lgline" style="border-color:#1C2126;border-top-width:1.5px"></i>実測</span>
+      <span><i class="lgline" style="border-color:#C8102E;border-top-width:2.5px"></i>移動平均（4期間）</span>
+      <span><i class="lgbox" style="background:#E5E7EA"></i>95%信頼区間</span>
+      <span><i class="lgbox" style="background:#B3BECA"></i>プレイ回数</span>
     </div>
     <p class="note">試合数が少ない期間ほど信頼区間は広くなる。灰色の帯が広い区間の上下動は、
       実力の変化ではなく偶然の可能性が高い。</p>
