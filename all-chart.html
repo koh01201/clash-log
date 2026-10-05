@@ -351,7 +351,7 @@ document.addEventListener('input', function(e){
   document.addEventListener('pointerleave', hide);
   window.addEventListener('scroll', hide, {passive: true});
 })();
-</script></head><body><header class="top"><div class="bar"><a class="brand" href="all-chart.html"><i></i>Clash Log<span></span></a><nav class="seg modes" aria-label="モード"><a href="chart.html">ランク戦</a><a href="etc-chart.html">その他</a><a href="all-chart.html" class='on'>すべて</a></nav><button id="lytbtn" class="lyt" onclick="crToggle()"></button></div><nav class="tabs" aria-label="表示"><a href="all-chart.html" class='on'>推移</a><a href="all-mydeck.html">使用デッキ</a><a href="all-enemy.html">対戦相手</a><a href="all-chosi.html">調子</a><a href="all-rate.html">レート</a><a href="all-rivals.html">強敵</a><a href="all-log.html">対戦記録</a></nav></header><main class='wrap'><div class='head'><h1>勝率の推移</h1><p>すべて　対象期間 2026/07/31 〜 2026/10/05　更新 2026/10/05 14:52 JST</p></div>
+</script></head><body><header class="top"><div class="bar"><a class="brand" href="all-chart.html"><i></i>Clash Log<span></span></a><nav class="seg modes" aria-label="モード"><a href="chart.html">ランク戦</a><a href="etc-chart.html">その他</a><a href="all-chart.html" class='on'>すべて</a></nav><button id="lytbtn" class="lyt" onclick="crToggle()"></button></div><nav class="tabs" aria-label="表示"><a href="all-chart.html" class='on'>推移</a><a href="all-mydeck.html">使用デッキ</a><a href="all-enemy.html">対戦相手</a><a href="all-chosi.html">調子</a><a href="all-rate.html">レート</a><a href="all-rivals.html">強敵</a><a href="all-log.html">対戦記録</a></nav></header><main class='wrap'><div class='head'><h1>勝率の推移</h1><p>すべて　対象期間 2026/07/31 〜 2026/10/05　更新 2026/10/05 23:55 JST</p></div>
   <section class="panel"><h2>勝率の推移</h2>
     <div class="toolbar">
       <div class="tgroup"><span class="tl">粒度</span><div class="seg">
@@ -383,7 +383,7 @@ document.addEventListener('input', function(e){
   var MODE = "all";
   var PATCHES = [];          // 例: ["2026-08-15"] を足すと縦線が入る
   var MA_WIN = 4;            // 移動平均の窓（バケット数）
-  var SEASONS = [{"f": "", "n": 85}, {"f": "2026-08-04 08:04:30", "n": 86}, {"f": "2026-09-08 08:41:21", "n": 87}]; // [{f: このシーズンの最初の時刻, n: 番号}] 古い順
+  var SEASONS = [{"f": "", "n": 85}, {"f": "2026-08-04 08:04:30", "n": 86}, {"f": "2026-09-08 08:41:21", "n": 87}, {"f": "2026-10-05 18:37:34", "n": 88}]; // [{f: このシーズンの最初の時刻, n: 番号}] 古い順
   var RELIABLE_N = 20;
   var S = { unit: "week", lo: 0, hi: 0, rows: [], buckets: [], icons: {} };
 
