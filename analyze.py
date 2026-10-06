@@ -24,6 +24,7 @@ from collections import defaultdict
 SESSION_GAP_MINUTES = 30      # 前の試合からこの分数以上あいたら「別のセッション」とみなす
 RELIABLE_N = 20               # この試合数未満は参考値として薄く表示する
 RANKED_ONLY = True            # クラン戦などを除き、ランク戦だけで集計する
+NEW_UI = True                 # True＝新しい1ページ型のサイト。False にすると旧ページ群に戻る
 # =========================================================
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -2581,6 +2582,1393 @@ def build(mode_key, prefix, label, rows, total_records):
 
 
 
+
+# ================= 新しい1ページ型のサイト =================
+# 見た目と計算はブラウザ側（APP_HTML の中のJS）で行い、ここではデータを詰めて渡すだけ。
+
+APP_HTML = r'''<title>Clash Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* レイアウト：上にシーズンの帯（横軸）、カーソルで各シーズンのページ一覧が縦に開く。本文は白地に罫線で区切る */
+:root{
+  --bg:#FFFFFF;--sunk:#F3F4F6;--cell:#EEF0F3;--ink:#1C2126;--ink2:#545C66;--ink3:#868E97;
+  --rule:#E6E8EC;--rule2:#CDD2D8;--accent:#BF0000;
+  --up:#C8102E;--down:#0B57A4;--na:#98A0A9;
+  --upbg:#FBECEE;--downbg:#E9F0F9;--nabg:#EFF1F3;
+  --upband:#F3C9D0;--downband:#C6D8EE;--naband:#DEE2E6;
+  --ult:#6E3BB8;--ultbg:#F2ECFA;--vol:#B3BECA;
+  --tipbg:#1C2126;--tipfg:#FFFFFF;--shadow:rgba(28,33,38,.14);
+  --font:"IBM Plex Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic","Meiryo",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121518;--sunk:#1B1F24;--cell:#20252B;--ink:#E8EBEE;--ink2:#A9B1BA;--ink3:#7D8690;
+  --rule:#262B31;--rule2:#363D45;--accent:#E5323F;
+  --up:#F0566A;--down:#5B9BE8;--na:#6F7882;
+  --upbg:#3A1C22;--downbg:#172A42;--nabg:#23282E;
+  --upband:#5A2630;--downband:#1E3A5E;--naband:#2C3238;
+  --ult:#A57BE8;--ultbg:#231C33;--vol:#46505C;
+  --tipbg:#E8EBEE;--tipfg:#121518;--shadow:rgba(0,0,0,.5);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121518;--sunk:#1B1F24;--cell:#20252B;--ink:#E8EBEE;--ink2:#A9B1BA;--ink3:#7D8690;
+  --rule:#262B31;--rule2:#363D45;--accent:#E5323F;
+  --up:#F0566A;--down:#5B9BE8;--na:#6F7882;
+  --upbg:#3A1C22;--downbg:#172A42;--nabg:#23282E;
+  --upband:#5A2630;--downband:#1E3A5E;--naband:#2C3238;
+  --ult:#A57BE8;--ultbg:#231C33;--vol:#46505C;
+  --tipbg:#E8EBEE;--tipfg:#121518;--shadow:rgba(0,0,0,.5);color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--down);outline-offset:2px;border-radius:4px}
+
+/* ---------- 上部 ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in oklab,var(--bg) 94%,transparent);
+  -webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--rule)}
+.in{max-width:1040px;margin:0 auto;padding-inline:24px}
+.bar{display:flex;align-items:center;gap:20px;padding-block:12px 8px}
+.brand{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand i{display:block;width:4px;height:18px;border-radius:1px;background:var(--accent)}
+.meta{margin-left:auto;font-size:12px;color:var(--ink3);white-space:nowrap}
+.seg{display:inline-flex;background:var(--sunk);border-radius:8px;padding:3px;gap:2px}
+.seg button{border:0;background:none;color:var(--ink2);font-size:12.5px;line-height:1.5;padding:4px 12px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--bg);color:var(--ink);font-weight:700;box-shadow:0 1px 2px var(--shadow),0 0 0 1px color-mix(in oklab,var(--ink) 6%,transparent)}
+.seg.modes button.on{color:var(--accent)}
+
+/* シーズンの帯 */
+.seasons{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--rule)}
+.seasons::-webkit-scrollbar{display:none}
+.sn{position:relative;flex:1 0 auto;min-width:118px;display:flex;flex-direction:column;align-items:flex-start;gap:0;
+  padding:9px 14px 10px;border:0;border-left:1px solid var(--rule);background:none;text-align:left;cursor:pointer}
+.sn:first-child{border-left:0;padding-left:0;min-width:96px}
+.sn b{font-size:13.5px;font-weight:700;color:var(--ink2);line-height:1.4}
+.sn span{font-size:11px;color:var(--ink3);line-height:1.45}
+.sn em{font-style:normal;font-size:11px;color:var(--ink3);line-height:1.45}
+.sn em .up-t,.sn em .down-t{font-weight:700}
+.sn:hover b,.sn.open b{color:var(--ink)}
+.sn.on b{color:var(--ink)}
+.sn.on::after{content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:var(--accent)}
+.sn:first-child.on::after{left:0}
+.sn .now{display:inline-block;margin-left:6px;padding:0 5px;border-radius:3px;background:var(--upbg);color:var(--up);font-size:10px;font-weight:700;vertical-align:1px}
+
+/* ページのタブ */
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--rule)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border:0;background:none;padding:9px 12px 8px;color:var(--ink2);font-size:14px;cursor:pointer;
+  border-bottom:2px solid transparent;white-space:nowrap;letter-spacing:.02em}
+.tabs button:first-child{margin-left:-12px}
+.tabs button:hover{color:var(--ink)}
+.tabs button.on{color:var(--ink);font-weight:700;border-bottom-color:var(--accent)}
+
+/* シーズンから開く一覧 */
+.menu{position:fixed;z-index:40;width:300px;max-width:calc(100vw - 32px);background:var(--bg);border:1px solid var(--rule2);
+  border-radius:10px;box-shadow:0 12px 32px var(--shadow);padding:6px;animation:drop .12s ease-out}
+@keyframes drop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.menu h4{margin:6px 10px 6px;font-size:12px;font-weight:500;color:var(--ink3)}
+.menu button{display:grid;grid-template-columns:76px 1fr;gap:10px;align-items:baseline;width:100%;border:0;background:none;
+  text-align:left;padding:8px 10px;border-radius:6px;cursor:pointer}
+.menu button:hover,.menu button:focus-visible{background:var(--sunk)}
+.menu button b{font-size:13.5px;font-weight:700}
+.menu button span{font-size:12px;color:var(--ink2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu button.cur b{color:var(--accent)}
+
+/* ---------- 本文 ---------- */
+.wrap{max-width:1040px;margin:0 auto;padding:28px 24px 64px}
+.head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px 20px;margin:0 0 28px}
+.head h1{margin:0;font-size:26px;line-height:1.3;font-weight:700;letter-spacing:.01em;text-wrap:balance}
+.head p{margin:0;font-size:12.5px;color:var(--ink3)}
+.sec{margin:0 0 48px;min-width:0}
+.sec>h2{position:relative;margin:0 0 14px;padding:0 0 9px;font-size:16px;font-weight:700;line-height:1.4;
+  letter-spacing:.02em;border-bottom:2px solid var(--rule);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sec>h2::after{content:"";position:absolute;left:0;bottom:-2px;width:48px;height:2px;background:var(--accent)}
+.sec>h2 small{font-size:12px;font-weight:400;color:var(--ink3)}
+.lead{margin:-4px 0 14px;max-width:46em;color:var(--ink2);font-size:13px}
+.note{position:relative;margin:12px 0 0;padding-left:1.3em;max-width:56em;color:var(--ink3);font-size:12px;line-height:1.75}
+.note::before{content:"※";position:absolute;left:0}
+.empty{color:var(--ink3);font-size:13px;margin:6px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:28px 40px}
+.grid2>*{min-width:0}
+.up-t{color:var(--up)}.down-t{color:var(--down)}.na-t{color:var(--na)}
+.sub{display:block;font-size:11.5px;font-weight:400;color:var(--ink3);line-height:1.5}
+
+/* 要約の数字 */
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule2);border-bottom:1px solid var(--rule);margin:0 0 36px}
+.kpi>div{padding:14px 18px 16px;border-left:1px solid var(--rule);min-width:0}
+.kpi>div:first-child{border-left:0;padding-left:0}
+.kpi .k{font-size:12px;color:var(--ink2)}
+.kpi .v{display:block;margin-top:4px;font-size:30px;font-weight:700;line-height:1.1;letter-spacing:-.01em}
+.kpi .v small{font-size:13px;font-weight:400;color:var(--ink3);margin-left:2px}
+.kpi .s{display:block;margin-top:5px;font-size:11.5px;color:var(--ink3)}
+
+/* 操作 */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px;margin:0 0 12px}
+.tg{display:flex;align-items:center;gap:10px}.tl{font-size:12px;color:var(--ink3)}
+.rng{margin:16px 0 0}
+.rlab{display:flex;justify-content:space-between;gap:12px;margin:0 0 4px;font-size:12px;color:var(--ink3)}
+.rlab b{color:var(--ink);font-weight:500}
+.dual{position:relative;height:24px}
+.dual::before{content:"";position:absolute;left:8px;right:8px;top:10px;height:4px;border-radius:2px;background:var(--rule)}
+.dual .fill{position:absolute;top:10px;height:4px;border-radius:2px;background:var(--ink)}
+.dual input{position:absolute;left:0;top:0;width:100%;height:24px;margin:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+.dual input::-webkit-slider-runnable-track{height:24px;background:none}
+.dual input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:16px;height:16px;margin-top:4px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--ink);box-shadow:0 1px 3px var(--shadow);cursor:ew-resize}
+.dual input::-moz-range-track{height:24px;background:none}
+.dual input::-moz-range-thumb{pointer-events:auto;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--ink);cursor:ew-resize}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;margin:12px 0 0;font-size:12px;color:var(--ink2)}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.lgl{display:inline-block;width:20px;border-top:2px solid var(--ink)}
+.lgb{display:inline-block;width:14px;height:12px;border-radius:3px}
+
+/* グラフ共通 */
+svg{display:block;overflow:visible}
+.ax{stroke:var(--rule2);stroke-width:1}.gr{stroke:var(--rule);stroke-width:1}
+.ref{stroke:var(--ink3);stroke-width:1;stroke-dasharray:3 3}
+.ssep{stroke:var(--ink3);stroke-width:1;stroke-dasharray:3 3;opacity:.8}
+.tk{font-size:10.5px;fill:var(--ink3);font-family:var(--font)}
+.tk.b{fill:var(--ink2);font-weight:700;font-size:11px}
+.tk.v{fill:var(--ink2);font-size:11px}
+.band{fill:var(--ink3);opacity:.12}
+.raw{fill:none;stroke:var(--ink);stroke-width:1.25;stroke-linejoin:round}
+.ma{fill:none;stroke:var(--up);stroke-width:2.25;stroke-linejoin:round;stroke-linecap:round}
+.vol{fill:var(--vol)}.volf{fill:var(--vol);opacity:.55}
+.pt{fill:var(--ink);stroke:var(--bg);stroke-width:1.5}
+.ptl{fill:var(--up);stroke:var(--bg);stroke-width:1.5}
+.ultb{fill:var(--ult);opacity:.08}.ultl{font-size:10.5px;fill:var(--ult);font-weight:500;font-family:var(--font)}
+.hit{fill:transparent;cursor:crosshair}
+.xh{stroke:var(--ink);stroke-width:1;opacity:0;pointer-events:none}
+
+/* 点と帯の表（勝率） */
+.dt{display:grid;grid-template-columns:var(--cols);align-items:center;column-gap:0}
+.dt>.h,.dt>.c{padding-right:16px}
+.dt>.z{padding-right:0}
+.dt>.h{padding:0 0 6px;font-size:11px;color:var(--ink3);border-bottom:1px solid var(--rule2);white-space:nowrap}
+.dt>.h.r{text-align:right}
+.dt>.c{padding:7px 0;border-bottom:1px solid var(--rule);min-width:0}
+.dt .lab{display:flex;align-items:center;gap:8px;font-size:13px;min-width:0}
+.dt .lab .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dt .pv{text-align:right;font-size:16px;font-weight:700;white-space:nowrap}
+.dt .pv small{font-size:10.5px;font-weight:400;color:var(--ink3)}
+.dt .rc{text-align:right;font-size:12px;color:var(--ink2);white-space:nowrap}
+.dt.tight>.c{padding:4px 0}
+.dt.tight .pv{font-size:14px}
+.dp{position:relative;height:16px}
+.dp .g{position:absolute;inset:0;background:linear-gradient(90deg,var(--rule) 1px,transparent 1px) 0 0/25% 100%;
+  border-right:1px solid var(--rule)}
+.dp .bl{position:absolute;top:-6px;bottom:-6px;width:0;border-left:1px dashed var(--ink3)}
+.dp .ci{position:absolute;top:5px;height:6px;border-radius:3px}
+.dp .d{position:absolute;top:2px;width:12px;height:12px;margin-left:-6px;border-radius:50%;border:2px solid var(--bg)}
+.ci.up{background:var(--upband)}.ci.down{background:var(--downband)}.ci.na{background:var(--naband)}
+.d.up{background:var(--up)}.d.down{background:var(--down)}.d.na{background:var(--na)}
+.dax{position:relative;height:14px;font-size:10px;color:var(--ink3)}
+.dax span{position:absolute;transform:translateX(-50%)}
+.dax span:first-child{transform:none}.dax span:last-child{transform:translateX(-100%)}
+.use{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);white-space:nowrap}
+.use i{display:block;height:6px;border-radius:3px;background:var(--ink2);opacity:.55}
+
+/* カード */
+.cd{position:relative;display:inline-grid;place-items:center;width:var(--w,26px);aspect-ratio:5/6;border-radius:4px;overflow:hidden;
+  flex:none;background:color-mix(in oklab,hsl(var(--h) 55% 50%) 22%,var(--cell));color:var(--ink2);
+  font-size:calc(var(--w,26px)*.36);font-weight:700;letter-spacing:-.02em;line-height:1}
+.cd img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cd i{font-style:normal}
+.deck8{display:flex;gap:3px;flex-wrap:nowrap}
+
+/* 対戦記録 */
+.lg{display:grid;grid-template-columns:96px 64px auto auto 1fr;align-items:center;gap:6px 14px;padding:10px 0;border-bottom:1px solid var(--rule)}
+.lg:first-of-type{border-top:1px solid var(--rule2)}
+.lg .when{font-size:12px;color:var(--ink2);line-height:1.4}
+.lg .when small{display:block;font-size:10.5px;color:var(--ink3)}
+.res{display:inline-flex;flex-direction:column;align-items:center;gap:2px}
+.pill{display:inline-grid;place-items:center;width:34px;height:22px;border-radius:5px;font-size:12.5px;font-weight:700}
+.pill.w{background:var(--upbg);color:var(--up)}.pill.l{background:var(--downbg);color:var(--down)}.pill.d{background:var(--nabg);color:var(--na)}
+.res b{font-size:12px;letter-spacing:.04em}
+.lg .vs{display:flex;flex-direction:column;gap:3px}
+.lg .hp{font-size:10.5px;color:var(--ink3)}
+.lg .who{font-size:12px;color:var(--ink2);min-width:0;line-height:1.55}
+.lg .who b{color:var(--ink)}
+.tag2{display:inline-block;padding:0 6px;border-radius:4px;background:var(--upbg);color:var(--up);font-size:10.5px;font-weight:700;line-height:1.7;margin-left:4px}
+.more{display:block;margin:16px auto 0;border:1px solid var(--rule2);background:none;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer}
+.more:hover{border-color:var(--ink3)}
+
+/* 表 */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{padding:0 10px 8px;border-bottom:1px solid var(--rule2);color:var(--ink2);font-size:11.5px;font-weight:500;line-height:1.4;
+  text-align:right;vertical-align:bottom;white-space:nowrap}
+table.t th.l,table.t td.l{text-align:left}
+table.t td{padding:10px;border-bottom:1px solid var(--rule);text-align:right;vertical-align:top;white-space:nowrap;color:var(--ink2)}
+table.t td:first-child,table.t th:first-child{padding-left:0}
+table.t td.key{color:var(--ink);font-weight:700}
+table.t td b{color:var(--ink)}
+table.t tr.sel td{background:color-mix(in oklab,var(--accent) 5%,transparent)}
+table.t .big{font-size:16px;font-weight:700;color:var(--ink)}
+
+/* レートの見出し */
+.hero{display:grid;grid-template-columns:1.2fr 1fr 1fr;border-top:1px solid var(--rule2);border-bottom:1px solid var(--rule);margin:0 0 36px}
+.hero>div{padding:16px 18px 18px;border-left:1px solid var(--rule);min-width:0}
+.hero>div:first-child{border-left:0;padding-left:0}
+.hero .k{font-size:12px;color:var(--ink2)}
+.hero .v{display:block;margin-top:2px;font-size:38px;font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.hero .v.st{font-size:26px}
+.hero .s{display:block;margin-top:6px;font-size:12px;color:var(--ink3)}
+.lgn{font-weight:700}
+
+/* カレンダー */
+.cal{display:grid;grid-template-columns:34px repeat(7,minmax(0,1fr));gap:3px}
+.cal .ch{font-size:11px;color:var(--ink3);text-align:left;padding:0 0 2px 6px}
+.cal .ch.we{color:var(--ink2)}
+.cal .cw{font-size:11px;color:var(--ink3);display:flex;align-items:flex-start;padding-top:6px}
+.cal .cc{position:relative;min-height:54px;border-radius:5px;background:var(--cell);padding:5px 7px;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.cal .cc.o{background:transparent}
+.cal .cd1{font-size:10.5px;color:var(--ink2);line-height:1}
+.cal .cc b{font-size:16px;line-height:1.1;text-align:right;color:var(--ink)}
+.cal .cc b small{font-size:10px;font-weight:400;color:var(--ink3)}
+.cal .cn{position:absolute;left:7px;bottom:5px;font-size:10px;color:var(--ink2);line-height:1}
+
+/* 対戦相手の中での位置（パーセンタイル） */
+.pr{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr) 96px;align-items:center;column-gap:18px;row-gap:0}
+.pr>div{padding:10px 0;border-bottom:1px solid var(--rule);min-width:0}
+.pr .ph{padding:0 0 6px;border-bottom:1px solid var(--rule2);font-size:11px;color:var(--ink3)}
+.pr .ph.sc{display:flex;justify-content:space-between}
+.pr .lb{font-size:13px}
+.pr .lb small{display:block;font-size:11px;color:var(--ink3)}
+.pr .vl{text-align:right;font-size:15px;font-weight:700}
+.pr .vl small{display:block;font-size:10.5px;font-weight:400;color:var(--ink3)}
+.trk{position:relative;height:30px}
+.trk::before{content:"";position:absolute;left:0;right:0;top:13px;height:4px;border-radius:2px;
+  background:linear-gradient(90deg,color-mix(in oklab,var(--down) 45%,var(--cell)),var(--cell) 50%,color-mix(in oklab,var(--up) 45%,var(--cell)))}
+.trk .md{position:absolute;top:7px;height:16px;border-left:1px dashed var(--ink3)}
+.trk .bb{position:absolute;top:1px;width:28px;height:28px;margin-left:-14px;border-radius:50%;display:grid;place-items:center;
+  color:#fff;font-size:12px;font-weight:700;border:2px solid var(--bg);box-shadow:0 1px 3px var(--shadow)}
+.seasons-past{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin:-22px 0 36px;font-size:12px;color:var(--ink3)}
+.seasons-past span.ch{display:inline-flex;align-items:baseline;gap:6px;padding:3px 10px;border-radius:999px;background:var(--sunk);color:var(--ink2)}
+.seasons-past span.ch b{color:var(--ink);font-size:12.5px}
+
+/* 直近20試合のまとめ */
+.recent{display:grid;grid-template-columns:auto minmax(0,1.3fr) minmax(0,1fr) minmax(0,.9fr);border-top:1px solid var(--rule2);border-bottom:1px solid var(--rule);margin:0 0 28px}
+.recent>div{padding:14px 18px 16px;border-left:1px solid var(--rule);min-width:0;display:flex;flex-direction:column;gap:8px}
+.recent>div:first-child{border-left:0;padding-left:0;flex-direction:row;align-items:center;gap:14px}
+.recent .k{font-size:12px;color:var(--ink2)}
+.recent .big{font-size:24px;font-weight:700;line-height:1.1}
+.recent .row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);min-width:0}
+.recent .row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;color:var(--ink)}
+
+/* 調子：時間帯×曜日 */
+.hm{display:grid;grid-template-columns:28px 1fr 104px;gap:0 10px;align-items:stretch}
+.hm .rows{display:grid;gap:3px}
+.hm .rl{font-size:11.5px;color:var(--ink2);display:flex;align-items:center;height:var(--ch)}
+.hm .cells{display:grid;gap:3px;min-width:0}
+.hm .row{display:grid;grid-template-columns:repeat(var(--nh),1fr);gap:3px}
+.hm .cell{height:var(--ch);border-radius:3px;background:var(--cell);display:grid;place-items:center;font-size:10px;color:var(--ink);cursor:default}
+.hm .cell.e{background:transparent;box-shadow:inset 0 0 0 1px var(--rule)}
+.hm .mg{display:grid;gap:3px}
+.hm .mr{height:var(--ch);display:flex;align-items:center;justify-content:flex-end;gap:6px;font-size:12px;white-space:nowrap}
+.hm .mr b{font-size:13px}
+.hm .mr small{font-size:10.5px;color:var(--ink3)}
+.hm .foot{grid-column:2;display:grid;grid-template-columns:repeat(var(--nh),1fr);gap:3px;margin-top:6px}
+.hm .foot div{display:flex;flex-direction:column;align-items:center;gap:2px}
+.hm .foot i{display:block;width:70%;border-radius:2px 2px 0 0;background:var(--vol)}
+.hm .foot span{font-size:10px;color:var(--ink3)}
+.hm .bars{height:34px;display:flex;align-items:flex-end;justify-content:center;width:100%}
+.scale{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink3);margin-top:10px;flex-wrap:wrap}
+.scale .sw{display:flex;gap:2px}.scale .sw i{display:block;width:16px;height:10px;border-radius:2px}
+
+/* セッションの流れ */
+.strip{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+
+footer{max-width:1040px;margin:0 auto;padding:18px 24px 48px;border-top:1px solid var(--rule);color:var(--ink3);font-size:11.5px;line-height:1.8}
+#tip{position:fixed;z-index:60;max-width:280px;padding:9px 12px;border-radius:8px;background:var(--tipbg);color:var(--tipfg);
+  font-size:12px;line-height:1.6;white-space:pre-line;pointer-events:none;opacity:0;transition:opacity .08s;box-shadow:0 6px 18px var(--shadow)}
+
+@media (max-width:760px){
+  .cal .cc{min-height:44px;padding:4px 5px}.cal .cc b{font-size:13px}.cal .cn{display:none}.cal{grid-template-columns:26px repeat(7,minmax(0,1fr))}
+  .in{padding-inline:16px}.wrap{padding:22px 16px 56px}footer{padding:16px 16px 40px}
+  .meta{display:none}
+  .head h1{font-size:22px}
+  .kpi,.hero{grid-template-columns:1fr 1fr}
+  .kpi>div:nth-child(3),.hero>div:nth-child(3){border-left:0;padding-left:0}
+  .kpi>div:nth-child(n+3),.hero>div:nth-child(n+3){border-top:1px solid var(--rule)}
+  .hero>div:first-child{grid-column:1/-1;border-bottom:1px solid var(--rule)}
+  .hero>div:nth-child(2){border-left:0;padding-left:0}
+  .hero>div:nth-child(3){border-left:1px solid var(--rule);padding-left:18px;border-top:0}
+  .grid2{grid-template-columns:1fr}
+  .kpi .v{font-size:26px}
+  .lg{grid-template-columns:1fr auto;grid-template-areas:"when res" "my my" "op op" "who who"}
+  .lg .when{grid-area:when}.lg .res{grid-area:res;flex-direction:row}.lg .my{grid-area:my}.lg .op{grid-area:op}.lg .who{grid-area:who}
+  .hm{grid-template-columns:24px 1fr 76px}
+  .pr{grid-template-columns:minmax(0,1fr) 84px}.pr .tr{grid-column:1/-1;padding-top:0}.pr .lb{border-bottom:0;padding-bottom:2px}.pr .vl{border-bottom:0;padding-bottom:2px}
+  .pr .ph.lab2,.pr .ph.v2{display:none}.pr .ph.sc{grid-column:1/-1}
+  .recent{grid-template-columns:1fr 1fr}.recent>div:nth-child(3){border-left:0;padding-left:0}
+  .recent>div:nth-child(n+3){border-top:1px solid var(--rule)}.recent>div:first-child{grid-column:1/-1;border-bottom:1px solid var(--rule)}
+  .recent>div:nth-child(2){border-left:0;padding-left:0}
+}
+@media (prefers-reduced-motion:reduce){.menu{animation:none}#tip{transition:none}}
+</style>
+
+<header class="top">
+  <div class="in">
+    <div class="bar">
+      <div class="brand"><i></i>Clash Log</div>
+      <div class="seg modes" id="modes" role="group" aria-label="モード"></div>
+      <div class="meta" id="meta"></div>
+    </div>
+    <nav class="seasons" id="seasons" aria-label="シーズン"></nav>
+    <nav class="tabs" id="tabs" aria-label="ページ"></nav>
+  </div>
+</header>
+<div class="menu" id="menu" hidden></div>
+<main class="wrap">
+  <div class="head"><h1 id="title"></h1><p id="sub"></p></div>
+  <div id="page"></div>
+</main>
+<footer>
+  battles.csv・profile.csv・opponents.csv より自動生成<br>
+  カード画像の出典は Supercell 公式API。本ページは非公式のファン制作物であり、Supercell は内容に関与していない。
+</footer>
+<div id="tip" role="tooltip"></div>
+
+<script type="application/json" id="data">/*DATA*/</script>
+<script>
+(function () {
+"use strict";
+var D = JSON.parse(document.getElementById("data").textContent);
+var IMG = D.img !== false;
+var RELIABLE_N = 20, MIN_CARD_N = 5, WR_WIN = 30, MA_WIN = 4;
+var PAGES = [["trend", "推移"], ["deck", "使用デッキ"], ["enemy", "対戦相手"], ["form", "調子"],
+             ["rate", "レート"], ["rivals", "強敵"], ["log", "対戦記録"]];
+var MODES = [["pol", "ランク戦"], ["etc", "その他"], ["all", "すべて"]];
+var WD = ["月", "火", "水", "木", "金", "土", "日"];
+var SEAS = D.seasons;
+
+/* ---------- 下ごしらえ ---------- */
+function esc(t) { return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function ms(t) { return new Date(t.slice(0, 10) + "T" + (t.length >= 19 ? t.slice(11, 19) : "00:00:00")).getTime(); }
+function seasonOf(t) { var n = null; for (var j = 0; j < SEAS.length; j++) if (SEAS[j].f <= t) n = SEAS[j].n; return n; }
+function dayKey(d) { return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+function addDays(k, n) { var d = new Date(k + "T00:00:00"); d.setDate(d.getDate() + n); return dayKey(d); }
+function md(k) { return (+k.slice(5, 7)) + "/" + (+k.slice(8, 10)); }
+function fmtn(n) { return n == null ? "-" : Number(n).toLocaleString("ja-JP"); }
+function wilson(w, n) {
+  if (!n) return [0, 0, 0];
+  var z = 1.96, p = w / n, d = 1 + z * z / n, c = (p + z * z / (2 * n)) / d;
+  var m = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d;
+  return [p, Math.max(0, c - m), Math.min(1, c + m)];
+}
+function tone(p, base, n) { if (n < RELIABLE_N) return "na"; return p > base ? "up" : p < base ? "down" : "na"; }
+function pc(p, d) { return (p * 100).toFixed(d == null ? 1 : d); }
+function rec(w, n) { return w + "勝" + (n - w) + "敗"; }
+function lname(n) { return D.leagues[n] || ("League " + n); }
+function hash(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+function abbr(s) {
+  var w = s.replace(/[^A-Za-z ]/g, " ").split(/\s+/).filter(Boolean);
+  if (w.length >= 2) return (w[0][0] + w[1][0]).toUpperCase();
+  return w.length ? w[0].slice(0, 2) : s.slice(0, 2);
+}
+
+var B = D.battles.map(function (a) {
+  var d = a[0].slice(0, 10);
+  return { t: a[0], d: d, h: +a[0].slice(11, 13), wd: (new Date(d + "T00:00:00").getDay() + 6) % 7,
+    mode: a[1], r: a[2], mc: a[3], oc: a[4], my: a[5], op: a[6], tag: a[7], name: a[8],
+    mk: a[9], mp: a[10], ok: a[11], opp: a[12], tc: a[13], gm: a[14], ses: a[15], s: seasonOf(a[0]) };
+});
+B.sort(function (x, y) { return x.t < y.t ? -1 : 1; });
+(function () {   // 直前の連勝・連敗と、セッション内で何戦目か（セッションが変われば数え直す）
+  var st = 0, ls = null, pos = 0;
+  B.forEach(function (g) {
+    if (g.ses !== ls) { st = 0; pos = 0; ls = g.ses; }
+    pos++; g.pos = pos; g.prev = st;
+    st = g.r === "w" ? (st > 0 ? st + 1 : 1) : g.r === "l" ? (st < 0 ? st - 1 : -1) : 0;
+  });
+})();
+var P = D.prof.map(function (a) { return { t: a[0], v: ms(a[0]), lg: a[1], tr: a[2], u: a[1] >= D.ult && a[2] > 0, s: seasonOf(a[0]) }; });
+
+var SINFO = SEAS.map(function (s, i) {
+  var g = B.filter(function (x) { return x.s === s.n; });
+  var p = P.filter(function (x) { return x.s === s.n; });
+  var from = g.length ? g[0].d : (p.length ? p[0].t.slice(0, 10) : "");
+  var to = g.length ? g[g.length - 1].d : from;
+  return { n: s.n, f: s.f, from: from, to: to, last: i === SEAS.length - 1 };
+});
+
+/* ---------- 状態 ---------- */
+var DAYS = [];
+var S = { mode: "pol", season: "all", page: "trend", unit: null, lo: null, hi: null, logN: 50 };
+try {
+  var sv = JSON.parse(localStorage.getItem("clashlog.v2") || "{}");
+  if (sv.mode) S.mode = sv.mode; if (sv.season != null) S.season = sv.season;
+} catch (e) {}
+// アドレスの # でページとモードを指定できる（例：#deck、#etc-deck）
+var h0 = /^#(?:(pol|etc|all)-)?([a-z]+)$/.exec(location.hash || "");
+if (h0 && PAGES.some(function (p) { return p[0] === h0[2]; })) { S.page = h0[2]; if (h0[1]) S.mode = h0[1]; }
+function save() { try { localStorage.setItem("clashlog.v2", JSON.stringify({ mode: S.mode, season: S.season })); } catch (e) {} }
+
+function games(season, mode) {
+  season = season == null ? S.season : season; mode = mode || S.mode;
+  return B.filter(function (g) { return (mode === "all" || g.mode === mode) && (season === "all" || g.s === season); });
+}
+function dec(gs) { var w = 0, n = 0; gs.forEach(function (g) { if (g.r !== "d") { n++; if (g.r === "w") w++; } }); return { w: w, n: n }; }
+function sinfo(n) { for (var i = 0; i < SINFO.length; i++) if (SINFO[i].n === n) return SINFO[i]; return null; }
+function seasonLabel(s) {
+  if (s === "all") return "全シーズン";
+  var i = sinfo(s); return "シーズン" + s + (i ? "（" + md(i.from) + "〜" + (i.last ? "" : md(i.to)) + "）" : "");
+}
+
+/* ---------- 部品 ---------- */
+function card(i, w) {
+  var nm = D.cards[i] || "?", url = D.icons[i];
+  return '<span class="cd" style="--h:' + (hash(nm) % 360) + (w ? ";--w:" + w + "px" : "") + '" data-tip="' + esc(nm) + '">' +
+    (IMG && url ? '<img src="' + esc(url) + '" alt="" loading="lazy" onerror="this.remove()">' : "") +
+    "<i>" + esc(abbr(nm)) + "</i></span>";
+}
+function deck8(ids, w) { return '<span class="deck8">' + ids.slice(0, 8).map(function (c) { return card(c, w); }).join("") + "</span>"; }
+function dotplot(w, n, base) {
+  var r = wilson(w, n), t = tone(r[0], base, n);
+  return '<div class="dp"><div class="g"></div><div class="bl" style="left:' + pc(base, 2) + '%"></div>' +
+    '<div class="ci ' + t + '" style="left:' + pc(r[1], 2) + "%;width:" + Math.max(1.5, (r[2] - r[1]) * 100).toFixed(2) + '%"></div>' +
+    '<div class="d ' + t + '" style="left:' + pc(r[0], 2) + '%"></div></div>';
+}
+function dax(base, lab) {
+  return '<div class="dax"><span style="left:0">0</span><span style="left:25%">25</span><span style="left:50%">50</span>' +
+    '<span style="left:75%">75</span><span style="left:100%">100</span></div>';
+}
+/* 勝率の表。items: {lab, w, n, use?} */
+function dtable(items, base, o) {
+  o = o || {};
+  if (!items.length) return '<p class="empty">該当する試合がない。</p>';
+  var useCol = o.total != null;
+  var cols = (o.labW || "minmax(0,1.3fr)") + (useCol ? " 96px" : "") + " minmax(120px,1.4fr) 62px " + (o.recW || "72px");
+  var maxU = 0; items.forEach(function (it) { if (it.n > maxU) maxU = it.n; });
+  var h = '<div class="dt' + (o.tight ? " tight" : "") + '" style="--cols:' + cols + '">' +
+    '<div class="h">' + esc(o.head || "") + "</div>" + (useCol ? '<div class="h">使用率</div>' : "") +
+    '<div class="h">' + dax(base) + '</div><div class="h r">勝率</div><div class="h r z">勝敗</div>';
+  items.forEach(function (it) {
+    var r = wilson(it.w, it.n), t = tone(r[0], base, it.n);
+    var tip = (it.tip || "") + (it.tip ? "\n" : "") + "勝率 " + pc(r[0]) + "%（" + rec(it.w, it.n) + "）\n95%信頼区間 " + pc(r[1]) + "〜" + pc(r[2]) + "%" +
+      (it.n < RELIABLE_N ? "\n" + RELIABLE_N + "試合未満のため判定不可" : "");
+    h += '<div class="c lab">' + it.lab + "</div>" +
+      (useCol ? '<div class="c use"><i style="width:' + Math.max(2, 46 * it.n / o.total).toFixed(1) + 'px;max-width:46px"></i>' + pc(it.n / o.total, 0) + "%</div>" : "") +
+      '<div class="c" data-tip="' + esc(tip) + '">' + dotplot(it.w, it.n, base) + "</div>" +
+      '<div class="c pv ' + t + '-t">' + pc(r[0]) + "<small>%</small></div>" +
+      '<div class="c rc z">' + rec(it.w, it.n) + "</div>";
+  });
+  return h + "</div>";
+}
+function sec(title, small, inner, lead, note) {
+  return '<section class="sec"><h2>' + esc(title) + (small ? "<small>" + esc(small) + "</small>" : "") + "</h2>" +
+    (lead ? '<p class="lead">' + esc(lead) + "</p>" : "") + inner + (note ? '<p class="note">' + esc(note) + "</p>" : "") + "</section>";
+}
+function pageW() { return Math.max(300, document.getElementById("page").clientWidth); }
+function niceSep(lo, hi, xOf, y0, y1, labY) {   // シーズンの区切り線と名前（期間内のみ）
+  var o = "";
+  SINFO.forEach(function (si, i) {
+    var a = si.f ? ms(si.f) : -Infinity, b = i + 1 < SINFO.length ? ms(SINFO[i + 1].f) : Infinity;
+    var x0 = xOf(Math.max(a, lo)), x1 = xOf(Math.min(b, hi));
+    if (b <= lo || a >= hi) return;
+    if (a > lo) o += '<line class="ssep" x1="' + x0.toFixed(1) + '" y1="' + (labY - 12) + '" x2="' + x0.toFixed(1) + '" y2="' + y1 + '"/>';
+    var w = x1 - x0;
+    if (w >= 30) o += '<text class="tk b" x="' + ((x0 + x1) / 2).toFixed(1) + '" y="' + labY + '" text-anchor="middle">' + (w >= 80 ? "シーズン" : "S") + si.n + "</text>";
+  });
+  return o;
+}
+
+/* ---------- 推移 ---------- */
+function streaks(gs) {
+  var bw = 0, bl = 0, cw = 0, cl = 0;
+  gs.forEach(function (g) {
+    if (g.r === "w") { cw++; cl = 0; } else if (g.r === "l") { cl++; cw = 0; } else { cw = 0; cl = 0; }
+    if (cw > bw) bw = cw; if (cl > bl) bl = cl;
+  });
+  return [bw, bl];
+}
+function trendPage() {
+  var all = games(); if (!all.length) return '<p class="empty">このシーズンの試合がまだない。</p>';
+  var days = []; all.forEach(function (g) { if (days[days.length - 1] !== g.d) days.push(g.d); });
+  DAYS = days;
+  if (S.lo == null || S.lo >= days.length) S.lo = 0;
+  if (S.hi == null || S.hi >= days.length) S.hi = days.length - 1;
+  var dLo = days[S.lo], dHi = days[S.hi];
+  var gs = all.filter(function (g) { return g.d >= dLo && g.d <= dHi; });
+  var dd = dec(gs), r = wilson(dd.w, dd.n), t = tone(r[0], 0.5, dd.n), sk = streaks(gs);
+  var nd = 0, seen = {}; gs.forEach(function (g) { if (!seen[g.d]) { seen[g.d] = 1; nd++; } });
+  var span = Math.round((ms(dHi) - ms(dLo)) / 864e5) + 1;
+  var kpi = '<div class="kpi">' +
+    '<div><span class="k">勝率</span><span class="v ' + t + '-t">' + pc(r[0]) + "<small>%</small></span>" +
+    '<span class="s">95%信頼区間 ' + pc(r[1]) + "〜" + pc(r[2]) + "%</span></div>" +
+    '<div><span class="k">試合</span><span class="v">' + gs.length + '<small>戦</small></span><span class="s">' +
+    '<span class="up-t">' + dd.w + '勝</span> <span class="down-t">' + (dd.n - dd.w) + "敗</span>" + (gs.length - dd.n ? " " + (gs.length - dd.n) + "分" : "") + "</span></div>" +
+    '<div><span class="k">最長の連勝・連敗</span><span class="v"><span class="up-t">' + sk[0] + '</span><small>連勝</small> <span class="down-t">' + sk[1] + "</span><small>連敗</small></span>" +
+    '<span class="s">日をまたいでも続けて数える</span></div>' +
+    '<div><span class="k">1日あたり</span><span class="v">' + (gs.length / nd).toFixed(1) + '<small>戦</small></span><span class="s">' + span + "日間のうち " + nd + "日プレイ</span></div></div>";
+
+  var ctrl = '<div class="toolbar"><div class="tg"><span class="tl">粒度</span><div class="seg" id="unit">' +
+    [["day", "日"], ["week", "週"]].map(function (u) { return '<button data-u="' + u[0] + '" class="' + (unitNow() === u[0] ? "on" : "") + '">' + u[1] + "</button>"; }).join("") +
+    "</div></div></div>";
+  var rng = '<div class="rng"><div class="rlab"><span>表示範囲</span><b id="rlabv">' + dLo + " 〜 " + dHi + "</b></div>" +
+    '<div class="dual"><div class="fill" id="rfill"></div><input id="r1" type="range" min="0" max="' + (days.length - 1) + '" value="' + S.lo + '" aria-label="範囲の始まり">' +
+    '<input id="r2" type="range" min="0" max="' + (days.length - 1) + '" value="' + S.hi + '" aria-label="範囲の終わり"></div></div>';
+  var leg = '<div class="legend"><span><i class="lgl" style="border-top-width:1.5px"></i>実測</span>' +
+    '<span><i class="lgl" style="border-color:var(--up);border-top-width:2.5px"></i>移動平均（' + MA_WIN + "期間）</span>" +
+    '<span><i class="lgb" style="background:color-mix(in oklab,var(--ink3) 22%,var(--bg))"></i>95%信頼区間</span>' +
+    '<span><i class="lgb" style="background:var(--vol)"></i>試合数</span>' +
+    (S.season === "all" ? '<span><i class="lgl" style="border-top:1.5px dashed var(--ink3)"></i>シーズンの区切り</span>' : "") + "</div>";
+  return kpi + sec("勝率の推移", "", ctrl + trendChart(gs) + rng + leg, "",
+      "試合数が少ない期間ほど信頼区間は広くなる。灰色の帯が広い区間の上下動は、実力の変化ではなく偶然の可能性が高い。") +
+    sec("日ごとの成績", "", calendar(gs), "", "色は勝率。50%より上は赤、下は青で、濃いほど差が大きい。試合が少ない日ほど、偶然で極端な値になりやすい。");
+}
+function weekStart(k) { var d = new Date(k + "T00:00:00"); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return dayKey(d); }
+function unitNow() { return S.unit || (S.season === "all" ? "week" : "day"); }
+function trendChart(gs) {
+  var U = unitNow(), map = {}, order = [];
+  gs.forEach(function (g) {
+    var k = U === "day" ? g.d : weekStart(g.d);
+    if (!map[k]) { map[k] = { k: k, w: 0, n: 0, g: 0 }; order.push(k); }
+    map[k].g++; if (g.r !== "d") { map[k].n++; if (g.r === "w") map[k].w++; }
+  });
+  var b = order.map(function (k) { return map[k]; }), nb = b.length;
+  var W = pageW(), narrow = W < 560;
+  var padL = 0, padR = 40, padT = S.season === "all" ? 26 : 8, MH = narrow ? 170 : 220, GAP = 28, VH = narrow ? 48 : 64;
+  var H = padT + MH + GAP + VH + 22, pw = W - padL - padR, step = pw / nb;
+  var x = function (i) { return padL + (i + 0.5) * step; }, y = function (v) { return padT + MH * (1 - v); };
+  var vy0 = padT + MH + GAP, vy1 = vy0 + VH, o = [];
+  o.push('<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="勝率の推移">');
+  [0, .25, .5, .75, 1].forEach(function (v) {
+    if (v !== .5) o.push('<line class="' + (v ? "gr" : "ax") + '" x1="' + padL + '" x2="' + (padL + pw) + '" y1="' + y(v) + '" y2="' + y(v) + '"/>');
+    o.push('<text class="tk" x="' + (padL + pw + 6) + '" y="' + (y(v) + 3.5) + '">' + (v * 100) + (v === 1 ? "%" : "") + "</text>");
+  });
+  o.push('<line class="ref" x1="' + padL + '" x2="' + (padL + pw) + '" y1="' + y(.5) + '" y2="' + y(.5) + '"/>');
+  if (S.season === "all") {
+    var t0 = ms(b[0].k), t1 = ms(addDays(b[nb - 1].k, U === "day" ? 1 : 7));
+    o.push(niceSep(t0, t1, function (t) { return padL + pw * (t - t0) / (t1 - t0); }, padT, vy1, padT - 10));
+  }
+  var ci = b.map(function (d) { return wilson(d.w, d.n); });
+  if (nb > 1) {
+    var up = [], dn = [];
+    for (var i = 0; i < nb; i++) up.push(x(i).toFixed(1) + "," + y(ci[i][2]).toFixed(1));
+    for (i = nb - 1; i >= 0; i--) dn.push(x(i).toFixed(1) + "," + y(ci[i][1]).toFixed(1));
+    o.push('<polygon class="band" points="' + up.concat(dn).join(" ") + '"/>');
+    o.push('<polyline class="raw" points="' + b.map(function (d, i) { return x(i).toFixed(1) + "," + y(d.n ? d.w / d.n : 0).toFixed(1); }).join(" ") + '"/>');
+  }
+  var ma = b.map(function (_, i) { var w = 0, n = 0; for (var j = Math.max(0, i - MA_WIN + 1); j <= i; j++) { w += b[j].w; n += b[j].n; } return n ? w / n : null; });
+  var mp = []; ma.forEach(function (v, i) { if (v != null) mp.push(x(i).toFixed(1) + "," + y(v).toFixed(1)); });
+  if (mp.length > 1) o.push('<polyline class="ma" points="' + mp.join(" ") + '"/>');
+  if (nb <= 45) b.forEach(function (d, i) { o.push('<circle class="pt" cx="' + x(i).toFixed(1) + '" cy="' + y(d.n ? d.w / d.n : 0).toFixed(1) + '" r="3"/>'); });
+  var mg = 1; b.forEach(function (d) { if (d.g > mg) mg = d.g; });
+  [0, .5, 1].forEach(function (v) {
+    var yy = vy1 - VH * v;
+    o.push('<line class="' + (v ? "gr" : "ax") + '" x1="' + padL + '" x2="' + (padL + pw) + '" y1="' + yy + '" y2="' + yy + '"/>');
+    o.push('<text class="tk" x="' + (padL + pw + 6) + '" y="' + (yy + 3.5) + '">' + Math.round(mg * v) + "</text>");
+  });
+  b.forEach(function (d, i) {
+    var bh = VH * d.g / mg;
+    o.push('<rect class="vol" x="' + (padL + i * step + step * .18).toFixed(1) + '" y="' + (vy1 - bh).toFixed(1) + '" width="' + Math.max(1, step * .64).toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="' + Math.min(2, step * .2).toFixed(1) + '"/>');
+  });
+  o.push('<text class="tk v" x="' + padL + '" y="' + (vy0 - 8) + '">試合数</text>');
+  var used = [];
+  var ev = Math.max(1, Math.ceil(nb / (narrow ? 4 : 8)));
+  for (i = 0; i < nb; i += ev) {
+    var xx = x(i); if (used.some(function (u) { return Math.abs(u - xx) < 40; })) continue; used.push(xx);
+    o.push('<text class="tk" x="' + xx.toFixed(1) + '" y="' + (vy1 + 16) + '" text-anchor="middle">' + md(b[i].k) + "</text>");
+  }
+  o.push('<line class="xh" id="xh" x1="0" x2="0" y1="' + padT + '" y2="' + vy1 + '"/>');
+  b.forEach(function (d, i) {
+    var c = ci[i], lines = [(U === "week" ? md(d.k) + "〜" + md(addDays(d.k, 6)) + "の週" : d.k)];
+    var sn = seasonOf(d.k + " 23:59:59"); if (sn) lines[0] += "（シーズン" + sn + "）";
+    if (d.n) { lines.push("勝率 " + pc(d.w / d.n) + "%（" + rec(d.w, d.n) + "）"); lines.push("95%信頼区間 " + pc(c[1]) + "〜" + pc(c[2]) + "%"); }
+    if (ma[i] != null) lines.push("移動平均 " + pc(ma[i]) + "%");
+    lines.push("試合数 " + d.g);
+    o.push('<rect class="hit" x="' + (padL + i * step).toFixed(1) + '" y="' + padT + '" width="' + step.toFixed(2) + '" height="' + (vy1 - padT) + '" data-cx="' + x(i).toFixed(1) + '" data-tip="' + esc(lines.join("\n")) + '"/>');
+  });
+  o.push("</svg>");
+  return o.join("");
+}
+function calendar(gs) {
+  var by = {}; gs.forEach(function (g) { var c = by[g.d] || (by[g.d] = { w: 0, n: 0, g: 0 }); c.g++; if (g.r !== "d") { c.n++; if (g.r === "w") c.w++; } });
+  var first = weekStart(gs[0].d), d0 = gs[0].d, last = gs[gs.length - 1].d, h = '<div class="cal"><div class="cw"></div>' +
+    WD.map(function (d, i) { return '<div class="ch' + (i >= 5 ? " we" : "") + '">' + d + "</div>"; }).join("");
+  for (var wk = first; wk <= last; wk = addDays(wk, 7)) {
+    var m = addDays(wk, 6);
+    var ml = ""; for (var q = 0; q < 7; q++) { var dq = addDays(wk, q); if (dq.slice(8) === "01") ml = (+dq.slice(5, 7)) + "月"; }
+    if (wk === first) ml = (+d0.slice(5, 7)) + "月";
+    h += '<div class="cw">' + ml + "</div>";
+    for (var r = 0; r < 7; r++) {
+      var d = addDays(wk, r), v = by[d], out = d < d0 || d > last;
+      if (out) { h += '<div class="cc o"></div>'; continue; }
+      var day = '<span class="cd1">' + (+d.slice(8)) + "</span>";
+      if (!v) { h += '<div class="cc" data-tip="' + d + "（" + WD[r] + '）\n試合なし">' + day + "</div>"; continue; }
+      var p = v.n ? v.w / v.n : .5, diff = Math.max(-.3, Math.min(.3, p - .5)), k2 = Math.abs(diff) / .3;
+      var bg = "color-mix(in oklab," + (diff >= 0 ? "var(--up)" : "var(--down)") + " " + Math.round(10 + 55 * k2) + "%,var(--cell))";
+      var tn = v.n < 5 ? "na" : p > .5 ? "up" : p < .5 ? "down" : "na";
+      h += '<div class="cc f" style="background:' + bg + '" data-tip="' + esc(d + "（" + WD[r] + "）\n" + v.g + "試合　" + rec(v.w, v.n) + "\n勝率 " + pc(p) + "%") + '">' + day +
+        '<b>' + pc(p, 0) + '<small>%</small></b><span class="cn">' + v.g + "戦</span></div>";
+    }
+  }
+  h += "</div>";
+  h += '<div class="scale">負け越し<span class="sw">' + [1, .66, .33].map(function (k) { return '<i style="background:color-mix(in oklab,var(--down) ' + Math.round(10 + 55 * k) + '%,var(--cell))"></i>'; }).join("") +
+    '<i style="background:var(--cell)"></i>' + [.33, .66, 1].map(function (k) { return '<i style="background:color-mix(in oklab,var(--up) ' + Math.round(10 + 55 * k) + '%,var(--cell))"></i>'; }).join("") + "</span>勝ち越し</div>";
+  return h;
+}
+
+/* ---------- 使用デッキ ---------- */
+function deckPage() {
+  var gs = games(), dd = dec(gs); if (!dd.n) return '<p class="empty">このシーズンの試合がまだない。</p>';
+  var base = dd.w / dd.n, decks = {}, face = {}, mine = {};
+  gs.forEach(function (g) {
+    if (g.r === "d" || !g.my.length) return;
+    var k = g.my.slice().sort(function (a, b) { return a - b; }).join(",");
+    if (!decks[k]) { decks[k] = { w: 0, n: 0 }; face[k] = g.my; }
+    decks[k].n++; if (g.r === "w") decks[k].w++;
+    var seen = {}; g.my.forEach(function (c) { if (seen[c]) return; seen[c] = 1; var m = mine[c] || (mine[c] = { w: 0, n: 0 }); m.n++; if (g.r === "w") m.w++; });
+  });
+  var narrow = pageW() < 640;
+  var items = Object.keys(decks).sort(function (a, b) { return decks[b].n - decks[a].n; }).slice(0, 8).map(function (k) {
+    return { lab: deck8(face[k], narrow ? 18 : 24), w: decks[k].w, n: decks[k].n, tip: face[k].map(function (c) { return D.cards[c]; }).join(" / ") };
+  });
+  var vary = Object.keys(mine).filter(function (c) { return mine[c].n < dd.n; }).sort(function (a, b) { return mine[b].n - mine[a].n; }).slice(0, 12);
+  var ci = vary.map(function (c) { return { lab: card(+c, 22) + '<span class="nm">' + esc(D.cards[c]) + "</span>", w: mine[c].w, n: mine[c].n, tip: D.cards[c] }; });
+  var labW = narrow ? "minmax(0,170px)" : "232px";
+  return sec("デッキ構成別の勝率", "基準線は期間平均 " + pc(base, 0) + "%", dtable(items, base, { head: "構成（8枚）", total: dd.n, labW: labW }),
+      "", "使用したデッキ構成は" + Object.keys(decks).length + "種類。試合数の多い順に上位8件。") +
+    sec("入れ替えのあったカード", "", dtable(ci, base, { head: "カード", total: dd.n, tight: true }),
+      "全試合に入っている固定枠は差が出ないため除外している。", "点が推定値、帯が95%信頼区間。帯どうしが重なる範囲では、差があるとは言えない。" + RELIABLE_N + "試合未満は灰色。");
+}
+
+/* ---------- 対戦相手 ---------- */
+function oppStats(gs) {
+  var opp = {};
+  gs.forEach(function (g) {
+    if (g.r === "d") return; var seen = {};
+    g.op.forEach(function (c) { if (seen[c]) return; seen[c] = 1; var m = opp[c] || (opp[c] = { w: 0, n: 0 }); m.n++; if (g.r === "w") m.w++; });
+  });
+  return opp;
+}
+function enemyPage() {
+  var gs = games(), dd = dec(gs); if (!dd.n) return '<p class="empty">このシーズンの試合がまだない。</p>';
+  var base = dd.w / dd.n, opp = oppStats(gs);
+  var ok = Object.keys(opp).filter(function (c) { return opp[c].n >= MIN_CARD_N; });
+  var byWr = ok.slice().sort(function (a, b) { return opp[a].w / opp[a].n - opp[b].w / opp[b].n; });
+  var mk = function (c) { return { lab: card(+c, 22) + '<span class="nm">' + esc(D.cards[c]) + "</span>", w: opp[c].w, n: opp[c].n, tip: D.cards[c] + "（" + opp[c].n + "試合で遭遇）" }; };
+  return sec("対戦カードの地図", "横＝よく当たる、縦＝勝てている", scatter(ok, opp, dd.n, base),
+      "", "右下ほど「よく当たるのに勝てていない」カード。点の大きさは遭遇した試合数。" + MIN_CARD_N + "試合以上当たったカードのみ（全" + Object.keys(opp).length + "種類のうち" + ok.length + "種類）。") +
+    '<div class="grid2">' +
+    sec("勝率の低いカード", "", dtable(byWr.slice(0, 10).map(mk), base, { head: "相手のカード", tight: true, recW: "64px" })) +
+    sec("勝率の高いカード", "", dtable(byWr.slice().reverse().slice(0, 10).map(mk), base, { head: "相手のカード", tight: true, recW: "64px" })) +
+    "</div>";
+}
+function scatter(keys, opp, total, base) {
+  var W = pageW(), narrow = W < 560, H = narrow ? 300 : 380, padL = 34, padR = 12, padT = 12, padB = 30;
+  var pw = W - padL - padR, ph = H - padT - padB;
+  var mx = 0; keys.forEach(function (c) { var f = opp[c].n / total; if (f > mx) mx = f; });
+  mx = Math.min(1, Math.ceil(mx * 10 + .5) / 10);
+  var X = function (f) { return padL + pw * f / mx; }, Y = function (p) { return padT + ph * (1 - p); };
+  var o = ['<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="対戦カードの遭遇率と勝率">'];
+  o.push('<rect x="' + X(mx * .5) + '" y="' + Y(base) + '" width="' + (X(mx) - X(mx * .5)) + '" height="' + (Y(0) - Y(base)) + '" style="fill:var(--downbg);opacity:.6"/>');
+  [0, .25, .5, .75, 1].forEach(function (v) {
+    o.push('<line class="' + (v ? "gr" : "ax") + '" x1="' + padL + '" x2="' + (padL + pw) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/>');
+    o.push('<text class="tk" x="' + (padL - 6) + '" y="' + (Y(v) + 3.5) + '" text-anchor="end">' + v * 100 + (v === 1 ? "%" : "") + "</text>");
+  });
+  for (var f = 0; f <= mx + 1e-9; f += mx <= .3 ? .05 : .1) {
+    o.push('<text class="tk" x="' + X(f) + '" y="' + (H - 10) + '" text-anchor="middle">' + Math.round(f * 100) + "%</text>");
+    if (f > 0) o.push('<line class="gr" x1="' + X(f) + '" x2="' + X(f) + '" y1="' + padT + '" y2="' + (padT + ph) + '"/>');
+  }
+  o.push('<line class="ref" x1="' + padL + '" x2="' + (padL + pw) + '" y1="' + Y(base) + '" y2="' + Y(base) + '"/>');
+  o.push('<text class="tk v" x="' + (padL + pw) + '" y="' + (Y(base) - 6) + '" text-anchor="end">期間平均 ' + pc(base, 0) + "%</text>");
+  o.push('<text class="tk v" x="' + (padL + pw - 6) + '" y="' + (Y(0) - 8) + '" text-anchor="end">よく当たるのに勝てていない</text>');
+  var pts = keys.map(function (c) { var m = opp[c], r = wilson(m.w, m.n); return { c: c, x: X(m.n / total), y: Y(r[0]), r: 3 + Math.sqrt(m.n) * .55, t: tone(r[0], base, m.n), m: m, ci: r }; });
+  pts.sort(function (a, b) { return b.r - a.r; });
+  pts.forEach(function (p) {
+    var col = p.t === "up" ? "var(--up)" : p.t === "down" ? "var(--down)" : "var(--na)";
+    o.push('<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + p.r.toFixed(1) + '" style="fill:' + col + ';fill-opacity:' + (p.t === "na" ? .45 : .8) + ';stroke:var(--bg);stroke-width:1.5" data-tip="' +
+      esc(D.cards[p.c] + "\n" + p.m.n + "試合で遭遇（" + pc(p.m.n / total) + "%）\n勝率 " + pc(p.ci[0]) + "%（" + rec(p.m.w, p.m.n) + "）\n95%信頼区間 " + pc(p.ci[1]) + "〜" + pc(p.ci[2]) + "%") + '"/>');
+  });
+  var boxes = [], lab = pts.slice().sort(function (a, b) { return b.m.n - a.m.n; }).slice(0, narrow ? 8 : 16);
+  lab.forEach(function (p) {
+    var t = D.cards[p.c], tw = t.length * 6.2, lx = p.x + p.r + 4, ly = p.y + 3.5;
+    if (lx + tw > padL + pw) lx = p.x - p.r - 4 - tw;
+    var bx = [lx, ly - 9, lx + tw, ly + 2];
+    if (boxes.some(function (q) { return !(bx[2] < q[0] || bx[0] > q[2] || bx[3] < q[1] || bx[1] > q[3]); })) return;
+    boxes.push(bx);
+    o.push('<text class="tk v" x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" style="pointer-events:none">' + esc(t) + "</text>");
+  });
+  o.push('<text class="tk" x="' + padL + '" y="' + (H - 10) + '" style="display:none"></text></svg>');
+  return '<div class="tw">' + o.join("") + "</div>";
+}
+
+/* ---------- 調子 ---------- */
+function formPage() {
+  var gs = games(), dd = dec(gs); if (!dd.n) return '<p class="empty">このシーズンの試合がまだない。</p>';
+  var base = dd.w / dd.n;
+  function tally(fn, keys) {
+    var m = {}; gs.forEach(function (g) { if (g.r === "d") return; var k = fn(g); if (k == null) return; var c = m[k] || (m[k] = { w: 0, n: 0 }); c.n++; if (g.r === "w") c.w++; });
+    return keys.filter(function (k) { return m[k]; }).map(function (k) { return { lab: '<span class="nm">' + esc(k) + "</span>", w: m[k].w, n: m[k].n, tip: k }; });
+  }
+  var prev = tally(function (g) { var s = g.prev; return s <= -2 ? "2連敗後" : s === -1 ? "1敗後" : s === 0 ? "セッション初戦" : s === 1 ? "1勝後" : "2連勝後"; },
+    ["2連敗後", "1敗後", "セッション初戦", "1勝後", "2連勝後"]);
+  var pos = tally(function (g) { return g.pos >= 6 ? "6戦目以降" : g.pos + "戦目"; }, ["1戦目", "2戦目", "3戦目", "4戦目", "5戦目", "6戦目以降"]);
+  return sec("時間帯と曜日", "色は期間平均 " + pc(base, 0) + "% との差", heatmap(gs, base), "",
+      "マスの数字は試合数（触れると勝率が出る）。" + RELIABLE_N + "試合未満のマスは淡く表示している（判定不可）。右の列は曜日ごとの勝率、下の棒は時間帯ごとの試合数。") +
+    '<div class="grid2">' +
+    sec("直前の結果別", "", dtable(prev, base, { head: "直前", tight: true, recW: "64px", labW: "minmax(0,96px)" })) +
+    sec("連続対戦数別", "", dtable(pos, base, { head: "何戦目", tight: true, recW: "64px", labW: "minmax(0,96px)" })) +
+    "</div>" +
+    sec("プレイごとの勝ち負け", "1列が1回のプレイ", sessions(gs), "",
+      "前の試合から30分以上あいたら別のプレイとして区切っている。上から順に1戦目、2戦目…。赤が勝ち、青が負け。");
+}
+function heatmap(gs, base) {
+  var hs = {}, cell = {}, rowT = [], colT = {};
+  gs.forEach(function (g) {
+    if (g.r === "d") return; hs[g.h] = 1;
+    var k = g.wd + "-" + g.h, c = cell[k] || (cell[k] = { w: 0, n: 0 }); c.n++; if (g.r === "w") c.w++;
+    var r = rowT[g.wd] || (rowT[g.wd] = { w: 0, n: 0 }); r.n++; if (g.r === "w") r.w++;
+    var q = colT[g.h] || (colT[g.h] = { w: 0, n: 0 }); q.n++; if (g.r === "w") q.w++;
+  });
+  var hl = Object.keys(hs).map(Number), h0 = Math.min.apply(null, hl), h1 = Math.max.apply(null, hl), hours = [];
+  for (var h = h0; h <= h1; h++) hours.push(h);
+  var narrow = pageW() < 560, ch = narrow ? 24 : 28, mc = 0;
+  hours.forEach(function (h) { if (colT[h] && colT[h].n > mc) mc = colT[h].n; });
+  function fill(w, n) {
+    var p = w / n, diff = Math.max(-.25, Math.min(.25, p - base)), k = Math.abs(diff) / .25;
+    var c = "color-mix(in oklab," + (diff >= 0 ? "var(--up)" : "var(--down)") + " " + Math.round(12 + 70 * k) + "%,var(--cell))";
+    return "background:" + c + ";opacity:" + (n >= RELIABLE_N ? 1 : .35 + .65 * n / RELIABLE_N).toFixed(2);
+  }
+  var o = '<div class="tw"><div class="hm" style="--nh:' + hours.length + ";--ch:" + ch + "px;min-width:" + (hours.length * (narrow ? 15 : 22) + (narrow ? 110 : 150)) + 'px">';
+  o += '<div class="rows">' + WD.map(function (d) { return '<div class="rl">' + d + "</div>"; }).join("") + "</div>";
+  o += '<div class="cells">';
+  for (var r = 0; r < 7; r++) {
+    o += '<div class="row">';
+    hours.forEach(function (h) {
+      var c = cell[r + "-" + h];
+      if (!c) { o += '<div class="cell e" data-tip="' + WD[r] + "曜 " + h + '時台\n試合なし"></div>'; return; }
+      var ci = wilson(c.w, c.n);
+      o += '<div class="cell" style="' + fill(c.w, c.n) + '" data-tip="' + esc(WD[r] + "曜 " + h + "時台\n勝率 " + pc(ci[0]) + "%（" + rec(c.w, c.n) + "）\n95%信頼区間 " + pc(ci[1]) + "〜" + pc(ci[2]) + "%" + (c.n < RELIABLE_N ? "\n判定不可（" + RELIABLE_N + "試合未満）" : "")) + '">' + (narrow ? "" : c.n) + "</div>";
+    });
+    o += "</div>";
+  }
+  o += "</div>";
+  o += '<div class="mg">' + WD.map(function (d, i) {
+    var t = rowT[i]; if (!t) return '<div class="mr"><small>-</small></div>';
+    var ci = wilson(t.w, t.n), tn = tone(ci[0], base, t.n);
+    return '<div class="mr" data-tip="' + esc(d + "曜\n勝率 " + pc(ci[0]) + "%（" + rec(t.w, t.n) + "）\n95%信頼区間 " + pc(ci[1]) + "〜" + pc(ci[2]) + "%") + '"><b class="' + tn + '-t">' + pc(ci[0], 0) + "%</b><small>" + t.n + "戦</small></div>";
+  }).join("") + "</div>";
+  o += '<div class="foot">' + hours.map(function (h) {
+    var t = colT[h], n = t ? t.n : 0, ci = t ? wilson(t.w, t.n) : null;
+    return '<div data-tip="' + esc(h + "時台\n" + (t ? "勝率 " + pc(ci[0]) + "%（" + rec(t.w, t.n) + "）" : "試合なし")) + '"><div class="bars"><i style="height:' + (mc ? Math.max(n ? 2 : 0, 34 * n / mc) : 0).toFixed(1) + 'px"></i></div><span>' + (narrow && h % 2 ? "" : h) + "</span></div>";
+  }).join("") + "</div>";
+  o += "</div></div>";
+  o += '<div class="scale">期間平均より低い<span class="sw">' + [1, .6, .25].map(function (k) { return '<i style="background:color-mix(in oklab,var(--down) ' + Math.round(12 + 70 * k) + '%,var(--cell))"></i>'; }).join("") +
+    '<i style="background:var(--cell)"></i>' + [.25, .6, 1].map(function (k) { return '<i style="background:color-mix(in oklab,var(--up) ' + Math.round(12 + 70 * k) + '%,var(--cell))"></i>'; }).join("") + "</span>高い</div>";
+  return o;
+}
+function sessions(gs) {
+  var ss = [], cur = null;
+  gs.forEach(function (g) { if (!cur || cur.id !== g.ses) { cur = { id: g.ses, g: [] }; ss.push(cur); } cur.g.push(g); });
+  var W = pageW(), cw = 10, gap = 4, maxN = 0;
+  var fit = Math.floor((W - 4) / (cw + gap));
+  var show = ss.slice(-Math.max(fit, 20));
+  show.forEach(function (s) { if (s.g.length > maxN) maxN = s.g.length; });
+  maxN = Math.min(maxN, 24);
+  var Wn = show.length * (cw + gap), H = maxN * (cw + 2) + 22, o = [];
+  o.push('<div class="strip"><svg width="' + Wn + '" height="' + H + '" viewBox="0 0 ' + Wn + " " + H + '" role="img" aria-label="プレイごとの勝敗">');
+  var lastLab = -99, lastD = "";
+  show.forEach(function (s, i) {
+    var x0 = i * (cw + gap);
+    s.g.slice(0, maxN).forEach(function (g, j) {
+      var col = g.r === "w" ? "var(--up)" : g.r === "l" ? "var(--down)" : "var(--na)";
+      var nm = (D.opps[g.tag] && D.opps[g.tag].name) || g.name;
+      o.push('<rect x="' + x0 + '" y="' + j * (cw + 2) + '" width="' + cw + '" height="' + cw + '" rx="2" style="fill:' + col + '" data-tip="' +
+        esc(g.t.slice(5, 16).replace("-", "/") + "　" + (j + 1) + "戦目\n" + (g.r === "w" ? "勝ち" : g.r === "l" ? "負け" : "引き分け") + " " + g.mc + "-" + g.oc + (nm ? "\n相手 " + nm : "")) + '"/>');
+    });
+    var d = s.g[0].d;
+    if (d !== lastD && i - lastLab >= 6) { o.push('<text class="tk" x="' + x0 + '" y="' + (H - 4) + '">' + md(d) + "</text>"); lastLab = i; }
+    lastD = d;
+  });
+  o.push("</svg></div>");
+  if (ss.length > show.length) o.push('<p class="note">直近の' + show.length + "回を表示（このシーズンは全" + ss.length + "回）。</p>");
+  return o.join("");
+}
+
+/* ---------- レート ---------- */
+function stageOrRate(lg, tr) { return lg >= D.ult && tr ? fmtn(tr) : lname(lg); }
+function seasonLedger() {
+  var rows = SINFO.slice().reverse().map(function (si) {
+    var p = P.filter(function (x) { return x.s === si.n; });
+    var g = B.filter(function (x) { return x.s === si.n && x.mode === "pol"; }), dd = dec(g), r = wilson(dd.w, dd.n);
+    var peak = null; p.forEach(function (x) { if (x.u && (peak == null || x.tr > peak)) peak = x.tr; });
+    var reach = null; for (var i = 0; i < p.length; i++) if (p[i].u) { reach = p[i]; break; }
+    var fin = D.finals[si.n], cur = !fin && p.length ? p[p.length - 1] : null;
+    var finTxt = fin ? stageOrRate(fin.lg, fin.tr) : cur ? stageOrRate(cur.lg, cur.tr) : "-";
+    var days = reach && si.from ? Math.round((ms(reach.t.slice(0, 10)) - ms(si.from)) / 864e5) + 1 : null;
+    return '<tr class="' + (S.season === si.n ? "sel" : "") + '"><td class="l"><b>シーズン' + si.n + "</b>" + (si.last ? '<span class="sub">開催中</span>' : "") + "</td>" +
+      '<td class="l">' + (si.from ? md(si.from) + "〜" + (si.last ? "" : md(si.to)) : "-") + "</td>" +
+      '<td><span class="big">' + finTxt + "</span>" + (fin ? '<span class="sub">確定</span>' : cur ? '<span class="sub">現在</span>' : "") + "</td>" +
+      "<td>" + (peak != null ? fmtn(peak) : "-") + "</td>" +
+      "<td>" + (reach ? md(reach.t.slice(0, 10)) + '<span class="sub">開幕から' + days + "日目</span>" : "-") + "</td>" +
+      "<td>" + g.length + "</td>" +
+      '<td class="' + tone(r[0], .5, dd.n) + '-t"><b style="color:inherit">' + (dd.n ? pc(r[0]) + "%" : "-") + "</b></td></tr>";
+  }).join("");
+  return '<div class="tw"><table class="t"><thead><tr><th class="l">シーズン</th><th class="l">期間</th><th>最終成績</th><th>シーズン最高<br>レート</th><th>Ultimate<br>到達</th><th>ランク戦<br>試合数</th><th>勝率</th></tr></thead><tbody>' + rows + "</tbody></table></div>";
+}
+function pctColor(p) {
+  return p >= 50 ? "color-mix(in oklab,var(--up) " + Math.round(35 + 65 * (p - 50) / 50) + "%,var(--na))"
+                 : "color-mix(in oklab,var(--down) " + Math.round(35 + 65 * (50 - p) / 50) + "%,var(--na))";
+}
+function pctPanel() {
+  if (!D.pct || !D.pct.length) return "";
+  var n = D.pct[0].n;
+  var h = '<div class="pr"><div class="ph lab2">指標</div><div class="ph sc"><span>下位</span><span>真ん中</span><span>上位</span></div><div class="ph v2" style="text-align:right">自分の値</div>';
+  D.pct.forEach(function (m) {
+    var v = m.fmt === "pct" ? pc(m.v) + "%" : fmtn(Math.round(m.v)), md2 = m.fmt === "pct" ? pc(m.med) + "%" : fmtn(Math.round(m.med));
+    h += '<div class="lb">' + esc(m.lab) + "<small>" + m.n + "人と比較</small></div>" +
+      '<div class="tr" data-tip="' + esc(m.lab + "\n対戦した相手" + m.n + "人の中で、下から" + m.p + "%の位置\n自分 " + v + "／相手の真ん中 " + md2) + '"><div class="trk">' +
+      '<span class="md" style="left:50%"></span><span class="bb" style="left:' + Math.max(3, Math.min(97, m.p)) + "%;background:" + pctColor(m.p) + '">' + m.p + "</span></div></div>" +
+      '<div class="vl">' + v + "<small>相手の真ん中 " + md2 + "</small></div>";
+  });
+  return h + "</div>";
+}
+function pastSeasons() {
+  var ks = Object.keys(D.finals).map(Number).sort(function (a, b) { return b - a; });
+  if (!ks.length) return "";
+  return '<div class="seasons-past">過去のシーズン' + ks.map(function (k) {
+    var f = D.finals[k]; return '<span class="ch">S' + k + "<b>" + stageOrRate(f.lg, f.tr) + "</b></span>";
+  }).join("") + "</div>";
+}
+function ratePage() {
+  var last = P[P.length - 1], me = D.me;
+  var sel = S.season === "all" ? null : S.season;
+  var p = P.filter(function (x) { return !sel || x.s === sel; });
+  var fin = sel ? D.finals[sel] : null;
+  var nowLg = fin ? fin.lg : (p.length ? p[p.length - 1].lg : last.lg), nowTr = fin ? fin.tr : (p.length ? p[p.length - 1].tr : last.tr);
+  var peak = null; p.forEach(function (x) { if (x.u && (peak == null || x.tr > peak)) peak = x.tr; });
+  var isRate = nowLg >= D.ult && nowTr;
+  var hero = '<div class="hero"><div><span class="k">' + (sel ? "シーズン" + sel + (fin ? "の最終成績" : "（現在）") : "現在（シーズン" + SEAS[SEAS.length - 1].n + "）") + "</span>" +
+    '<span class="v' + (isRate ? "" : " st") + '">' + stageOrRate(nowLg, nowTr) + "</span>" +
+    '<span class="s">' + (isRate ? '<span class="lgn" style="color:var(--ult)">' + lname(nowLg) + "</span>" : "ステージ（Ultimate到達でレート表示）") + (peak != null ? "　期間最高 " + fmtn(peak) : "") + "</span></div>" +
+    '<div><span class="k">自己ベスト</span><span class="v">' + fmtn(me.best_tr) + '</span><span class="s">世界 ' + fmtn(me.best_rank) + " 位・" + esc(me.best_when) + "に達成</span></div>" +
+    '<div><span class="k">通算成績（全モード）</span><span class="v">' + pc(me.wins / (me.wins + me.losses)) + '<small style="font-size:14px;color:var(--ink3);font-weight:400">%</small></span><span class="s">' + fmtn(me.wins) + "勝 " + fmtn(me.losses) + "敗</span></div></div>";
+  return hero + pastSeasons() +
+    sec("対戦した相手の中での位置", "", pctPanel(), "数字は、これまで対戦した相手の中で下から何%の位置にいるか。50が真ん中で、赤いほど上、青いほど下。",
+      "マッチングで当たった相手との比較なので、プレイヤー全体の中での順位ではない。相手の値は最後に情報を取得した時点のもの。") +
+    sec("レートと勝率の推移", S.season === "all" ? "全シーズン" : "シーズン" + S.season, rateChart(),
+      "", "上はランク戦のレート（Ultimate Champion 到達前はステージ）。下は表示中のモードの勝率（直近" + WR_WIN + "試合の移動平均）と、1日の試合数。紫の帯がUltimate Championの範囲。") +
+    sec("シーズン別の成績", "", seasonLedger(), "", "最終成績は、シーズンが替わった時点でAPIが返す前シーズンの確定値。Ultimate到達は記録上で初めてレートが出た日。");
+}
+function rateChart() {
+  var all = games("all"), gs = games();
+  var lo, hi;
+  if (S.season === "all") { lo = ms((all.length ? all[0].d : P[0].t.slice(0, 10)) + " 00:00:00"); hi = Math.max(P[P.length - 1].v, all.length ? ms(all[all.length - 1].t) : 0); }
+  else {
+    var si = sinfo(S.season), i0 = SINFO.indexOf(si);
+    lo = si.f ? ms(si.f) : ms(si.from + " 00:00:00");
+    hi = i0 + 1 < SINFO.length ? ms(SINFO[i0 + 1].f) : Math.max(P[P.length - 1].v, gs.length ? ms(gs[gs.length - 1].t) : lo + 864e5);
+  }
+  hi += 36e5;
+  var W = pageW(), narrow = W < 560, padR = narrow ? 92 : 112, padT = S.season === "all" ? 34 : 18;
+  var RH = narrow ? 150 : 200, WH = narrow ? 96 : 120, GAP = 30, pw = W - padR;
+  var ry0 = padT, ry1 = ry0 + RH, wy0 = ry1 + GAP, wy1 = wy0 + WH, H = wy1 + 24;
+  var X = function (t) { return pw * (t - lo) / (hi - lo); };
+  var o = ['<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="レートと勝率の推移">'];
+  // 範囲内の記録点（直前の1点を左端に足して線をつなぐ）
+  var vis = [], before = null;
+  P.forEach(function (p) { if (p.v < lo) before = p; else if (p.v <= hi) vis.push(p); });
+  if (before && S.season === "all") vis.unshift({ t: before.t, v: lo, lg: before.lg, tr: before.tr, u: before.u });
+  var ticks = [], yof = null, uT = null, uB = null;
+  if (vis.length) {
+    var ults = vis.filter(function (p) { return p.u; }).map(function (p) { return p.tr; });
+    var stg = vis.filter(function (p) { return !p.u; }).map(function (p) { return p.lg; });
+    var mn = function (a) { return Math.min.apply(null, a); }, mxf = function (a) { return Math.max.apply(null, a); };
+    if (!stg.length) {
+      var a1 = mn(ults), b1 = mxf(ults); if (a1 === b1) { a1 -= 10; b1 += 10; }
+      yof = function (p) { return ry0 + RH * (1 - (p.tr - a1) / (b1 - a1)); };
+      for (var k = 0; k < 5; k++) ticks.push([ry0 + RH * (1 - k / 4), fmtn(Math.round(a1 + (b1 - a1) * k / 4))]);
+      uT = ry0; uB = ry1;
+    } else if (!ults.length) {
+      var a2 = mn(stg), b2 = Math.max(mxf(stg), a2 + 1);
+      yof = function (p) { return ry0 + RH * (1 - (p.lg - a2) / (b2 - a2)); };
+      for (k = a2; k <= b2; k++) ticks.push([ry0 + RH * (1 - (k - a2) / (b2 - a2)), lname(k)]);
+    } else {
+      var slo = mn(stg), shi = Math.max(mxf(stg), D.ult); if (shi === slo) slo = shi - 1;
+      var sh = Math.min(RH * .5, Math.max(40, 16 * (shi - slo))), sep = ry1 - sh;
+      var rlo = mn(ults), rhi = mxf(ults); if (rhi === rlo) { rlo -= 10; rhi += 10; }
+      yof = function (p) { return p.u ? sep - (RH - sh) * (p.tr - rlo) / (rhi - rlo) : ry1 - sh * (p.lg - slo) / (shi - slo); };
+      for (k = slo; k < shi; k++) ticks.push([ry1 - sh * (k - slo) / (shi - slo), lname(k)]);
+      for (k = 0; k < 5; k++) ticks.push([sep - (RH - sh) * k / 4, fmtn(Math.round(rlo + (rhi - rlo) * k / 4))]);
+      uT = ry0; uB = sep;
+    }
+  }
+  if (uT != null && uB - uT > 2) {
+    o.push('<rect class="ultb" x="0" y="' + uT + '" width="' + pw + '" height="' + (uB - uT) + '"/>');
+    o.push('<text class="ultl" x="6" y="' + (uT + 13) + '">Ultimate Champion</text>');
+  }
+  ticks.forEach(function (t) {
+    if (t[0] > ry0 + 1 && t[0] < ry1 - 1) o.push('<line class="gr" x1="0" x2="' + pw + '" y1="' + t[0].toFixed(1) + '" y2="' + t[0].toFixed(1) + '"/>');
+    o.push('<text class="tk" x="' + (pw + 6) + '" y="' + (t[0] + 3.5).toFixed(1) + '">' + esc(t[1]) + "</text>");
+  });
+  o.push('<line class="ax" x1="0" x2="' + pw + '" y1="' + ry1 + '" y2="' + ry1 + '"/>');
+  if (vis.length > 1) {
+    var pts = []; vis.forEach(function (p, i) {   // 段差で描く（記録の間は値が変わっていない）
+      if (i) pts.push(X(p.v).toFixed(1) + "," + yof(vis[i - 1]).toFixed(1));
+      pts.push(X(p.v).toFixed(1) + "," + yof(p).toFixed(1));
+    });
+    var lp = vis[vis.length - 1];
+    pts.push(Math.min(pw, X(Math.min(hi, Date.now()))).toFixed(1) + "," + yof(lp).toFixed(1));
+    o.push('<polyline class="ma" points="' + pts.join(" ") + '"/>');
+    o.push('<circle class="ptl" cx="' + Math.min(pw, X(Math.min(hi, Date.now()))).toFixed(1) + '" cy="' + yof(lp).toFixed(1) + '" r="4"/>');
+  } else if (!vis.length) o.push('<text class="tk" x="' + pw / 2 + '" y="' + (ry0 + RH / 2) + '" text-anchor="middle">この期間はレートの記録がない</text>');
+  o.push('<text class="tk v" x="0" y="' + (ry0 - 7) + '">レート</text>');
+  // 勝率と試合数
+  var mode = all.filter(function (g) { return g.r !== "d"; }), wr = [], w = 0;
+  mode.forEach(function (g, i) { if (g.r === "w") w++; if (i >= WR_WIN && mode[i - WR_WIN].r === "w") w--; if (i >= WR_WIN - 1) wr.push({ v: ms(g.t), p: w / WR_WIN }); });
+  var vol = {}; all.forEach(function (g) { vol[g.d] = (vol[g.d] || 0) + 1; });
+  var dk = [], d0 = dayKey(new Date(lo)), d1 = dayKey(new Date(hi - 36e5));
+  for (var dd = d0; dd <= d1; dd = addDays(dd, 1)) dk.push(dd);
+  var mv = 0; dk.forEach(function (d) { if ((vol[d] || 0) > mv) mv = vol[d]; });
+  dk.forEach(function (d) {
+    var n = vol[d] || 0; if (!n) return;
+    var x0 = Math.max(0, X(ms(d + " 00:00:00"))), x1 = Math.min(pw, X(ms(addDays(d, 1) + " 00:00:00"))), bw = x1 - x0, bh = (WH - 2) * n / mv;
+    o.push('<rect class="volf" x="' + (x0 + bw * .14).toFixed(1) + '" y="' + (wy1 - bh).toFixed(1) + '" width="' + Math.max(.8, bw * .72).toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="' + Math.min(2, bw * .2).toFixed(1) + '"/>');
+  });
+  [0, .25, .5, .75, 1].forEach(function (v) {
+    var yy = wy1 - WH * v;
+    if (v !== .5) o.push('<line class="' + (v ? "gr" : "ax") + '" x1="0" x2="' + pw + '" y1="' + yy + '" y2="' + yy + '"/>');
+    o.push('<text class="tk" x="' + (pw + 6) + '" y="' + (yy + 3.5) + '">' + v * 100 + (v === 1 ? "%" : "") + "</text>");
+  });
+  o.push('<line class="ref" x1="0" x2="' + pw + '" y1="' + (wy1 - WH * .5) + '" y2="' + (wy1 - WH * .5) + '"/>');
+  var wp = wr.filter(function (q) { return q.v >= lo && q.v <= hi; }).map(function (q) { return X(q.v).toFixed(1) + "," + (wy1 - WH * q.p).toFixed(1); });
+  if (wp.length > 1) o.push('<polyline class="raw" points="' + wp.join(" ") + '"/>');
+  else o.push('<text class="tk" x="' + pw / 2 + '" y="' + (wy0 + WH / 2) + '" text-anchor="middle">移動平均には' + WR_WIN + "試合の蓄積が要る</text>");
+  o.push('<text class="tk v" x="0" y="' + (wy0 - 7) + '">勝率（' + WR_WIN + "試合の移動平均）・薄い棒は1日の試合数</text>");
+  if (S.season === "all") o.push(niceSep(lo, hi, X, ry0, wy1, ry0 - 20));
+  var used = [], ev = Math.max(1, Math.ceil(dk.length / (narrow ? 4 : 9)));
+  for (var i = 0; i < dk.length; i += ev) {
+    var xx = X(ms(dk[i] + " 12:00:00")); if (xx < 10 || xx > pw - 10 || used.some(function (u) { return Math.abs(u - xx) < 38; })) continue; used.push(xx);
+    o.push('<text class="tk" x="' + xx.toFixed(1) + '" y="' + (wy1 + 16) + '" text-anchor="middle">' + md(dk[i]) + "</text>");
+  }
+  o.push('<line class="xh" id="xh" x1="0" x2="0" y1="' + ry0 + '" y2="' + wy1 + '"/>');
+  var pi = -1, wi = -1, sorted = P;
+  dk.forEach(function (d) {
+    var de = ms(addDays(d, 1) + " 00:00:00"), x0 = Math.max(0, X(ms(d + " 00:00:00"))), x1 = Math.min(pw, X(de));
+    while (pi + 1 < sorted.length && sorted[pi + 1].v < de) pi++;
+    while (wi + 1 < wr.length && wr[wi + 1].v < de) wi++;
+    var sn = seasonOf(d + " 23:59:59"), tl = [d.replace(/-/g, "/") + (sn ? "（シーズン" + sn + "）" : "")];
+    if (pi >= 0) { var pp = sorted[pi]; tl.push(pp.u ? "レート " + fmtn(pp.tr) + "（" + lname(pp.lg) + "）" : "ステージ " + lname(pp.lg)); }
+    if (wi >= 0) tl.push("勝率 " + pc(wr[wi].p) + "%（直近" + WR_WIN + "試合）");
+    tl.push("この日の試合 " + (vol[d] || 0));
+    o.push('<rect class="hit" x="' + x0.toFixed(1) + '" y="' + ry0 + '" width="' + Math.max(0, x1 - x0).toFixed(2) + '" height="' + (wy1 - ry0) + '" data-cx="' + ((x0 + x1) / 2).toFixed(1) + '" data-tip="' + esc(tl.join("\n")) + '"/>');
+  });
+  o.push("</svg>");
+  return '<div class="tw">' + o.join("") + "</div>" +
+    '<div class="legend"><span><i class="lgl" style="border-color:var(--up);border-top-width:2.5px"></i>レート・ステージ</span><span><i class="lgl" style="border-top-width:1.5px"></i>勝率（' + WR_WIN + '試合の移動平均）</span>' +
+    '<span><i class="lgb" style="background:var(--ultbg);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--ult) 30%,transparent)"></i>Ultimate Champion</span><span><i class="lgb" style="background:var(--vol);opacity:.7"></i>試合数</span>' +
+    (S.season === "all" ? '<span><i class="lgl" style="border-top:1.5px dashed var(--ink3)"></i>シーズンの区切り</span>' : "") + "</div>";
+}
+
+/* ---------- 強敵 ---------- */
+function rivalOf(o) {
+  return o && ((o.pol != null && o.pol <= D.rival.pol) || (o.gt != null && o.gt <= 1000) || (o.ladder != null && o.ladder <= D.rival.ladder) || !!o.rt);
+}
+function bestRank(o) {
+  var c = [];
+  if (o.pol != null) c.push([o.pol, "レート戦"]); if (o.gt != null) c.push([o.gt, "GT"]);
+  if (o.ladder != null) c.push([o.ladder, "Top Ladder"]); if (o.rt) c.push([D.rival.rt, "GT Top1000"]);
+  c.sort(function (a, b) { return a[0] - b[0]; }); return c[0] || [null, ""];
+}
+function rivalsPage() {
+  var gs = games().filter(function (g) { return g.r === "w" && rivalOf(D.opps[g.tag]); });
+  if (!gs.length) return sec("勝利した強敵", "", '<p class="empty">このシーズンは、条件を満たす相手にまだ勝っていない。</p>');
+  var it = gs.map(function (g) { var o = D.opps[g.tag], b = bestRank(o); return { g: g, o: o, top: b[0], basis: b[1] }; });
+  it.sort(function (a, b) { return (a.top || 1e9) - (b.top || 1e9) || (a.o.pol || 1e9) - (b.o.pol || 1e9) || (a.g.t < b.g.t ? 1 : -1); });
+  var cnt = {}; it.forEach(function (x) { cnt[x.g.tag] = (cnt[x.g.tag] || 0) + 1; });
+  var c = function (v, s, key) { return '<td class="' + (key ? "key" : "") + '">' + (v == null ? "-" : fmtn(v) + (s || "")) + "</td>"; };
+  var rows = it.map(function (x, i) {
+    return '<tr><td class="l" style="color:var(--ink3)">' + (i + 1) + '</td><td class="l"><b>' + esc(x.o.name || x.g.name) + '</b><span class="sub">' + esc(x.g.tag) + (cnt[x.g.tag] > 1 ? "・" + cnt[x.g.tag] + "回撃破" : "") + "</span></td>" +
+      c(x.o.best) + c(x.o.pol, " 位", x.basis === "レート戦") +
+      '<td class="' + (x.basis === "GT Top1000" ? "key" : "") + '">' + (x.o.rt ? x.o.rt + " 回" : "-") + "</td>" +
+      c(x.o.ladder, " 位", x.basis === "Top Ladder") + c(x.o.battles) +
+      '<td class="l">' + x.g.t.slice(5, 16).replace("-", "/") + '<span class="sub">' + deck8(x.g.op, 14) + "</span></td></tr>";
+  }).join("");
+  return sec("勝利した強敵", it.length + "件", '<div class="tw"><table class="t"><thead><tr><th class="l">#</th><th class="l">相手</th><th>最高<br>レート</th><th>レート戦<br>最高順位</th><th>グローバル<br>トーナメント<br>Top1000</th><th>Top Ladder<br>最高順位</th><th>通算<br>試合数</th><th class="l">撃破した試合・相手のデッキ</th></tr></thead><tbody>' + rows + "</tbody></table></div>",
+    "それぞれの相手が持つ順位のうち、最も良いものが高い順。太字が並べ替えの基準にした順位。",
+    "レート戦の過去最高順位" + fmtn(D.rival.pol) + "位以内、グローバルトーナメント1,000位以内、または Top Ladder " + fmtn(D.rival.ladder) + "位以内の相手が対象。グローバルトーナメントはAPIから回数しか取れないため、並べ替えでは1,000位として扱う。");
+}
+
+/* ---------- 対戦記録 ---------- */
+function gmLabel(g) {
+  var m = g.gm || "";
+  if (/^Ranked/i.test(m)) return "ランク戦";
+  if (/^CW_|riverrace|clanwar/i.test(m)) return "クラン戦";
+  return m.replace(/_/g, " ");
+}
+function hpTxt(k, p) {
+  var kk = String(k || "0"), king = (kk === "0" || kk === "") ? "王 陥落" : "王 " + fmtn(Math.round(+kk));
+  var t = String(p || "").split("|").filter(Boolean).map(function (v) { return fmtn(Math.round(+v)); });
+  while (t.length < 2) t.push("陥落");
+  return king + "　姫 " + t[0] + "/" + t[1];
+}
+function donut(w, l, d) {
+  var n = w + l + d, R = 30, C = 2 * Math.PI * R, fw = n ? w / n : 0, fl = n ? l / n : 0;
+  return '<svg width="76" height="76" viewBox="0 0 76 76" role="img" aria-label="勝敗の割合"><circle cx="38" cy="38" r="' + R + '" style="fill:none;stroke:var(--cell);stroke-width:9"/>' +
+    '<circle cx="38" cy="38" r="' + R + '" transform="rotate(-90 38 38)" style="fill:none;stroke:var(--up);stroke-width:9" stroke-dasharray="' + (C * fw).toFixed(1) + " " + C.toFixed(1) + '"/>' +
+    '<circle cx="38" cy="38" r="' + R + '" transform="rotate(' + (-90 + 360 * fw).toFixed(1) + ' 38 38)" style="fill:none;stroke:var(--down);stroke-width:9" stroke-dasharray="' + (C * fl).toFixed(1) + " " + C.toFixed(1) + '"/>' +
+    '<text x="38" y="43" text-anchor="middle" style="font-size:15px;font-weight:700;fill:var(--ink);font-family:var(--font)">' + (n ? Math.round(100 * w / (w + l || 1)) : 0) + "%</text></svg>";
+}
+function recentBox(all) {
+  var gs = all.slice(0, 20); if (!gs.length) return "";
+  var w = 0, l = 0, d = 0, three = 0, mc = 0, oc = 0, decks = {}, face = {}, opp = {};
+  gs.forEach(function (g) {
+    if (g.r === "w") { w++; if (g.mc === 3) three++; } else if (g.r === "l") l++; else d++;
+    mc += g.mc; oc += g.oc;
+    var k = g.my.slice().sort().join(","); var x = decks[k] || (decks[k] = { w: 0, n: 0 }); face[k] = g.my; if (g.r !== "d") { x.n++; if (g.r === "w") x.w++; }
+    var seen = {}; g.op.forEach(function (c) { if (seen[c]) return; seen[c] = 1; var o = opp[c] || (opp[c] = { w: 0, n: 0 }); if (g.r !== "d") { o.n++; if (g.r === "w") o.w++; } });
+  });
+  var top = Object.keys(decks).sort(function (a, b) { return decks[b].n - decks[a].n; })[0];
+  var oc3 = Object.keys(opp).sort(function (a, b) { return opp[b].n - opp[a].n || opp[a].w - opp[b].w; }).slice(0, 3);
+  return '<div class="recent">' +
+    "<div>" + donut(w, l, d) + '<div><span class="k">直近' + gs.length + '試合</span><div class="big"><span class="up-t">' + w + '勝</span> <span class="down-t">' + l + "敗</span></div>" +
+      '<span class="k">3クラウン勝利 ' + three + "回</span></div></div>" +
+    '<div><span class="k">いちばん使ったデッキ</span>' + deck8(face[top], 22) + '<span class="row">' + decks[top].n + "試合　" + rec(decks[top].w, decks[top].n) + "</span></div>" +
+    '<div><span class="k">よく当たったカード</span>' + oc3.map(function (c) { return '<span class="row">' + card(+c, 20) + '<span class="nm">' + esc(D.cards[c]) + "</span>" + rec(opp[c].w, opp[c].n) + "</span>"; }).join("") + "</div>" +
+    '<div><span class="k">1試合あたりのクラウン</span><div class="big">' + (mc / gs.length).toFixed(1) + '<small style="font-size:12px;font-weight:400;color:var(--ink3)"> 取った</small></div>' +
+      '<span class="row">取られた ' + (oc / gs.length).toFixed(1) + "</span></div>" +
+    "</div>";
+}
+function logPage() {
+  var gs = games().slice().reverse(); if (!gs.length) return '<p class="empty">このシーズンの試合がまだない。</p>';
+  var narrow = pageW() < 640, cw = narrow ? 26 : 22;
+  var rows = gs.slice(0, S.logN).map(function (g) {
+    var o = D.opps[g.tag] || {}, nm = o.name || g.name, bits = [];
+    if (o.best) bits.push("最高レート " + fmtn(o.best));
+    if (o.pol != null) bits.push("レート戦 " + fmtn(o.pol) + "位");
+    if (o.ladder != null) bits.push("Top Ladder " + fmtn(o.ladder) + "位");
+    if (o.rt) bits.push("GT Top1000 " + o.rt + "回");
+    if (o.battles != null) bits.push("通算 " + fmtn(o.battles) + "戦");
+    return '<div class="lg"><div class="when">' + g.t.slice(5, 16).replace("-", "/") + "<small>" + esc(gmLabel(g)) + (g.tc != null ? '　<span class="' + (g.tc > 0 ? "up-t" : g.tc < 0 ? "down-t" : "") + '">' + (g.tc > 0 ? "+" : "") + g.tc + "</span>" : "") + "</small></div>" +
+      '<div class="res"><span class="pill ' + g.r + '">' + (g.r === "w" ? "勝" : g.r === "l" ? "敗" : "分") + "</span><b>" + g.mc + " - " + g.oc + "</b></div>" +
+      '<div class="vs my">' + deck8(g.my, cw) + '<span class="hp">自分　' + hpTxt(g.mk, g.mp) + "</span></div>" +
+      '<div class="vs op">' + deck8(g.op, cw) + '<span class="hp">相手　' + hpTxt(g.ok, g.opp) + "</span></div>" +
+      '<div class="who"><b>' + esc(nm) + "</b>" + (rivalOf(o) ? '<span class="tag2">強敵</span>' : "") + '<br><span style="color:var(--ink3)">' + esc(g.tag) + "</span>" + (bits.length ? "<br>" + bits.join("・") : "") + "</div></div>";
+  }).join("");
+  return recentBox(gs) + sec("試合の一覧", "新しい順", rows + (gs.length > S.logN ? '<button class="more" id="more">さらに50試合を表示（残り' + (gs.length - S.logN) + "試合）</button>" : ""),
+    "1行が1試合。左が自分、右が相手のデッキ。HPは残ったタワーの体力。");
+}
+
+/* ---------- シーズンから開く一覧 ---------- */
+var menuCache = {};
+function summary(season) {
+  var key = S.mode + ":" + season; if (menuCache[key]) return menuCache[key];
+  var gs = games(season), dd = dec(gs), r = wilson(dd.w, dd.n), base = dd.n ? dd.w / dd.n : .5, out = {};
+  out.trend = dd.n ? "勝率 " + pc(r[0]) + "%・" + gs.length + "戦" : "試合なし";
+  var decks = {}, face = {}; gs.forEach(function (g) { if (g.r === "d" || !g.my.length) return; var k = g.my.slice().sort().join(","); var d = decks[k] || (decks[k] = { w: 0, n: 0 }); d.n++; if (g.r === "w") d.w++; });
+  var top = Object.keys(decks).sort(function (a, b) { return decks[b].n - decks[a].n; })[0];
+  out.deck = top ? "主力デッキ " + pc(decks[top].w / decks[top].n) + "%（" + decks[top].n + "戦）" : "-";
+  var opp = oppStats(gs), ok = Object.keys(opp).filter(function (c) { return opp[c].n >= 10; }).sort(function (a, b) { return opp[a].w / opp[a].n - opp[b].w / opp[b].n; });
+  out.enemy = ok.length ? "苦手 " + D.cards[ok[0]] + " " + pc(opp[ok[0]].w / opp[ok[0]].n, 0) + "%" : "-";
+  var hh = {}; gs.forEach(function (g) { if (g.r === "d") return; var c = hh[g.h] || (hh[g.h] = { w: 0, n: 0 }); c.n++; if (g.r === "w") c.w++; });
+  var hk = Object.keys(hh).filter(function (h) { return hh[h].n >= RELIABLE_N; }).sort(function (a, b) { return hh[b].w / hh[b].n - hh[a].w / hh[a].n; });
+  out.form = hk.length ? "好調 " + hk[0] + "時台 " + pc(hh[hk[0]].w / hh[hk[0]].n, 0) + "%" : "判定できる時間帯なし";
+  var pp = P.filter(function (x) { return season === "all" || x.s === season; }), fin = season !== "all" ? D.finals[season] : null;
+  var lp = pp.length ? pp[pp.length - 1] : P[P.length - 1];
+  out.rate = fin ? "最終 " + stageOrRate(fin.lg, fin.tr) : "現在 " + stageOrRate(lp.lg, lp.tr);
+  var rv = gs.filter(function (g) { return g.r === "w" && rivalOf(D.opps[g.tag]); }).length;
+  out.rivals = "撃破 " + rv + "件";
+  out.log = gs.length + "試合";
+  menuCache[key] = out; return out;
+}
+var menuEl = document.getElementById("menu"), menuFor = null, menuTimer = null;
+function openMenu(btn) {
+  var s = btn.getAttribute("data-s"); s = s === "all" ? "all" : +s;
+  var sm = summary(s);
+  menuEl.innerHTML = "<h4>" + esc(seasonLabel(s)) + "</h4>" + PAGES.map(function (p) {
+    return '<button data-go="' + p[0] + '" class="' + (S.season === s && S.page === p[0] ? "cur" : "") + '"><b>' + p[1] + "</b><span>" + esc(sm[p[0]]) + "</span></button>";
+  }).join("");
+  var r = btn.getBoundingClientRect();
+  menuEl.hidden = false;
+  var left = Math.min(r.left, window.innerWidth - menuEl.offsetWidth - 16);
+  menuEl.style.left = Math.max(16, left) + "px"; menuEl.style.top = (r.bottom + 4) + "px";
+  menuFor = s;
+  document.querySelectorAll(".sn").forEach(function (b) { b.classList.toggle("open", b === btn); });
+}
+function closeMenu() { menuEl.hidden = true; menuFor = null; document.querySelectorAll(".sn.open").forEach(function (b) { b.classList.remove("open"); }); }
+var hoverable = window.matchMedia("(hover:hover)").matches;
+
+/* ---------- 描画 ---------- */
+function renderChrome() {
+  document.getElementById("modes").innerHTML = MODES.map(function (m) { return '<button data-m="' + m[0] + '" class="' + (S.mode === m[0] ? "on" : "") + '">' + m[1] + "</button>"; }).join("");
+  document.getElementById("meta").textContent = D.me.tag + "　更新 " + D.updated.replace(/-/g, "/");
+  var items = [{ s: "all", b: "全シーズン", sp: md(SINFO[0].from) + "〜" }].concat(SINFO.map(function (si) {
+    return { s: si.n, b: "シーズン" + si.n, sp: si.from ? md(si.from) + "〜" + (si.last ? "" : md(si.to)) : "記録なし", now: si.last };
+  }));
+  document.getElementById("seasons").innerHTML = items.map(function (it) {
+    var gs = games(it.s), dd = dec(gs), r = wilson(dd.w, dd.n), t = tone(r[0], .5, dd.n);
+    return '<button class="sn' + (S.season === it.s ? " on" : "") + '" data-s="' + it.s + '" aria-haspopup="true"><b>' + it.b + (it.now ? '<span class="now">開催中</span>' : "") + "</b><span>" + it.sp + "</span>" +
+      "<em>" + (dd.n ? gs.length + "戦　<span class=\"" + t + '-t">' + pc(r[0]) + "%</span>" : "試合なし") + "</em></button>";
+  }).join("");
+  document.getElementById("tabs").innerHTML = PAGES.map(function (p) { return '<button data-p="' + p[0] + '" class="' + (S.page === p[0] ? "on" : "") + '">' + p[1] + "</button>"; }).join("");
+}
+var lastW = 0;
+function render() {
+  renderChrome();
+  var name = PAGES.filter(function (p) { return p[0] === S.page; })[0][1];
+  document.getElementById("title").textContent = name;
+  document.getElementById("sub").textContent = seasonLabel(S.season) + "・" + MODES.filter(function (m) { return m[0] === S.mode; })[0][1];
+  document.title = name + "｜Clash Log";
+  var f = { trend: trendPage, deck: deckPage, enemy: enemyPage, form: formPage, rate: ratePage, rivals: rivalsPage, log: logPage }[S.page];
+  document.getElementById("page").innerHTML = f();
+  lastW = pageW();
+  fillRange();
+}
+function fillRange() {
+  var a = document.getElementById("r1"), z = document.getElementById("r2"), f = document.getElementById("rfill");
+  if (!a || !z || !f) return;
+  var m = +a.max || 1, lo = Math.min(+a.value, +z.value) / m, hi = Math.max(+a.value, +z.value) / m;
+  f.style.left = "calc(8px + (100% - 16px) * " + lo + ")"; f.style.width = "calc((100% - 16px) * " + (hi - lo) + ")";
+}
+function go(o) {
+  var reset = ("season" in o && o.season !== S.season) || ("mode" in o && o.mode !== S.mode);
+  Object.keys(o).forEach(function (k) { S[k] = o[k]; });
+  if (reset) { S.lo = null; S.hi = null; S.logN = 50; S.unit = null; }
+  if ("page" in o || "mode" in o) {
+    var hs = "#" + (S.mode !== "pol" ? S.mode + "-" : "") + S.page;
+    try { history.replaceState(null, "", hs); } catch (e) { location.hash = hs; }
+  }
+  if ("page" in o) S.logN = 50;
+  save(); closeMenu(); render();
+  if ("page" in o || "season" in o) window.scrollTo({ top: 0 });
+}
+
+/* ---------- 操作 ---------- */
+document.addEventListener("click", function (e) {
+  var t = e.target.closest ? e.target : null; if (!t) return;
+  var m = t.closest("[data-m]"); if (m) return go({ mode: m.getAttribute("data-m") });
+  var sn = t.closest(".sn");
+  if (sn) {
+    var s = sn.getAttribute("data-s"); s = s === "all" ? "all" : +s;
+    if (!hoverable && menuFor !== s) { openMenu(sn); return; }   // スマホは1回目のタップで一覧を開く
+    return go({ season: s });
+  }
+  var g2 = t.closest("[data-go]"); if (g2) return go({ season: menuFor, page: g2.getAttribute("data-go") });
+  var p = t.closest("[data-p]"); if (p) return go({ page: p.getAttribute("data-p") });
+  var u = t.closest("[data-u]"); if (u) { S.unit = u.getAttribute("data-u"); return render(); }
+  if (t.closest("#more")) { S.logN += 50; return render(); }
+  if (!t.closest("#menu")) closeMenu();
+});
+document.getElementById("seasons").addEventListener("mouseover", function (e) {
+  if (!hoverable) return; var sn = e.target.closest(".sn"); if (!sn) return;
+  clearTimeout(menuTimer); menuTimer = setTimeout(function () { openMenu(sn); }, 90);
+});
+document.getElementById("seasons").addEventListener("focusin", function (e) { var sn = e.target.closest(".sn"); if (sn) openMenu(sn); });
+function maybeClose(e) {
+  if (!hoverable) return; var to = e.relatedTarget;
+  if (to && (to.closest && (to.closest("#menu") || to.closest(".sn")))) return;
+  clearTimeout(menuTimer); menuTimer = setTimeout(closeMenu, 160);
+}
+document.getElementById("seasons").addEventListener("mouseout", maybeClose);
+menuEl.addEventListener("mouseout", maybeClose);
+menuEl.addEventListener("mouseover", function () { clearTimeout(menuTimer); });
+document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
+window.addEventListener("scroll", function () { if (!menuEl.hidden && hoverable) closeMenu(); hideTip(); }, { passive: true });
+document.addEventListener("input", function (e) {   // つまみを動かしている間は帯と日付だけ動かす
+  if (e.target.id !== "r1" && e.target.id !== "r2") return;
+  var a = document.getElementById("r1"), z = document.getElementById("r2");
+  S.lo = Math.min(+a.value, +z.value); S.hi = Math.max(+a.value, +z.value);
+  fillRange();
+  var lab = document.getElementById("rlabv"); if (lab && DAYS.length) lab.textContent = DAYS[S.lo] + " 〜 " + DAYS[S.hi];
+});
+document.addEventListener("change", function (e) {  // 離したら集計を描き直す
+  if (e.target.id !== "r1" && e.target.id !== "r2") return;
+  var y = window.scrollY, id = e.target.id; render(); window.scrollTo(0, y);
+  var a2 = document.getElementById(id); if (a2) a2.focus({ preventScroll: true });
+});
+var rt = null;
+window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (Math.abs(pageW() - lastW) > 16) render(); }, 120); });
+
+/* 吹き出し */
+var tip = document.getElementById("tip"), cur = null;
+function hideTip() { tip.style.opacity = 0; var x = document.getElementById("xh"); if (x) x.style.opacity = 0; cur = null; }
+function moveTip(e) {
+  var el = e.target.closest ? e.target.closest("[data-tip]") : null;
+  if (!el) { if (cur) hideTip(); return; }
+  if (cur !== el) {
+    tip.textContent = el.getAttribute("data-tip"); cur = el;
+    var xh = document.getElementById("xh"), cx = el.getAttribute("data-cx");
+    if (xh) { if (cx && el.ownerSVGElement && el.ownerSVGElement.contains(xh)) { xh.setAttribute("x1", cx); xh.setAttribute("x2", cx); xh.style.opacity = .35; } else xh.style.opacity = 0; }
+  }
+  var w = tip.offsetWidth, h = tip.offsetHeight, vw = window.innerWidth;
+  var l = e.clientX + 14; if (l + w > vw - 8) l = e.clientX - w - 14; if (l < 8) l = 8;
+  var tp = e.clientY - h - 12; if (tp < 8) tp = e.clientY + 16;
+  tip.style.left = l + "px"; tip.style.top = tp + "px"; tip.style.opacity = 1;
+}
+document.addEventListener("pointermove", moveTip);
+document.addEventListener("pointerdown", moveTip);
+
+if (S.season !== "all" && !sinfo(S.season)) S.season = "all";
+render();
+})();
+</script>
+'''
+
+PLAYER_TAG = "#LQQQQPUL0"     # 表示用（収集側の collect_battles.py と同じタグ）
+
+# 旧ページのアドレス → 新サイトの「#モード-ページ」（ブックマークが切れないように転送する）
+OLD_PAGES = [("chart.html", "trend"), ("mydeck.html", "deck"), ("enemy.html", "enemy"),
+             ("chosi.html", "form"), ("rate.html", "rate"), ("rivals.html", "rivals"),
+             ("log.html", "log")]
+OLD_PREFIX = [("", "pol"), ("etc-", "etc"), ("all-", "all")]
+
+
+def _f(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def build_app_data(rows):
+    """ブラウザ側に渡すデータ。カード名は番号に置き換えて小さくする。"""
+    cards, cidx = [], {}
+
+    def ci(name):
+        if name not in cidx:
+            cidx[name] = len(cards)
+            cards.append(name)
+        return cidx[name]
+
+    def deck(text):
+        return [ci(c) for c in (text or "").split("|") if c]
+
+    res = {"win": "w", "loss": "l"}
+    battles, tags = [], set()
+    for r in rows:
+        tag = (r.get("opp_tag") or "").strip()
+        tags.add(tag)
+        battles.append([
+            r["battle_time_jst"][:19], classify(r), res.get(r["result"], "d"),
+            _num(r.get("my_crowns")) or 0, _num(r.get("opp_crowns")) or 0,
+            deck(r.get("my_deck")), deck(r.get("opp_deck")), tag, r.get("opp_name") or "",
+            r.get("my_king_hp") or "", r.get("my_princess_hp") or "",
+            r.get("opp_king_hp") or "", r.get("opp_princess_hp") or "",
+            _num(r.get("trophy_change")), r.get("game_mode") or r.get("battle_type") or "",
+            r["_session"],
+        ])
+
+    opps = {}
+    for tag in tags:
+        if not tag:
+            continue
+        o = opp_ranks(tag)
+        if all(o.get(k) is None for k in ("pol", "gt", "best", "ladder", "battles")) and not o.get("rt"):
+            continue
+        opps[tag] = {k: o.get(k) for k in ("name", "pol", "gt", "best", "ladder",
+                                            "ladder_season", "rt", "battles")}
+
+    prof, prev = [], None
+    for r in PROFILE:
+        t = (r.get("checked_jst") or "").strip()[:19]
+        lg, tr = _num(r.get("pol_current_league")), _num(r.get("pol_current_trophies"))
+        if not t or lg is None:
+            continue
+        if (lg, tr) != prev:
+            prof.append([t, lg, tr or 0])
+            prev = (lg, tr)
+    last = PROFILE[-1] if PROFILE else {}
+    lt = (last.get("checked_jst") or "")[:19]
+    if prof and lt and prof[-1][0] != lt:
+        prof.append([lt, prof[-1][1], prof[-1][2]])
+
+    # 各シーズンの確定成績（前シーズンの成績欄が更新された時点の値）
+    finals, seen = {}, None
+    for r in PROFILE:
+        key = (r.get("pol_last_league"), r.get("pol_last_trophies"), r.get("pol_last_rank"))
+        if key == seen or _num(key[0]) is None:
+            continue
+        seen = key
+        sn = season_of((r.get("checked_jst") or "").strip())
+        if sn:
+            finals[sn - 1] = {"lg": _num(key[0]), "tr": _num(key[1]), "rank": _num(key[2])}
+
+    # 対戦した相手の中での位置（Baseball Savant のパーセンタイル表示にならう）
+    pop = {"wr": [], "best": [], "bc": []}
+    for o in OPPONENTS.values():
+        w, l = _f(o.get("wins")), _f(o.get("losses"))
+        if w is not None and l is not None and w + l > 0:
+            pop["wr"].append(w / (w + l))
+        b = _f(o.get("pol_best_trophies"))
+        if b:
+            pop["best"].append(b)
+        c = _f(o.get("battle_count"))
+        if c:
+            pop["bc"].append(c)
+    mw, ml = _f(last.get("wins")), _f(last.get("losses"))
+    mine = {"wr": mw / (mw + ml) if mw is not None and ml else None,
+            "best": _f(last.get("pol_best_trophies")), "bc": _f(last.get("battle_count"))}
+    pct = []
+    for key, lab, fmt in (("wr", "通算勝率", "pct"), ("best", "レート戦の自己ベスト", "int"),
+                          ("bc", "通算試合数", "int")):
+        arr = sorted(pop[key])
+        if mine[key] is None or not arr:
+            continue
+        lo = sum(1 for x in arr if x < mine[key])
+        eq = sum(1 for x in arr if x == mine[key])
+        n = len(arr)
+        med = arr[n // 2] if n % 2 else (arr[n // 2 - 1] + arr[n // 2]) / 2
+        pct.append({"k": key, "lab": lab, "fmt": fmt, "v": mine[key],
+                    "p": round((lo + eq / 2) / n * 100), "med": med, "n": n})
+
+    return {
+        "img": True,
+        "updated": now_jst().strftime("%Y-%m-%d %H:%M"),
+        "seasons": [{"f": f, "n": n} for f, n in SEASONS],
+        "anchor": list(SEASON_ANCHOR),
+        "leagues": {k: v[0] for k, v in LEAGUES.items()},
+        "ult": ULTIMATE,
+        "cards": cards,
+        "icons": [ICONS.get(c, "") for c in cards],
+        "battles": battles,
+        "opps": opps,
+        "prof": prof,
+        "finals": finals,
+        "me": {
+            "tag": PLAYER_TAG,
+            "best_lg": _num(last.get("pol_best_league")),
+            "best_tr": _num(last.get("pol_best_trophies")),
+            "best_rank": _num(last.get("pol_best_rank")),
+            "best_when": BEST_ACHIEVED_BEFORE,
+            "wins": _num(last.get("wins")), "losses": _num(last.get("losses")),
+            "trophies": _num(last.get("trophies")),
+        },
+        "pct": pct,
+        "rival": {"pol": RIVAL_POL_RANK, "ladder": RIVAL_LADDER_RANK, "rt": RIVAL_RT_RANK},
+    }
+
+
+def _write(name, text):
+    WRITTEN.add(name)
+    with open(os.path.join(SCRIPT_DIR, name), "w", encoding="utf-8") as f:
+        f.write(text)
+
+
+def write_app(rows):
+    data = json.dumps(build_app_data(rows), ensure_ascii=False, separators=(",", ":"))
+    data = data.replace("</", "<\\/")
+    head, body = APP_HTML.split("</style>", 1)
+    doc = ("<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'>"
+           "<meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'>"
+           + head + "</style></head><body>" + body.replace("/*DATA*/", data) + "</body></html>")
+    _write("index.html", doc)
+    for prefix, mode in OLD_PREFIX:
+        for name, pg in OLD_PAGES:
+            to = "index.html#" + ("" if mode == "pol" else mode + "-") + pg
+            _write(prefix + name,
+                   "<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'>"
+                   f"<meta http-equiv='refresh' content='0; url={to}'>"
+                   "<title>Clash Log</title></head>"
+                   f"<body><p><a href='{to}'>新しいページへ移動</a></p></body></html>")
+    return len(doc)
+
+
 def main():
     global ICONS, AVAILABLE, PROFILE, OPPONENTS, GT_RANKS
     ICONS = load_icons()
@@ -2601,19 +3989,23 @@ def main():
     AVAILABLE = [k for k, _, _ in MODES
                  if (k == "all" and all_rows) or groups.get(k)]
 
-    for key, prefix, label in MODES:
-        if key not in AVAILABLE:
-            continue
-        rows = all_rows if key == "all" else groups[key]
-        build(key, prefix, label, rows, len(all_rows))
+    if NEW_UI:
+        size = write_app(all_rows)
+        print(f"新しいサイトを出力しました（index.html {size:,} 字）")
+    else:
+        for key, prefix, label in MODES:
+            if key not in AVAILABLE:
+                continue
+            rows = all_rows if key == "all" else groups[key]
+            build(key, prefix, label, rows, len(all_rows))
 
-    # 入口。概要ページを廃止したため、トップは推移へ送る
-    WRITTEN.add("index.html")
-    with open(os.path.join(SCRIPT_DIR, "index.html"), "w", encoding="utf-8") as f:
-        f.write("<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'>"
-                "<meta http-equiv='refresh' content='0; url=chart.html'>"
-                "<title>対戦記録レポート</title></head>"
-                "<body><p><a href='chart.html'>推移のページへ</a></p></body></html>")
+        # 入口。概要ページを廃止したため、トップは推移へ送る
+        WRITTEN.add("index.html")
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "w", encoding="utf-8") as f:
+            f.write("<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'>"
+                    "<meta http-equiv='refresh' content='0; url=chart.html'>"
+                    "<title>対戦記録レポート</title></head>"
+                    "<body><p><a href='chart.html'>推移のページへ</a></p></body></html>")
 
     # 今回書き出さなかった古いHTMLを片づける
     removed = 0
