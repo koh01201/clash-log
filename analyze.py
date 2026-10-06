@@ -2703,6 +2703,7 @@ button{font-family:inherit;color:inherit}
 .kpi .v{display:block;margin-top:4px;font-size:30px;font-weight:700;line-height:1.1;letter-spacing:-.01em}
 .kpi .v small{font-size:13px;font-weight:400;color:var(--ink3);margin-left:2px}
 .kpi .s{display:block;margin-top:5px;font-size:11.5px;color:var(--ink3)}
+.kpi.sm{margin:0 0 28px;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.1fr)}.kpi .dn{display:flex;align-items:center;gap:10px}.kpi.sm>div:first-child{padding-left:0}.kpi.sm>div{padding:10px 16px 12px}.kpi.sm .v{font-size:22px}.kpi.sm .v small{font-size:12px}
 
 /* 操作 */
 .toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px;margin:0 0 12px}
@@ -2751,12 +2752,21 @@ svg{display:block;overflow:visible}
 .dt>.c{padding:7px 0;border-bottom:1px solid var(--rule);min-width:0}
 .dt .lab{display:flex;align-items:center;gap:8px;font-size:13px;min-width:0}
 .dt .lab .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));border-top:1px solid var(--rule2)}
+.cg>div{min-width:0;padding:10px 12px 12px;border-bottom:1px solid var(--rule);border-right:1px solid var(--rule)}
+.cg .ctop{display:flex;align-items:center;gap:8px;min-width:0}
+.cg .cnm{display:flex;flex-direction:column;min-width:0;line-height:1.35}
+.cg .cnm b{font-size:12.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cg .cnm small{font-size:11px;color:var(--ink3)}
+.cg .cmid{display:flex;justify-content:space-between;align-items:baseline;margin:8px 0 6px;font-size:11.5px;color:var(--ink2)}
+.cg .pv{font-size:18px;font-weight:700}.cg .pv small{font-size:11px;font-weight:400;color:var(--ink3)}
+.cg .dp{margin:0}
 .dt .pv{text-align:right;font-size:16px;font-weight:700;white-space:nowrap}
 .dt .pv small{font-size:10.5px;font-weight:400;color:var(--ink3)}
 .dt .rc{text-align:right;font-size:12px;color:var(--ink2);white-space:nowrap}
 .dt.tight>.c{padding:4px 0}
 .dt.tight .pv{font-size:14px}
-.dp{position:relative;height:16px}
+.dp{position:relative;height:16px;margin:0 6px}
 .dp .g{position:absolute;inset:0;background:linear-gradient(90deg,var(--rule) 1px,transparent 1px) 0 0/25% 100%;
   border-right:1px solid var(--rule)}
 .dp .bl{position:absolute;top:-6px;bottom:-6px;width:0;border-left:1px dashed var(--ink3)}
@@ -2764,11 +2774,24 @@ svg{display:block;overflow:visible}
 .dp .d{position:absolute;top:2px;width:12px;height:12px;margin-left:-6px;border-radius:50%;border:2px solid var(--bg)}
 .ci.up{background:var(--upband)}.ci.down{background:var(--downband)}.ci.na{background:var(--naband)}
 .d.up{background:var(--up)}.d.down{background:var(--down)}.d.na{background:var(--na)}
-.dax{position:relative;height:14px;font-size:10px;color:var(--ink3)}
+.dax{position:relative;height:14px;margin:0 6px;font-size:10px;color:var(--ink3)}
 .dax span{position:absolute;transform:translateX(-50%)}
 .dax span:first-child{transform:none}.dax span:last-child{transform:translateX(-100%)}
 .use{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);white-space:nowrap}
 .use i{display:block;height:6px;border-radius:3px;background:var(--ink2);opacity:.55}
+
+/* 狭い画面の勝率の表（1件2段） */
+.dtm-h{display:grid;grid-template-columns:minmax(0,1fr) 92px;column-gap:14px;padding:0 0 6px;border-bottom:1px solid var(--rule2);font-size:11px;color:var(--ink3)}
+.dtm-h .r{text-align:right}
+.dtm-r{display:grid;grid-template-columns:minmax(0,1fr) 92px;column-gap:14px;row-gap:8px;align-items:center;padding:10px 0 12px;border-bottom:1px solid var(--rule)}
+.dtm-r .lab{display:flex;align-items:center;gap:8px;font-size:13px;min-width:0;overflow:hidden}
+.dtm-r .lab .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dtm-r .pv{text-align:right;font-size:17px;font-weight:700;white-space:nowrap}
+.dtm-r .pv small{font-size:10.5px;font-weight:400;color:var(--ink3)}
+.dtm-r .dpw{padding:0;min-width:0}
+.dtm-r .rc{text-align:right;font-size:12px;color:var(--ink2);white-space:nowrap;line-height:1.35}
+.dtm-r .rc small{display:block;font-size:10.5px;color:var(--ink3)}
+.dt .lab{overflow:hidden}
 
 /* カード */
 .cd{position:relative;display:inline-grid;place-items:center;width:var(--w,26px);aspect-ratio:5/6;border-radius:4px;overflow:hidden;
@@ -2777,6 +2800,7 @@ svg{display:block;overflow:visible}
 .cd img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cd i{font-style:normal}
 .deck8{display:flex;gap:3px;flex-wrap:nowrap}
+.deck8.d42{display:inline-grid;grid-template-columns:repeat(4,max-content);gap:3px}
 
 /* 対戦記録 */
 .lg{display:grid;grid-template-columns:96px 64px auto auto 1fr;align-items:center;gap:6px 14px;padding:10px 0;border-bottom:1px solid var(--rule)}
@@ -2789,7 +2813,7 @@ svg{display:block;overflow:visible}
 .res b{font-size:12px;letter-spacing:.04em}
 .lg .vs{display:flex;flex-direction:column;gap:3px}
 .lg .hp{font-size:10.5px;color:var(--ink3)}
-.lg .who{font-size:12px;color:var(--ink2);min-width:0;line-height:1.55}
+.lg .who{font-size:12px;color:var(--ink2);min-width:0;line-height:1.55;overflow-wrap:anywhere}
 .lg .who b{color:var(--ink)}
 .tag2{display:inline-block;padding:0 6px;border-radius:4px;background:var(--upbg);color:var(--up);font-size:10.5px;font-weight:700;line-height:1.7;margin-left:4px}
 .more{display:block;margin:16px auto 0;border:1px solid var(--rule2);background:none;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer}
@@ -2805,6 +2829,7 @@ table.t td{padding:10px;border-bottom:1px solid var(--rule);text-align:right;ver
 table.t td:first-child,table.t th:first-child{padding-left:0}
 table.t td.key{color:var(--ink);font-weight:700}
 table.t td b{color:var(--ink)}
+table.t td.l b{white-space:normal;overflow-wrap:anywhere}
 table.t tr.sel td{background:color-mix(in oklab,var(--accent) 5%,transparent)}
 table.t .big{font-size:16px;font-weight:700;color:var(--ink)}
 
@@ -2830,6 +2855,18 @@ table.t .big{font-size:16px;font-weight:700;color:var(--ink)}
 .cal .cc b small{font-size:10px;font-weight:400;color:var(--ink3)}
 .cal .cn{position:absolute;left:7px;bottom:5px;font-size:10px;color:var(--ink2);line-height:1}
 
+/* 戦績（RoyaleAPI のプロフィール／OP.GG のランク欄／Baseball Savant の選手ページにならう） */
+.bio{display:flex;flex-wrap:wrap;gap:4px 0;margin:-16px 0 30px;font-size:12.5px;color:var(--ink2);line-height:1.6}
+.bio span+span::before{content:"｜";margin:0 8px;color:var(--rule2)}
+.bio b{color:var(--ink);font-weight:700}
+.hero.h4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.hero .rk{display:block;margin-top:2px;font-size:12px;color:var(--ink2)}
+table.t tr.tot td{border-top:2px solid var(--rule2);border-bottom:0;color:var(--ink)}
+table.t .ci{display:block;font-size:11px;color:var(--ink3);font-weight:400}
+.jump{display:flex;flex-wrap:wrap;gap:6px;margin:-12px 0 30px}
+.jump button{border:1px solid var(--rule2);background:var(--bg);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--ink2);cursor:pointer}
+.jump button:hover{border-color:var(--ink3);color:var(--ink)}
+
 /* 対戦相手の中での位置（パーセンタイル） */
 .pr{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr) 96px;align-items:center;column-gap:18px;row-gap:0}
 .pr>div{padding:10px 0;border-bottom:1px solid var(--rule);min-width:0}
@@ -2843,20 +2880,13 @@ table.t .big{font-size:16px;font-weight:700;color:var(--ink)}
 .trk::before{content:"";position:absolute;left:0;right:0;top:13px;height:4px;border-radius:2px;
   background:linear-gradient(90deg,color-mix(in oklab,var(--down) 45%,var(--cell)),var(--cell) 50%,color-mix(in oklab,var(--up) 45%,var(--cell)))}
 .trk .md{position:absolute;top:7px;height:16px;border-left:1px dashed var(--ink3)}
-.trk .bb{position:absolute;top:1px;width:28px;height:28px;margin-left:-14px;border-radius:50%;display:grid;place-items:center;
+.trk .bb{position:absolute;top:1px;min-width:28px;height:28px;padding:0 9px;transform:translateX(-50%);white-space:nowrap;border-radius:14px;display:grid;place-items:center;
   color:#fff;font-size:12px;font-weight:700;border:2px solid var(--bg);box-shadow:0 1px 3px var(--shadow)}
 .seasons-past{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin:-22px 0 36px;font-size:12px;color:var(--ink3)}
 .seasons-past span.ch{display:inline-flex;align-items:baseline;gap:6px;padding:3px 10px;border-radius:999px;background:var(--sunk);color:var(--ink2)}
 .seasons-past span.ch b{color:var(--ink);font-size:12.5px}
 
 /* 直近20試合のまとめ */
-.recent{display:grid;grid-template-columns:auto minmax(0,1.3fr) minmax(0,1fr) minmax(0,.9fr);border-top:1px solid var(--rule2);border-bottom:1px solid var(--rule);margin:0 0 28px}
-.recent>div{padding:14px 18px 16px;border-left:1px solid var(--rule);min-width:0;display:flex;flex-direction:column;gap:8px}
-.recent>div:first-child{border-left:0;padding-left:0;flex-direction:row;align-items:center;gap:14px}
-.recent .k{font-size:12px;color:var(--ink2)}
-.recent .big{font-size:24px;font-weight:700;line-height:1.1}
-.recent .row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);min-width:0}
-.recent .row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;color:var(--ink)}
 
 /* 調子：時間帯×曜日 */
 .hm{display:grid;grid-template-columns:28px 1fr 104px;gap:0 10px;align-items:stretch}
@@ -2890,24 +2920,31 @@ footer{max-width:1040px;margin:0 auto;padding:18px 24px 48px;border-top:1px soli
   .in{padding-inline:16px}.wrap{padding:22px 16px 56px}footer{padding:16px 16px 40px}
   .meta{display:none}
   .head h1{font-size:22px}
-  .kpi,.hero{grid-template-columns:1fr 1fr}
+  .kpi,.hero,.hero.h4{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .hero .v{font-size:28px}.hero .v.st{font-size:20px}.hero>div{padding:14px 12px 16px}
   .kpi>div:nth-child(3),.hero>div:nth-child(3){border-left:0;padding-left:0}
+  .kpi.sm{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.kpi.sm>div:nth-child(5){grid-column:1/-1;border-left:0;padding-left:0}.kpi.sm>div:nth-child(3){padding-left:0}
   .kpi>div:nth-child(n+3),.hero>div:nth-child(n+3){border-top:1px solid var(--rule)}
   .hero>div:first-child{grid-column:1/-1;border-bottom:1px solid var(--rule)}
   .hero>div:nth-child(2){border-left:0;padding-left:0}
   .hero>div:nth-child(3){border-left:1px solid var(--rule);padding-left:18px;border-top:0}
+  .hero.h4>div:first-child{grid-column:auto;border-bottom:0}
+  .hero.h4>div:nth-child(2){border-left:1px solid var(--rule);padding-left:12px}
+  .hero.h4>div:nth-child(3){border-left:0;padding-left:0;border-top:1px solid var(--rule)}
+  .hero.h4>div:nth-child(4){border-top:1px solid var(--rule)}
+  .bio{flex-direction:column;margin-top:-18px}.bio span+span::before{display:none}
+  table.t .opt{display:none}table.t td.l b{white-space:nowrap}
+  .ledger table.t td,.ledger table.t th{padding-left:6px;padding-right:6px}.ledger table.t .big{font-size:14px;white-space:normal}
   .grid2{grid-template-columns:1fr}
   .kpi .v{font-size:26px}
   .lg{grid-template-columns:1fr auto;grid-template-areas:"when res" "my my" "op op" "who who"}
   .lg .when{grid-area:when}.lg .res{grid-area:res;flex-direction:row}.lg .my{grid-area:my}.lg .op{grid-area:op}.lg .who{grid-area:who}
   .hm{grid-template-columns:24px 1fr 76px}
-  .pr{grid-template-columns:minmax(0,1fr) 84px}.pr .tr{grid-column:1/-1;padding-top:0}.pr .lb{border-bottom:0;padding-bottom:2px}.pr .vl{border-bottom:0;padding-bottom:2px}
+  .pr{grid-template-columns:minmax(0,1fr) 84px;grid-auto-flow:row dense}.pr .tr{grid-column:1/-1;padding-top:0}.pr .lb{border-bottom:0;padding-bottom:2px}.pr .vl{border-bottom:0;padding-bottom:2px}
   .pr .ph.lab2,.pr .ph.v2{display:none}.pr .ph.sc{grid-column:1/-1}
-  .recent{grid-template-columns:1fr 1fr}.recent>div:nth-child(3){border-left:0;padding-left:0}
-  .recent>div:nth-child(n+3){border-top:1px solid var(--rule)}.recent>div:first-child{grid-column:1/-1;border-bottom:1px solid var(--rule)}
-  .recent>div:nth-child(2){border-left:0;padding-left:0}
 }
-@media (prefers-reduced-motion:reduce){.menu{animation:none}#tip{transition:none}}
+html{scroll-padding-top:180px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.menu{animation:none}#tip{transition:none}}
 </style>
 
 <header class="top">
@@ -2939,8 +2976,8 @@ footer{max-width:1040px;margin:0 auto;padding:18px 24px 48px;border-top:1px soli
 var D = JSON.parse(document.getElementById("data").textContent);
 var IMG = D.img !== false;
 var RELIABLE_N = 20, MIN_CARD_N = 5, WR_WIN = 30, MA_WIN = 4;
-var PAGES = [["trend", "推移"], ["deck", "使用デッキ"], ["enemy", "対戦相手"], ["form", "調子"],
-             ["rate", "レート"], ["rivals", "強敵"], ["log", "対戦記録"]];
+var PAGES = [["profile", "戦績"], ["trend", "推移"], ["deck", "使用デッキ"], ["enemy", "対戦相手"], ["rivals", "強敵"], ["log", "対戦記録"]];
+var ALIAS = { home: "profile", form: "trend", rate: "trend", chart: "trend" };   // 旧ページの名前
 var MODES = [["pol", "ランク戦"], ["etc", "その他"], ["all", "すべて"]];
 var WD = ["月", "火", "水", "木", "金", "土", "日"];
 var SEAS = D.seasons;
@@ -2997,14 +3034,17 @@ var SINFO = SEAS.map(function (s, i) {
 
 /* ---------- 状態 ---------- */
 var DAYS = [];
-var S = { mode: "pol", season: "all", page: "trend", unit: null, lo: null, hi: null, logN: 50 };
+var S = { mode: "pol", season: "all", page: "profile", unit: null, lo: null, hi: null, logN: 50 };
 try {
   var sv = JSON.parse(localStorage.getItem("clashlog.v2") || "{}");
   if (sv.mode) S.mode = sv.mode; if (sv.season != null) S.season = sv.season;
 } catch (e) {}
 // アドレスの # でページとモードを指定できる（例：#deck、#etc-deck）
 var h0 = /^#(?:(pol|etc|all)-)?([a-z]+)$/.exec(location.hash || "");
-if (h0 && PAGES.some(function (p) { return p[0] === h0[2]; })) { S.page = h0[2]; if (h0[1]) S.mode = h0[1]; }
+if (h0) {
+  var pg0 = ALIAS[h0[2]] || h0[2];
+  if (PAGES.some(function (p) { return p[0] === pg0; })) { S.page = pg0; if (h0[1]) S.mode = h0[1]; }
+}
 function save() { try { localStorage.setItem("clashlog.v2", JSON.stringify({ mode: S.mode, season: S.season })); } catch (e) {} }
 
 function games(season, mode) {
@@ -3041,6 +3081,7 @@ function dtable(items, base, o) {
   o = o || {};
   if (!items.length) return '<p class="empty">該当する試合がない。</p>';
   var useCol = o.total != null;
+  if (pageW() < 760) return dtableNarrow(items, base, o, useCol);
   var cols = (o.labW || "minmax(0,1.3fr)") + (useCol ? " 96px" : "") + " minmax(120px,1.4fr) 62px " + (o.recW || "72px");
   var maxU = 0; items.forEach(function (it) { if (it.n > maxU) maxU = it.n; });
   var h = '<div class="dt' + (o.tight ? " tight" : "") + '" style="--cols:' + cols + '">' +
@@ -3055,6 +3096,29 @@ function dtable(items, base, o) {
       '<div class="c" data-tip="' + esc(tip) + '">' + dotplot(it.w, it.n, base) + "</div>" +
       '<div class="c pv ' + t + '-t">' + pc(r[0]) + "<small>%</small></div>" +
       '<div class="c rc z">' + rec(it.w, it.n) + "</div>";
+  });
+  return h + "</div>";
+}
+function tiles(items, base) {
+  if (!items.length) return '<p class="empty">該当する試合がない。</p>';
+  return '<div class="cg">' + items.map(function (it) {
+    var r = wilson(it.w, it.n), t = tone(r[0], base, it.n);
+    var tip = D.cards[it.c] + "\n" + it.sub + "（" + it.n + "試合）\n勝率 " + pc(r[0]) + "%（" + rec(it.w, it.n) + "）\n95%信頼区間 " + pc(r[1]) + "〜" + pc(r[2]) + "%" +
+      (it.n < RELIABLE_N ? "\n" + RELIABLE_N + "試合未満のため判定不可" : "");
+    return '<div data-tip="' + esc(tip) + '"><div class="ctop">' + card(+it.c, 34) + '<span class="cnm"><b>' + esc(D.cards[it.c]) + "</b><small>" + it.sub + "</small></span></div>" +
+      '<div class="cmid"><span class="pv ' + t + '-t">' + pc(r[0]) + "<small>%</small></span><span>" + rec(it.w, it.n) + "</span></div>" + dotplot(it.w, it.n, base) + "</div>";
+  }).join("") + "</div>";
+}
+function dtableNarrow(items, base, o, useCol) {
+  var h = '<div class="dtm"><div class="dtm-h"><div>' + dax(base) + '</div><div class="r">勝率・勝敗</div></div>';
+  items.forEach(function (it) {
+    var r = wilson(it.w, it.n), t = tone(r[0], base, it.n);
+    var tip = (it.tip || "") + (it.tip ? "\n" : "") + "勝率 " + pc(r[0]) + "%（" + rec(it.w, it.n) + "）\n95%信頼区間 " + pc(r[1]) + "〜" + pc(r[2]) + "%" +
+      (it.n < RELIABLE_N ? "\n" + RELIABLE_N + "試合未満のため判定不可" : "");
+    h += '<div class="dtm-r"><div class="lab">' + (o.narrowLab ? o.narrowLab(it) : it.lab) + "</div>" +
+      '<div class="pv ' + t + '-t">' + pc(r[0]) + "<small>%</small></div>" +
+      '<div class="dpw" data-tip="' + esc(tip) + '">' + dotplot(it.w, it.n, base) + "</div>" +
+      '<div class="rc">' + rec(it.w, it.n) + (useCol ? "<small>使用率 " + pc(it.n / o.total, 0) + "%</small>" : "") + "</div></div>";
   });
   return h + "</div>";
 }
@@ -3076,6 +3140,44 @@ function niceSep(lo, hi, xOf, y0, y1, labY) {   // シーズンの区切り線�
   return o;
 }
 
+/* ---------- 表紙（まとめ） ---------- */
+function rankedOf(season) {
+  var g = B.filter(function (x) { return x.s === season && x.mode === "pol"; }), dd = dec(g);
+  var peak = null; P.forEach(function (x) { if (x.s === season && x.u && (peak == null || x.tr > peak)) peak = x.tr; });
+  return { n: g.length, dd: dd, r: wilson(dd.w, dd.n), peak: peak };
+}
+function profilePage() {
+  var me = D.me, cur = SINFO[SINFO.length - 1], lastP = P[P.length - 1];
+  var fk = Object.keys(D.finals).map(Number).sort(function (a, b) { return b - a; }), pn = fk[0], pf = D.finals[pn];
+  var c = rankedOf(cur.n), pv = pn != null ? rankedOf(pn) : null;
+  var wl = function (x) { return x.dd.n ? rec(x.dd.w, x.dd.n) + "・勝率 " + pc(x.r[0]) + "%" : "試合なし"; };
+  var rateCell = function (lg, tr) {
+    var isRate = lg >= D.ult && tr;
+    return '<span class="v' + (isRate ? "" : " st") + '">' + stageOrRate(lg, tr) + "</span>" +
+      '<span class="rk' + (isRate ? ' lgn" style="color:var(--ult)' : "") + '">' + (isRate ? lname(Math.min(lg, D.ult)) : "ステージ") + "</span>";
+  };
+  var days = {}; B.forEach(function (g) { days[g.d] = 1; });
+  var bio = '<p class="bio"><span><b>' + esc(me.tag) + "</b></span><span>記録開始 " + md(B[0].d) + "（" + Object.keys(days).length + "日・" + fmtn(B.length) + "試合）</span>" +
+    "<span>2時間ごとに自動更新</span></p>";
+  var tot = me.wins + me.losses;
+  var hero = '<div class="hero h4">' +
+    '<div><span class="k">自己ベスト</span>' + rateCell(me.best_lg, me.best_tr) +
+      '<span class="s">世界 ' + fmtn(me.best_rank) + "位・" + esc(me.best_when) + "に達成</span></div>" +
+    '<div><span class="k">今シーズン（シーズン' + cur.n + (cur.last ? "・開催中" : "") + "）</span>" + rateCell(lastP.lg, lastP.tr) +
+      '<span class="s">' + (c.peak != null ? "シーズン最高 " + fmtn(c.peak) + "<br>" : "") + wl(c) + "</span></div>" +
+    (pf ? '<div><span class="k">前シーズン（シーズン' + pn + "）</span>" + rateCell(pf.lg, pf.tr) +
+      '<span class="s">' + (pf.rank ? "世界 " + fmtn(pf.rank) + "位<br>" : "") + (pv.peak != null ? "シーズン最高 " + fmtn(pv.peak) + "<br>" : "") + wl(pv) + "</span></div>" : "<div></div>") +
+    '<div><span class="k">通算（全モード）</span><span class="v">' + pc(me.wins / tot) + '<small style="font-size:14px;color:var(--ink3);font-weight:400">%</small></span>' +
+      '<span class="rk">勝率</span><span class="s">' + fmtn(me.wins) + "勝 " + fmtn(me.losses) + "敗<br>トロフィー " + fmtn(me.trophies) + "</span></div>" +
+    "</div>";
+  return bio +
+    sec("ランク戦の成績", "", hero, "", "自己ベストと通算は、公式APIがアカウントに記録している値（記録開始より前を含む）。シーズンの勝敗は、このサイトが記録したランク戦の試合から数えたもの。") +
+    sec("シーズン別の成績", "", seasonLedger(), "",
+      "最終成績は、シーズンが替わった時点でAPIが返す前シーズンの確定値。Ultimate到達は記録上で初めてレートが出た日。勝率の下の数字は95%信頼区間で、" + RELIABLE_N + "試合未満は灰色。") +
+    sec("対戦した相手の中での位置", "", pctPanel(), "これまで対戦した相手の中で、上から何%の位置にいるか。右へ行くほど上位で赤、左ほど下位で青。点線が真ん中。",
+      "マッチングで当たった相手との比較なので、プレイヤー全体の中での順位ではない。レート戦の自己ベストは、レートの数字が出る段階まで届いていない相手も下位として数に入れている。相手の値は最後に情報を取得した時点のもの。");
+}
+
 /* ---------- 推移 ---------- */
 function streaks(gs) {
   var bw = 0, bl = 0, cw = 0, cl = 0;
@@ -3087,105 +3189,12 @@ function streaks(gs) {
 }
 function trendPage() {
   var all = games(); if (!all.length) return '<p class="empty">このシーズンの試合がまだない。</p>';
-  var days = []; all.forEach(function (g) { if (days[days.length - 1] !== g.d) days.push(g.d); });
-  DAYS = days;
-  if (S.lo == null || S.lo >= days.length) S.lo = 0;
-  if (S.hi == null || S.hi >= days.length) S.hi = days.length - 1;
-  var dLo = days[S.lo], dHi = days[S.hi];
-  var gs = all.filter(function (g) { return g.d >= dLo && g.d <= dHi; });
-  var dd = dec(gs), r = wilson(dd.w, dd.n), t = tone(r[0], 0.5, dd.n), sk = streaks(gs);
-  var nd = 0, seen = {}; gs.forEach(function (g) { if (!seen[g.d]) { seen[g.d] = 1; nd++; } });
-  var span = Math.round((ms(dHi) - ms(dLo)) / 864e5) + 1;
-  var kpi = '<div class="kpi">' +
-    '<div><span class="k">勝率</span><span class="v ' + t + '-t">' + pc(r[0]) + "<small>%</small></span>" +
-    '<span class="s">95%信頼区間 ' + pc(r[1]) + "〜" + pc(r[2]) + "%</span></div>" +
-    '<div><span class="k">試合</span><span class="v">' + gs.length + '<small>戦</small></span><span class="s">' +
-    '<span class="up-t">' + dd.w + '勝</span> <span class="down-t">' + (dd.n - dd.w) + "敗</span>" + (gs.length - dd.n ? " " + (gs.length - dd.n) + "分" : "") + "</span></div>" +
-    '<div><span class="k">最長の連勝・連敗</span><span class="v"><span class="up-t">' + sk[0] + '</span><small>連勝</small> <span class="down-t">' + sk[1] + "</span><small>連敗</small></span>" +
-    '<span class="s">日をまたいでも続けて数える</span></div>' +
-    '<div><span class="k">1日あたり</span><span class="v">' + (gs.length / nd).toFixed(1) + '<small>戦</small></span><span class="s">' + span + "日間のうち " + nd + "日プレイ</span></div></div>";
-
-  var ctrl = '<div class="toolbar"><div class="tg"><span class="tl">粒度</span><div class="seg" id="unit">' +
-    [["day", "日"], ["week", "週"]].map(function (u) { return '<button data-u="' + u[0] + '" class="' + (unitNow() === u[0] ? "on" : "") + '">' + u[1] + "</button>"; }).join("") +
-    "</div></div></div>";
-  var rng = '<div class="rng"><div class="rlab"><span>表示範囲</span><b id="rlabv">' + dLo + " 〜 " + dHi + "</b></div>" +
-    '<div class="dual"><div class="fill" id="rfill"></div><input id="r1" type="range" min="0" max="' + (days.length - 1) + '" value="' + S.lo + '" aria-label="範囲の始まり">' +
-    '<input id="r2" type="range" min="0" max="' + (days.length - 1) + '" value="' + S.hi + '" aria-label="範囲の終わり"></div></div>';
-  var leg = '<div class="legend"><span><i class="lgl" style="border-top-width:1.5px"></i>実測</span>' +
-    '<span><i class="lgl" style="border-color:var(--up);border-top-width:2.5px"></i>移動平均（' + MA_WIN + "期間）</span>" +
-    '<span><i class="lgb" style="background:color-mix(in oklab,var(--ink3) 22%,var(--bg))"></i>95%信頼区間</span>' +
-    '<span><i class="lgb" style="background:var(--vol)"></i>試合数</span>' +
-    (S.season === "all" ? '<span><i class="lgl" style="border-top:1.5px dashed var(--ink3)"></i>シーズンの区切り</span>' : "") + "</div>";
-  return kpi + sec("勝率の推移", "", ctrl + trendChart(gs) + rng + leg, "",
-      "試合数が少ない期間ほど信頼区間は広くなる。灰色の帯が広い区間の上下動は、実力の変化ではなく偶然の可能性が高い。") +
-    sec("日ごとの成績", "", calendar(gs), "", "色は勝率。50%より上は赤、下は青で、濃いほど差が大きい。試合が少ない日ほど、偶然で極端な値になりやすい。");
+  return anchor("rate", sec("レートと勝率の推移", S.season === "all" ? "全シーズン" : "シーズン" + S.season, rateChart(),
+      "", "上はランク戦のレート（Ultimate Champion 到達前はステージ）。下は表示中のモードの勝率（直近" + WR_WIN + "試合の移動平均）と、1日の試合数。紫の帯がUltimate Championの範囲。")) +
+    anchor("cal", sec("日ごとの成績", "", calendar(all), "", "色は勝率。50%より上は赤、下は青で、濃いほど差が大きい。試合が少ない日ほど、偶然で極端な値になりやすい。"));
 }
 function weekStart(k) { var d = new Date(k + "T00:00:00"); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return dayKey(d); }
-function unitNow() { return S.unit || (S.season === "all" ? "week" : "day"); }
-function trendChart(gs) {
-  var U = unitNow(), map = {}, order = [];
-  gs.forEach(function (g) {
-    var k = U === "day" ? g.d : weekStart(g.d);
-    if (!map[k]) { map[k] = { k: k, w: 0, n: 0, g: 0 }; order.push(k); }
-    map[k].g++; if (g.r !== "d") { map[k].n++; if (g.r === "w") map[k].w++; }
-  });
-  var b = order.map(function (k) { return map[k]; }), nb = b.length;
-  var W = pageW(), narrow = W < 560;
-  var padL = 0, padR = 40, padT = S.season === "all" ? 26 : 8, MH = narrow ? 170 : 220, GAP = 28, VH = narrow ? 48 : 64;
-  var H = padT + MH + GAP + VH + 22, pw = W - padL - padR, step = pw / nb;
-  var x = function (i) { return padL + (i + 0.5) * step; }, y = function (v) { return padT + MH * (1 - v); };
-  var vy0 = padT + MH + GAP, vy1 = vy0 + VH, o = [];
-  o.push('<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="勝率の推移">');
-  [0, .25, .5, .75, 1].forEach(function (v) {
-    if (v !== .5) o.push('<line class="' + (v ? "gr" : "ax") + '" x1="' + padL + '" x2="' + (padL + pw) + '" y1="' + y(v) + '" y2="' + y(v) + '"/>');
-    o.push('<text class="tk" x="' + (padL + pw + 6) + '" y="' + (y(v) + 3.5) + '">' + (v * 100) + (v === 1 ? "%" : "") + "</text>");
-  });
-  o.push('<line class="ref" x1="' + padL + '" x2="' + (padL + pw) + '" y1="' + y(.5) + '" y2="' + y(.5) + '"/>');
-  if (S.season === "all") {
-    var t0 = ms(b[0].k), t1 = ms(addDays(b[nb - 1].k, U === "day" ? 1 : 7));
-    o.push(niceSep(t0, t1, function (t) { return padL + pw * (t - t0) / (t1 - t0); }, padT, vy1, padT - 10));
-  }
-  var ci = b.map(function (d) { return wilson(d.w, d.n); });
-  if (nb > 1) {
-    var up = [], dn = [];
-    for (var i = 0; i < nb; i++) up.push(x(i).toFixed(1) + "," + y(ci[i][2]).toFixed(1));
-    for (i = nb - 1; i >= 0; i--) dn.push(x(i).toFixed(1) + "," + y(ci[i][1]).toFixed(1));
-    o.push('<polygon class="band" points="' + up.concat(dn).join(" ") + '"/>');
-    o.push('<polyline class="raw" points="' + b.map(function (d, i) { return x(i).toFixed(1) + "," + y(d.n ? d.w / d.n : 0).toFixed(1); }).join(" ") + '"/>');
-  }
-  var ma = b.map(function (_, i) { var w = 0, n = 0; for (var j = Math.max(0, i - MA_WIN + 1); j <= i; j++) { w += b[j].w; n += b[j].n; } return n ? w / n : null; });
-  var mp = []; ma.forEach(function (v, i) { if (v != null) mp.push(x(i).toFixed(1) + "," + y(v).toFixed(1)); });
-  if (mp.length > 1) o.push('<polyline class="ma" points="' + mp.join(" ") + '"/>');
-  if (nb <= 45) b.forEach(function (d, i) { o.push('<circle class="pt" cx="' + x(i).toFixed(1) + '" cy="' + y(d.n ? d.w / d.n : 0).toFixed(1) + '" r="3"/>'); });
-  var mg = 1; b.forEach(function (d) { if (d.g > mg) mg = d.g; });
-  [0, .5, 1].forEach(function (v) {
-    var yy = vy1 - VH * v;
-    o.push('<line class="' + (v ? "gr" : "ax") + '" x1="' + padL + '" x2="' + (padL + pw) + '" y1="' + yy + '" y2="' + yy + '"/>');
-    o.push('<text class="tk" x="' + (padL + pw + 6) + '" y="' + (yy + 3.5) + '">' + Math.round(mg * v) + "</text>");
-  });
-  b.forEach(function (d, i) {
-    var bh = VH * d.g / mg;
-    o.push('<rect class="vol" x="' + (padL + i * step + step * .18).toFixed(1) + '" y="' + (vy1 - bh).toFixed(1) + '" width="' + Math.max(1, step * .64).toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="' + Math.min(2, step * .2).toFixed(1) + '"/>');
-  });
-  o.push('<text class="tk v" x="' + padL + '" y="' + (vy0 - 8) + '">試合数</text>');
-  var used = [];
-  var ev = Math.max(1, Math.ceil(nb / (narrow ? 4 : 8)));
-  for (i = 0; i < nb; i += ev) {
-    var xx = x(i); if (used.some(function (u) { return Math.abs(u - xx) < 40; })) continue; used.push(xx);
-    o.push('<text class="tk" x="' + xx.toFixed(1) + '" y="' + (vy1 + 16) + '" text-anchor="middle">' + md(b[i].k) + "</text>");
-  }
-  o.push('<line class="xh" id="xh" x1="0" x2="0" y1="' + padT + '" y2="' + vy1 + '"/>');
-  b.forEach(function (d, i) {
-    var c = ci[i], lines = [(U === "week" ? md(d.k) + "〜" + md(addDays(d.k, 6)) + "の週" : d.k)];
-    var sn = seasonOf(d.k + " 23:59:59"); if (sn) lines[0] += "（シーズン" + sn + "）";
-    if (d.n) { lines.push("勝率 " + pc(d.w / d.n) + "%（" + rec(d.w, d.n) + "）"); lines.push("95%信頼区間 " + pc(c[1]) + "〜" + pc(c[2]) + "%"); }
-    if (ma[i] != null) lines.push("移動平均 " + pc(ma[i]) + "%");
-    lines.push("試合数 " + d.g);
-    o.push('<rect class="hit" x="' + (padL + i * step).toFixed(1) + '" y="' + padT + '" width="' + step.toFixed(2) + '" height="' + (vy1 - padT) + '" data-cx="' + x(i).toFixed(1) + '" data-tip="' + esc(lines.join("\n")) + '"/>');
-  });
-  o.push("</svg>");
-  return o.join("");
-}
+
 function calendar(gs) {
   var by = {}; gs.forEach(function (g) { var c = by[g.d] || (by[g.d] = { w: 0, n: 0, g: 0 }); c.g++; if (g.r !== "d") { c.n++; if (g.r === "w") c.w++; } });
   var first = weekStart(gs[0].d), d0 = gs[0].d, last = gs[gs.length - 1].d, h = '<div class="cal"><div class="cw"></div>' +
@@ -3224,16 +3233,16 @@ function deckPage() {
     decks[k].n++; if (g.r === "w") decks[k].w++;
     var seen = {}; g.my.forEach(function (c) { if (seen[c]) return; seen[c] = 1; var m = mine[c] || (mine[c] = { w: 0, n: 0 }); m.n++; if (g.r === "w") m.w++; });
   });
-  var narrow = pageW() < 640;
+  var narrow = pageW() < 760, cw8 = narrow ? 26 : 24;
   var items = Object.keys(decks).sort(function (a, b) { return decks[b].n - decks[a].n; }).slice(0, 8).map(function (k) {
-    return { lab: deck8(face[k], narrow ? 18 : 24), w: decks[k].w, n: decks[k].n, tip: face[k].map(function (c) { return D.cards[c]; }).join(" / ") };
+    return { lab: narrow ? deck8(face[k], cw8).replace('class="deck8"', 'class="deck8 d42"') : deck8(face[k], cw8), w: decks[k].w, n: decks[k].n, tip: face[k].map(function (c) { return D.cards[c]; }).join(" / ") };
   });
   var vary = Object.keys(mine).filter(function (c) { return mine[c].n < dd.n; }).sort(function (a, b) { return mine[b].n - mine[a].n; }).slice(0, 12);
-  var ci = vary.map(function (c) { return { lab: card(+c, 22) + '<span class="nm">' + esc(D.cards[c]) + "</span>", w: mine[c].w, n: mine[c].n, tip: D.cards[c] }; });
-  var labW = narrow ? "minmax(0,170px)" : "232px";
-  return sec("デッキ構成別の勝率", "基準線は期間平均 " + pc(base, 0) + "%", dtable(items, base, { head: "構成（8枚）", total: dd.n, labW: labW }),
-      "", "使用したデッキ構成は" + Object.keys(decks).length + "種類。試合数の多い順に上位8件。") +
-    sec("入れ替えのあったカード", "", dtable(ci, base, { head: "カード", total: dd.n, tight: true }),
+  var ciHtml = tiles(vary.map(function (c) { return { c: c, w: mine[c].w, n: mine[c].n, sub: "使用率 " + pc(mine[c].n / dd.n, 0) + "%" }; }), base);
+  var labW = "232px";
+  return anchor("mydeck", sec("デッキ構成別の勝率", "基準線は期間平均 " + pc(base, 0) + "%", dtable(items, base, { head: "構成（8枚）", total: dd.n, labW: labW }),
+      "", "使用したデッキ構成は" + Object.keys(decks).length + "種類。試合数の多い順に上位8件。")) +
+    '<div id="sec-mycard"></div>' + sec("入れ替えのあったカード", "使用率の高い順", ciHtml,
       "全試合に入っている固定枠は差が出ないため除外している。", "点が推定値、帯が95%信頼区間。帯どうしが重なる範囲では、差があるとは言えない。" + RELIABLE_N + "試合未満は灰色。");
 }
 
@@ -3251,13 +3260,13 @@ function enemyPage() {
   var base = dd.w / dd.n, opp = oppStats(gs);
   var ok = Object.keys(opp).filter(function (c) { return opp[c].n >= MIN_CARD_N; });
   var byWr = ok.slice().sort(function (a, b) { return opp[a].w / opp[a].n - opp[b].w / opp[b].n; });
-  var mk = function (c) { return { lab: card(+c, 22) + '<span class="nm">' + esc(D.cards[c]) + "</span>", w: opp[c].w, n: opp[c].n, tip: D.cards[c] + "（" + opp[c].n + "試合で遭遇）" }; };
-  return sec("対戦カードの地図", "横＝よく当たる、縦＝勝てている", scatter(ok, opp, dd.n, base),
+  var mk = function (c) { return { c: c, w: opp[c].w, n: opp[c].n, sub: "遭遇 " + opp[c].n + "試合" }; };
+  return '<div id="sec-map"></div>' + sec("対戦カードの地図", "横＝よく当たる、縦＝勝てている", scatter(ok, opp, dd.n, base),
       "", "右下ほど「よく当たるのに勝てていない」カード。点の大きさは遭遇した試合数。" + MIN_CARD_N + "試合以上当たったカードのみ（全" + Object.keys(opp).length + "種類のうち" + ok.length + "種類）。") +
-    '<div class="grid2">' +
-    sec("勝率の低いカード", "", dtable(byWr.slice(0, 10).map(mk), base, { head: "相手のカード", tight: true, recW: "64px" })) +
-    sec("勝率の高いカード", "", dtable(byWr.slice().reverse().slice(0, 10).map(mk), base, { head: "相手のカード", tight: true, recW: "64px" })) +
-    "</div>";
+    '<div id="sec-oppcard"></div>' +
+    sec("勝率の低いカード", "低い順に12枚", tiles(byWr.slice(0, 12).map(mk), base)) +
+    sec("勝率の高いカード", "高い順に12枚", tiles(byWr.slice().reverse().slice(0, 12).map(mk), base),
+      "", "点が推定値、帯が95%信頼区間、点線が期間平均。" + RELIABLE_N + "試合未満は灰色。");
 }
 function scatter(keys, opp, total, base) {
   var W = pageW(), narrow = W < 560, H = narrow ? 300 : 380, padL = 34, padR = 12, padT = 12, padB = 30;
@@ -3309,14 +3318,14 @@ function formPage() {
   var prev = tally(function (g) { var s = g.prev; return s <= -2 ? "2連敗後" : s === -1 ? "1敗後" : s === 0 ? "セッション初戦" : s === 1 ? "1勝後" : "2連勝後"; },
     ["2連敗後", "1敗後", "セッション初戦", "1勝後", "2連勝後"]);
   var pos = tally(function (g) { return g.pos >= 6 ? "6戦目以降" : g.pos + "戦目"; }, ["1戦目", "2戦目", "3戦目", "4戦目", "5戦目", "6戦目以降"]);
-  return sec("時間帯と曜日", "色は期間平均 " + pc(base, 0) + "% との差", heatmap(gs, base), "",
-      "マスの数字は試合数（触れると勝率が出る）。" + RELIABLE_N + "試合未満のマスは淡く表示している（判定不可）。右の列は曜日ごとの勝率、下の棒は時間帯ごとの試合数。") +
-    '<div class="grid2">' +
+  return anchor("hm", sec("時間帯と曜日", "色は期間平均 " + pc(base, 0) + "% との差", heatmap(gs, base), "",
+      "マスの数字は試合数（触れると勝率が出る）。" + RELIABLE_N + "試合未満のマスは淡く表示している（判定不可）。右の列は曜日ごとの勝率、下の棒は時間帯ごとの試合数。")) +
+    '<div class="grid2" id="sec-streak">' +
     sec("直前の結果別", "", dtable(prev, base, { head: "直前", tight: true, recW: "64px", labW: "minmax(0,96px)" })) +
     sec("連続対戦数別", "", dtable(pos, base, { head: "何戦目", tight: true, recW: "64px", labW: "minmax(0,96px)" })) +
     "</div>" +
-    sec("プレイごとの勝ち負け", "1列が1回のプレイ", sessions(gs), "",
-      "前の試合から30分以上あいたら別のプレイとして区切っている。上から順に1戦目、2戦目…。赤が勝ち、青が負け。");
+    anchor("ses", sec("プレイごとの勝ち負け", "1列が1回のプレイ", sessions(gs), "",
+      "前の試合から30分以上あいたら別のプレイとして区切っている。上から順に1戦目、2戦目…。赤が勝ち、青が負け。"));
 }
 function heatmap(gs, base) {
   var hs = {}, cell = {}, rowT = [], colT = {};
@@ -3394,23 +3403,33 @@ function sessions(gs) {
 /* ---------- レート ---------- */
 function stageOrRate(lg, tr) { return lg >= D.ult && tr ? fmtn(tr) : lname(lg); }
 function seasonLedger() {
+  var row = function (cls, c1, c2, fin, finSub, peak, reach, gs) {
+    var dd = dec(gs), r = wilson(dd.w, dd.n);
+    return '<tr class="' + cls + '"><td class="l">' + c1 + '</td><td class="l opt">' + c2 + "</td>" +
+      '<td><span class="big">' + fin + "</span>" + finSub + "</td><td>" + peak + '</td><td class="opt">' + reach + "</td>" +
+      '<td class="opt">' + gs.length + '</td><td class="opt">' + (dd.n ? rec(dd.w, dd.n) : "-") + "</td>" +
+      '<td class="' + tone(r[0], .5, dd.n) + '-t"><b style="color:inherit">' + (dd.n ? pc(r[0]) + "%" : "-") + "</b>" +
+      (dd.n ? '<span class="ci">' + pc(r[1]) + "〜" + pc(r[2]) + "</span>" : "") + "</td></tr>";
+  };
+  var allPeak = null;
   var rows = SINFO.slice().reverse().map(function (si) {
     var p = P.filter(function (x) { return x.s === si.n; });
-    var g = B.filter(function (x) { return x.s === si.n && x.mode === "pol"; }), dd = dec(g), r = wilson(dd.w, dd.n);
+    var g = B.filter(function (x) { return x.s === si.n && x.mode === "pol"; });
     var peak = null; p.forEach(function (x) { if (x.u && (peak == null || x.tr > peak)) peak = x.tr; });
+    if (peak != null && (allPeak == null || peak > allPeak)) allPeak = peak;
     var reach = null; for (var i = 0; i < p.length; i++) if (p[i].u) { reach = p[i]; break; }
     var fin = D.finals[si.n], cur = !fin && p.length ? p[p.length - 1] : null;
-    var finTxt = fin ? stageOrRate(fin.lg, fin.tr) : cur ? stageOrRate(cur.lg, cur.tr) : "-";
     var days = reach && si.from ? Math.round((ms(reach.t.slice(0, 10)) - ms(si.from)) / 864e5) + 1 : null;
-    return '<tr class="' + (S.season === si.n ? "sel" : "") + '"><td class="l"><b>シーズン' + si.n + "</b>" + (si.last ? '<span class="sub">開催中</span>' : "") + "</td>" +
-      '<td class="l">' + (si.from ? md(si.from) + "〜" + (si.last ? "" : md(si.to)) : "-") + "</td>" +
-      '<td><span class="big">' + finTxt + "</span>" + (fin ? '<span class="sub">確定</span>' : cur ? '<span class="sub">現在</span>' : "") + "</td>" +
-      "<td>" + (peak != null ? fmtn(peak) : "-") + "</td>" +
-      "<td>" + (reach ? md(reach.t.slice(0, 10)) + '<span class="sub">開幕から' + days + "日目</span>" : "-") + "</td>" +
-      "<td>" + g.length + "</td>" +
-      '<td class="' + tone(r[0], .5, dd.n) + '-t"><b style="color:inherit">' + (dd.n ? pc(r[0]) + "%" : "-") + "</b></td></tr>";
+    return row(S.season === si.n ? "sel" : "", "<b>シーズン" + si.n + "</b>" + (si.last ? '<span class="sub">開催中</span>' : ""),
+      si.from ? md(si.from) + "〜" + (si.last ? "" : md(si.to)) : "-",
+      fin ? stageOrRate(fin.lg, fin.tr) : cur ? stageOrRate(cur.lg, cur.tr) : "-",
+      fin ? '<span class="sub">確定' + (fin.rank ? "・世界" + fmtn(fin.rank) + "位" : "") + "</span>" : cur ? '<span class="sub">現在</span>' : "",
+      peak != null ? fmtn(peak) : "-",
+      reach ? md(reach.t.slice(0, 10)) + '<span class="sub">開幕から' + days + "日目</span>" : "-", g);
   }).join("");
-  return '<div class="tw"><table class="t"><thead><tr><th class="l">シーズン</th><th class="l">期間</th><th>最終成績</th><th>シーズン最高<br>レート</th><th>Ultimate<br>到達</th><th>ランク戦<br>試合数</th><th>勝率</th></tr></thead><tbody>' + rows + "</tbody></table></div>";
+  rows += row("tot", "<b>記録全体</b>", md(B[0].d) + "〜", "-", "", allPeak != null ? fmtn(allPeak) : "-", "-",
+    B.filter(function (x) { return x.mode === "pol"; }));
+  return '<div class="tw ledger"><table class="t"><thead><tr><th class="l">シーズン</th><th class="l opt">期間</th><th>最終成績</th><th>シーズン最高<br>レート</th><th class="opt">Ultimate<br>到達</th><th class="opt">ランク戦<br>試合数</th><th class="opt">勝敗</th><th>勝率</th></tr></thead><tbody>' + rows + "</tbody></table></div>";
 }
 function pctColor(p) {
   return p >= 50 ? "color-mix(in oklab,var(--up) " + Math.round(35 + 65 * (p - 50) / 50) + "%,var(--na))"
@@ -3421,10 +3440,11 @@ function pctPanel() {
   var n = D.pct[0].n;
   var h = '<div class="pr"><div class="ph lab2">指標</div><div class="ph sc"><span>下位</span><span>真ん中</span><span>上位</span></div><div class="ph v2" style="text-align:right">自分の値</div>';
   D.pct.forEach(function (m) {
-    var v = m.fmt === "pct" ? pc(m.v) + "%" : fmtn(Math.round(m.v)), md2 = m.fmt === "pct" ? pc(m.med) + "%" : fmtn(Math.round(m.med));
+    var v = m.fmt === "pct" ? pc(m.v) + "%" : fmtn(Math.round(m.v)), md2 = m.fmt === "pct" ? pc(m.med) + "%" : m.med < 0 ? "レートなし" : fmtn(Math.round(m.med));
+    var top = m.top < 1 ? "1%未満" : Math.round(m.top) + "%";
     h += '<div class="lb">' + esc(m.lab) + "<small>" + m.n + "人と比較</small></div>" +
-      '<div class="tr" data-tip="' + esc(m.lab + "\n対戦した相手" + m.n + "人の中で、下から" + m.p + "%の位置\n自分 " + v + "／相手の真ん中 " + md2) + '"><div class="trk">' +
-      '<span class="md" style="left:50%"></span><span class="bb" style="left:' + Math.max(3, Math.min(97, m.p)) + "%;background:" + pctColor(m.p) + '">' + m.p + "</span></div></div>" +
+      '<div class="tr" data-tip="' + esc(m.lab + "\n対戦した相手" + m.n + "人の中で上位" + top + "\n自分 " + v + "／相手の真ん中 " + md2) + '"><div class="trk">' +
+      '<span class="md" style="left:50%"></span><span class="bb" style="left:clamp(34px,' + m.p + "%,calc(100% - 34px));background:" + pctColor(m.p) + '">上位' + top + "</span></div></div>" +
       '<div class="vl">' + v + "<small>相手の真ん中 " + md2 + "</small></div>";
   });
   return h + "</div>";
@@ -3436,25 +3456,14 @@ function pastSeasons() {
     var f = D.finals[k]; return '<span class="ch">S' + k + "<b>" + stageOrRate(f.lg, f.tr) + "</b></span>";
   }).join("") + "</div>";
 }
-function ratePage() {
-  var last = P[P.length - 1], me = D.me;
-  var sel = S.season === "all" ? null : S.season;
-  var p = P.filter(function (x) { return !sel || x.s === sel; });
-  var fin = sel ? D.finals[sel] : null;
-  var nowLg = fin ? fin.lg : (p.length ? p[p.length - 1].lg : last.lg), nowTr = fin ? fin.tr : (p.length ? p[p.length - 1].tr : last.tr);
-  var peak = null; p.forEach(function (x) { if (x.u && (peak == null || x.tr > peak)) peak = x.tr; });
-  var isRate = nowLg >= D.ult && nowTr;
-  var hero = '<div class="hero"><div><span class="k">' + (sel ? "シーズン" + sel + (fin ? "の最終成績" : "（現在）") : "現在（シーズン" + SEAS[SEAS.length - 1].n + "）") + "</span>" +
-    '<span class="v' + (isRate ? "" : " st") + '">' + stageOrRate(nowLg, nowTr) + "</span>" +
-    '<span class="s">' + (isRate ? '<span class="lgn" style="color:var(--ult)">' + lname(nowLg) + "</span>" : "ステージ（Ultimate到達でレート表示）") + (peak != null ? "　期間最高 " + fmtn(peak) : "") + "</span></div>" +
-    '<div><span class="k">自己ベスト</span><span class="v">' + fmtn(me.best_tr) + '</span><span class="s">世界 ' + fmtn(me.best_rank) + " 位・" + esc(me.best_when) + "に達成</span></div>" +
-    '<div><span class="k">通算成績（全モード）</span><span class="v">' + pc(me.wins / (me.wins + me.losses)) + '<small style="font-size:14px;color:var(--ink3);font-weight:400">%</small></span><span class="s">' + fmtn(me.wins) + "勝 " + fmtn(me.losses) + "敗</span></div></div>";
-  return hero + pastSeasons() +
-    sec("対戦した相手の中での位置", "", pctPanel(), "数字は、これまで対戦した相手の中で下から何%の位置にいるか。50が真ん中で、赤いほど上、青いほど下。",
-      "マッチングで当たった相手との比較なので、プレイヤー全体の中での順位ではない。相手の値は最後に情報を取得した時点のもの。") +
-    sec("レートと勝率の推移", S.season === "all" ? "全シーズン" : "シーズン" + S.season, rateChart(),
-      "", "上はランク戦のレート（Ultimate Champion 到達前はステージ）。下は表示中のモードの勝率（直近" + WR_WIN + "試合の移動平均）と、1日の試合数。紫の帯がUltimate Championの範囲。") +
-    sec("シーズン別の成績", "", seasonLedger(), "", "最終成績は、シーズンが替わった時点でAPIが返す前シーズンの確定値。Ultimate到達は記録上で初めてレートが出た日。");
+function jump(list) {
+  return '<div class="jump">' + list.map(function (x) { return '<button data-jump="' + x[0] + '">' + x[1] + "</button>"; }).join("") + "</div>";
+}
+function anchor(id, html) { return '<div id="sec-' + id + '">' + html + "</div>"; }
+function timePage() {
+  return jump([["rate", "レートと勝率"], ["cal", "日ごと"], ["hm", "時間帯と曜日"], ["streak", "直前の結果・連戦"], ["ses", "プレイごと"]]) +
+    trendPage(true) +
+    formPage(true);
 }
 function rateChart() {
   var all = games("all"), gs = games();
@@ -3615,25 +3624,22 @@ function donut(w, l, d) {
     '<circle cx="38" cy="38" r="' + R + '" transform="rotate(' + (-90 + 360 * fw).toFixed(1) + ' 38 38)" style="fill:none;stroke:var(--down);stroke-width:9" stroke-dasharray="' + (C * fl).toFixed(1) + " " + C.toFixed(1) + '"/>' +
     '<text x="38" y="43" text-anchor="middle" style="font-size:15px;font-weight:700;fill:var(--ink);font-family:var(--font)">' + (n ? Math.round(100 * w / (w + l || 1)) : 0) + "%</text></svg>";
 }
-function recentBox(all) {
-  var gs = all.slice(0, 20); if (!gs.length) return "";
-  var w = 0, l = 0, d = 0, three = 0, mc = 0, oc = 0, decks = {}, face = {}, opp = {};
-  gs.forEach(function (g) {
-    if (g.r === "w") { w++; if (g.mc === 3) three++; } else if (g.r === "l") l++; else d++;
-    mc += g.mc; oc += g.oc;
-    var k = g.my.slice().sort().join(","); var x = decks[k] || (decks[k] = { w: 0, n: 0 }); face[k] = g.my; if (g.r !== "d") { x.n++; if (g.r === "w") x.w++; }
-    var seen = {}; g.op.forEach(function (c) { if (seen[c]) return; seen[c] = 1; var o = opp[c] || (opp[c] = { w: 0, n: 0 }); if (g.r !== "d") { o.n++; if (g.r === "w") o.w++; } });
-  });
-  var top = Object.keys(decks).sort(function (a, b) { return decks[b].n - decks[a].n; })[0];
-  var oc3 = Object.keys(opp).sort(function (a, b) { return opp[b].n - opp[a].n || opp[a].w - opp[b].w; }).slice(0, 3);
-  return '<div class="recent">' +
-    "<div>" + donut(w, l, d) + '<div><span class="k">直近' + gs.length + '試合</span><div class="big"><span class="up-t">' + w + '勝</span> <span class="down-t">' + l + "敗</span></div>" +
-      '<span class="k">3クラウン勝利 ' + three + "回</span></div></div>" +
-    '<div><span class="k">いちばん使ったデッキ</span>' + deck8(face[top], 22) + '<span class="row">' + decks[top].n + "試合　" + rec(decks[top].w, decks[top].n) + "</span></div>" +
-    '<div><span class="k">よく当たったカード</span>' + oc3.map(function (c) { return '<span class="row">' + card(+c, 20) + '<span class="nm">' + esc(D.cards[c]) + "</span>" + rec(opp[c].w, opp[c].n) + "</span>"; }).join("") + "</div>" +
-    '<div><span class="k">1試合あたりのクラウン</span><div class="big">' + (mc / gs.length).toFixed(1) + '<small style="font-size:12px;font-weight:400;color:var(--ink3)"> 取った</small></div>' +
-      '<span class="row">取られた ' + (oc / gs.length).toFixed(1) + "</span></div>" +
-    "</div>";
+function kpiBox(gs) {
+  var dd = dec(gs), r = wilson(dd.w, dd.n), t = tone(r[0], 0.5, dd.n), sk = streaks(gs);
+  var nd = 0, seen = {}; gs.forEach(function (g) { if (!seen[g.d]) { seen[g.d] = 1; nd++; } });
+  var dLo = gs[0].d, dHi = gs[gs.length - 1].d, span = Math.round((ms(dHi) - ms(dLo)) / 864e5) + 1;
+  var kpi = '<div class="kpi sm">' +
+    '<div><span class="k">勝率（' + (S.season === "all" ? "全シーズン" : "シーズン" + S.season) + '全体）</span><span class="v ' + t + '-t">' + pc(r[0]) + "<small>%</small></span>" +
+    '<span class="s">95%信頼区間 ' + pc(r[1]) + "〜" + pc(r[2]) + "%</span></div>" +
+    '<div><span class="k">試合</span><span class="v">' + gs.length + '<small>戦</small></span><span class="s">' +
+    '<span class="up-t">' + dd.w + '勝</span> <span class="down-t">' + (dd.n - dd.w) + "敗</span>" + (gs.length - dd.n ? " " + (gs.length - dd.n) + "分" : "") + "</span></div>" +
+    '<div><span class="k">最長の連勝・連敗</span><span class="v"><span class="up-t">' + sk[0] + '</span><small>連勝</small> <span class="down-t">' + sk[1] + "</span><small>連敗</small></span>" +
+    '<span class="s">日をまたいでも続けて数える</span></div>' +
+    '<div><span class="k">1日あたり</span><span class="v">' + (gs.length / nd).toFixed(1) + '<small>戦</small></span><span class="s">' + span + "日間のうち " + nd + "日プレイ</span></div></div>";;
+  var rc = gs.slice(-20), rw = 0, rl = 0, rd = 0; rc.forEach(function (g) { if (g.r === "w") rw++; else if (g.r === "l") rl++; else rd++; });
+  kpi = kpi.replace(/<\/div>$/, '<div class="dn">' + donut(rw, rl, rd).replace('width="76" height="76"', 'width="54" height="54"') +
+    '<div><span class="k">直近' + rc.length + '試合</span><span class="v"><span class="up-t">' + rw + '</span><small>勝</small> <span class="down-t">' + rl + "</span><small>敗</small></span></div></div></div>");
+  return kpi;
 }
 function logPage() {
   var gs = games().slice().reverse(); if (!gs.length) return '<p class="empty">このシーズンの試合がまだない。</p>';
@@ -3651,7 +3657,7 @@ function logPage() {
       '<div class="vs op">' + deck8(g.op, cw) + '<span class="hp">相手　' + hpTxt(g.ok, g.opp) + "</span></div>" +
       '<div class="who"><b>' + esc(nm) + "</b>" + (rivalOf(o) ? '<span class="tag2">強敵</span>' : "") + '<br><span style="color:var(--ink3)">' + esc(g.tag) + "</span>" + (bits.length ? "<br>" + bits.join("・") : "") + "</div></div>";
   }).join("");
-  return recentBox(gs) + sec("試合の一覧", "新しい順", rows + (gs.length > S.logN ? '<button class="more" id="more">さらに50試合を表示（残り' + (gs.length - S.logN) + "試合）</button>" : ""),
+  return kpiBox(gs.slice().reverse()) + sec("試合の一覧", "新しい順", rows + (gs.length > S.logN ? '<button class="more" id="more">さらに50試合を表示（残り' + (gs.length - S.logN) + "試合）</button>" : ""),
     "1行が1試合。左が自分、右が相手のデッキ。HPは残ったタワーの体力。");
 }
 
@@ -3672,7 +3678,9 @@ function summary(season) {
   var pp = P.filter(function (x) { return season === "all" || x.s === season; }), fin = season !== "all" ? D.finals[season] : null;
   var lp = pp.length ? pp[pp.length - 1] : P[P.length - 1];
   out.rate = fin ? "最終 " + stageOrRate(fin.lg, fin.tr) : "現在 " + stageOrRate(lp.lg, lp.tr);
+  out.trend = out.rate + "・" + out.trend;
   var rv = gs.filter(function (g) { return g.r === "w" && rivalOf(D.opps[g.tag]); }).length;
+  out.profile = "自己ベスト " + fmtn(D.me.best_tr);
   out.rivals = "撃破 " + rv + "件";
   out.log = gs.length + "試合";
   menuCache[key] = out; return out;
@@ -3698,7 +3706,7 @@ var hoverable = window.matchMedia("(hover:hover)").matches;
 function renderChrome() {
   document.getElementById("modes").innerHTML = MODES.map(function (m) { return '<button data-m="' + m[0] + '" class="' + (S.mode === m[0] ? "on" : "") + '">' + m[1] + "</button>"; }).join("");
   document.getElementById("meta").textContent = D.me.tag + "　更新 " + D.updated.replace(/-/g, "/");
-  var items = [{ s: "all", b: "全シーズン", sp: md(SINFO[0].from) + "〜" }].concat(SINFO.map(function (si) {
+  var items = [{ s: "all", b: "全シーズン", sp: md(SINFO[0].from) + "〜" }].concat(SINFO.slice().reverse().map(function (si) {
     return { s: si.n, b: "シーズン" + si.n, sp: si.from ? md(si.from) + "〜" + (si.last ? "" : md(si.to)) : "記録なし", now: si.last };
   }));
   document.getElementById("seasons").innerHTML = items.map(function (it) {
@@ -3715,7 +3723,7 @@ function render() {
   document.getElementById("title").textContent = name;
   document.getElementById("sub").textContent = seasonLabel(S.season) + "・" + MODES.filter(function (m) { return m[0] === S.mode; })[0][1];
   document.title = name + "｜Clash Log";
-  var f = { trend: trendPage, deck: deckPage, enemy: enemyPage, form: formPage, rate: ratePage, rivals: rivalsPage, log: logPage }[S.page];
+  var f = { profile: profilePage, trend: timePage, deck: deckPage, enemy: enemyPage, rivals: rivalsPage, log: logPage }[S.page];
   document.getElementById("page").innerHTML = f();
   lastW = pageW();
   fillRange();
@@ -3752,6 +3760,12 @@ document.addEventListener("click", function (e) {
   var g2 = t.closest("[data-go]"); if (g2) return go({ season: menuFor, page: g2.getAttribute("data-go") });
   var p = t.closest("[data-p]"); if (p) return go({ page: p.getAttribute("data-p") });
   var u = t.closest("[data-u]"); if (u) { S.unit = u.getAttribute("data-u"); return render(); }
+  var jp = t.closest("[data-jump]");
+  if (jp) {
+    var el = document.getElementById("sec-" + jp.getAttribute("data-jump"));
+    if (el) { var top = el.getBoundingClientRect().top + window.scrollY - document.querySelector(".top").offsetHeight - 12; window.scrollTo({ top: top, behavior: "smooth" }); }
+    return;
+  }
   if (t.closest("#more")) { S.logN += 50; return render(); }
   if (!t.closest("#menu")) closeMenu();
 });
@@ -3896,8 +3910,7 @@ def build_app_data(rows):
         if w is not None and l is not None and w + l > 0:
             pop["wr"].append(w / (w + l))
         b = _f(o.get("pol_best_trophies"))
-        if b:
-            pop["best"].append(b)
+        pop["best"].append(b if b and b > 0 else -1)   # レートが出ていない相手も下位として数える
         c = _f(o.get("battle_count"))
         if c:
             pop["bc"].append(c)
@@ -3911,11 +3924,13 @@ def build_app_data(rows):
         if mine[key] is None or not arr:
             continue
         lo = sum(1 for x in arr if x < mine[key])
+        hi = sum(1 for x in arr if x > mine[key])
         eq = sum(1 for x in arr if x == mine[key])
         n = len(arr)
         med = arr[n // 2] if n % 2 else (arr[n // 2 - 1] + arr[n // 2]) / 2
         pct.append({"k": key, "lab": lab, "fmt": fmt, "v": mine[key],
-                    "p": round((lo + eq / 2) / n * 100), "med": med, "n": n})
+                    "p": round((lo + eq / 2) / n * 100), "top": round((hi + eq / 2) / n * 100, 1),
+                    "med": med, "n": n})
 
     return {
         "img": True,
