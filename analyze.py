@@ -3628,7 +3628,7 @@ function rivalsPage() {
       c(x.o.best) + c(x.o.pol, " 位", x.basis === "レート戦") +
       '<td class="' + (x.basis === "GT Top1000" ? "key" : "") + '">' + (x.o.rt ? x.o.rt + " 回" : "-") + "</td>" +
       c(x.o.ladder, " 位", x.basis === "Top Ladder") + c(x.o.battles) +
-      '<td class="l">' + x.g.t.slice(5, 16).replace("-", "/") + '<span class="sub">' + (isNarrow() ? deck8(x.g.op, 24).replace('class="deck8"', 'class="deck8 d42"') : deck8(x.g.op, 26)) + "</span></td></tr>";
+      '<td class="l">' + x.g.t.slice(5, 16).replace("-", "/") + '<span class="sub">' + (isNarrow() ? deck8(x.g.op, 30).replace('class="deck8"', 'class="deck8 d42"') : deck8(x.g.op, 36)) + "</span></td></tr>";
   }).join("");
   return sec("勝利した強敵", it.length + "件", '<div class="tw"><table class="t"><thead><tr><th class="l">#</th><th class="l">相手</th><th>最高<br>レート</th><th>レート戦<br>最高順位</th><th>グローバル<br>トーナメント<br>Top1000</th><th>Top Ladder<br>最高順位</th><th>通算<br>試合数</th><th class="l">撃破した試合・相手のデッキ</th></tr></thead><tbody>' + rows + "</tbody></table></div>",
     "それぞれの相手が持つ順位のうち、最も良いものが高い順。太字が並べ替えの基準にした順位。",
@@ -3674,7 +3674,8 @@ function kpiBox(gs) {
 }
 function logPage() {
   var gs = games().slice().reverse(); if (!gs.length) return '<p class="empty">このシーズンの試合がまだない。</p>';
-  var narrow = pageW() < 640, cw = narrow ? 26 : 22;
+  // デッキの絵は画面の幅に合わせて大きくする（PCは最大36px、スマホは1行に8枚が収まる大きさ）
+  var narrow = isNarrow(), cw = narrow ? Math.min(40, Math.floor((pageW() - 21) / 8)) : Math.max(22, Math.min(36, Math.floor((pageW() - 416) / 16) - 3));
   var rows = gs.slice(0, S.logN).map(function (g) {
     var o = D.opps[g.tag] || {}, nm = o.name || g.name, bits = [];
     if (o.best) bits.push("最高レート " + fmtn(o.best));
