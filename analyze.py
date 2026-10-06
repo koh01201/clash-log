@@ -2586,7 +2586,10 @@ def build(mode_key, prefix, label, rows, total_records):
 # ================= 新しい1ページ型のサイト =================
 # 見た目と計算はブラウザ側（APP_HTML の中のJS）で行い、ここではデータを詰めて渡すだけ。
 
-APP_HTML = r'''<title>Clash Log</title>
+APP_HTML = r'''<script>/* PC表示を選んだスマホでは、描く前に画面の幅をPCに合わせる */
+(function () { try { if (localStorage.getItem("clashlog.layout") === "wide" && screen.width < 760) { var v = document.querySelector('meta[name="viewport"]');
+  if (v) v.setAttribute("content", "width=1200,initial-scale=" + (screen.width / 1200).toFixed(3)); } } catch (e) {} })();</script>
+<title>Clash Log</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap">
@@ -2628,7 +2631,7 @@ button{font-family:inherit;color:inherit}
 /* ---------- 上部 ---------- */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in oklab,var(--bg) 94%,transparent);
   -webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--rule)}
-.in{max-width:1040px;margin:0 auto;padding-inline:24px}
+.in{max-width:1440px;margin:0 auto;padding-inline:24px}
 .bar{display:flex;align-items:center;gap:20px;padding-block:12px 8px}
 .brand{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
 .brand i{display:block;width:4px;height:18px;border-radius:1px;background:var(--accent)}
@@ -2638,6 +2641,7 @@ button{font-family:inherit;color:inherit}
 .seg button:hover{color:var(--ink)}
 .seg button.on{background:var(--bg);color:var(--ink);font-weight:700;box-shadow:0 1px 2px var(--shadow),0 0 0 1px color-mix(in oklab,var(--ink) 6%,transparent)}
 .seg.modes button.on{color:var(--accent)}
+.lyt{margin-left:auto}.meta+.lyt{margin-left:0}
 
 /* シーズンの帯 */
 .seasons{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--rule)}
@@ -2677,7 +2681,7 @@ button{font-family:inherit;color:inherit}
 .menu button.cur b{color:var(--accent)}
 
 /* ---------- 本文 ---------- */
-.wrap{max-width:1040px;margin:0 auto;padding:28px 24px 64px}
+.wrap{max-width:1440px;margin:0 auto;padding:28px 24px 64px}
 .head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px 20px;margin:0 0 28px}
 .head h1{margin:0;font-size:26px;line-height:1.3;font-weight:700;letter-spacing:.01em;text-wrap:balance}
 .head p{margin:0;font-size:12.5px;color:var(--ink3)}
@@ -2761,6 +2765,7 @@ svg{display:block;overflow:visible}
 .cg .cmid{display:flex;justify-content:space-between;align-items:baseline;margin:8px 0 6px;font-size:11.5px;color:var(--ink2)}
 .cg .pv{font-size:18px;font-weight:700}.cg .pv small{font-size:11px;font-weight:400;color:var(--ink3)}
 .cg .dp{margin:0}
+.cg .cci{font-size:11px;color:var(--ink3)}
 .dt .pv{text-align:right;font-size:16px;font-weight:700;white-space:nowrap}
 .dt .pv small{font-size:10.5px;font-weight:400;color:var(--ink3)}
 .dt .rc{text-align:right;font-size:12px;color:var(--ink2);white-space:nowrap}
@@ -2911,39 +2916,63 @@ table.t .ci{display:block;font-size:11px;color:var(--ink3);font-weight:400}
 /* セッションの流れ */
 .strip{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
 
-footer{max-width:1040px;margin:0 auto;padding:18px 24px 48px;border-top:1px solid var(--rule);color:var(--ink3);font-size:11.5px;line-height:1.8}
+footer{max-width:1440px;margin:0 auto;padding:18px 24px 48px;border-top:1px solid var(--rule);color:var(--ink3);font-size:11.5px;line-height:1.8}
 #tip{position:fixed;z-index:60;max-width:280px;padding:9px 12px;border-radius:8px;background:var(--tipbg);color:var(--tipfg);
   font-size:12px;line-height:1.6;white-space:pre-line;pointer-events:none;opacity:0;transition:opacity .08s;box-shadow:0 6px 18px var(--shadow)}
 
-@media (max-width:760px){
-  .cal .cc{min-height:44px;padding:4px 5px}.cal .cc b{font-size:13px}.cal .cn{display:none}.cal{grid-template-columns:26px repeat(7,minmax(0,1fr))}
-  .in{padding-inline:16px}.wrap{padding:22px 16px 56px}footer{padding:16px 16px 40px}
-  .meta{display:none}
-  .head h1{font-size:22px}
-  .kpi,.hero,.hero.h4{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-  .hero .v{font-size:28px}.hero .v.st{font-size:20px}.hero>div{padding:14px 12px 16px}
-  .kpi>div:nth-child(3),.hero>div:nth-child(3){border-left:0;padding-left:0}
-  .kpi.sm{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.kpi.sm>div:nth-child(5){grid-column:1/-1;border-left:0;padding-left:0}.kpi.sm>div:nth-child(3){padding-left:0}
-  .kpi>div:nth-child(n+3),.hero>div:nth-child(n+3){border-top:1px solid var(--rule)}
-  .hero>div:first-child{grid-column:1/-1;border-bottom:1px solid var(--rule)}
-  .hero>div:nth-child(2){border-left:0;padding-left:0}
-  .hero>div:nth-child(3){border-left:1px solid var(--rule);padding-left:18px;border-top:0}
-  .hero.h4>div:first-child{grid-column:auto;border-bottom:0}
-  .hero.h4>div:nth-child(2){border-left:1px solid var(--rule);padding-left:12px}
-  .hero.h4>div:nth-child(3){border-left:0;padding-left:0;border-top:1px solid var(--rule)}
-  .hero.h4>div:nth-child(4){border-top:1px solid var(--rule)}
-  .bio{flex-direction:column;margin-top:-18px}.bio span+span::before{display:none}
-  table.t .opt{display:none}table.t td.l b{white-space:nowrap}
-  .ledger table.t td,.ledger table.t th{padding-left:6px;padding-right:6px}.ledger table.t .big{font-size:14px;white-space:normal}
-  .grid2{grid-template-columns:1fr}
-  .kpi .v{font-size:26px}
-  .lg{grid-template-columns:1fr auto;grid-template-areas:"when res" "my my" "op op" "who who"}
-  .lg .when{grid-area:when}.lg .res{grid-area:res;flex-direction:row}.lg .my{grid-area:my}.lg .op{grid-area:op}.lg .who{grid-area:who}
-  .hm{grid-template-columns:24px 1fr 76px}
-  .pr{grid-template-columns:minmax(0,1fr) 84px;grid-auto-flow:row dense}.pr .tr{grid-column:1/-1;padding-top:0}.pr .lb{border-bottom:0;padding-bottom:2px}.pr .vl{border-bottom:0;padding-bottom:2px}
-  .pr .ph.lab2,.pr .ph.v2{display:none}.pr .ph.sc{grid-column:1/-1}
-}
-html{scroll-padding-top:180px}
+/* スマホ表示（PCでも切り替えボタンで選べる） */
+html[data-layout="narrow"] .cal .cc{min-height:44px;padding:4px 5px}
+html[data-layout="narrow"] .cal .cc b{font-size:13px}
+html[data-layout="narrow"] .cal .cn{display:none}
+html[data-layout="narrow"] .cal{grid-template-columns:26px repeat(7,minmax(0,1fr))}
+html[data-layout="narrow"] .in{padding-inline:16px}
+html[data-layout="narrow"] .wrap{padding:22px 16px 56px}
+html[data-layout="narrow"] footer{padding:16px 16px 40px}
+html[data-layout="narrow"] .meta{display:none}
+html[data-layout="narrow"] .head h1{font-size:22px}
+html[data-layout="narrow"] .kpi,html[data-layout="narrow"] .hero,html[data-layout="narrow"] .hero.h4{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+html[data-layout="narrow"] .hero .v{font-size:28px}
+html[data-layout="narrow"] .hero .v.st{font-size:20px}
+html[data-layout="narrow"] .hero>div{padding:14px 12px 16px}
+html[data-layout="narrow"] .kpi>div:nth-child(3),html[data-layout="narrow"] .hero>div:nth-child(3){border-left:0;padding-left:0}
+html[data-layout="narrow"] .kpi.sm{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+html[data-layout="narrow"] .kpi.sm>div:nth-child(5){grid-column:1/-1;border-left:0;padding-left:0}
+html[data-layout="narrow"] .kpi.sm>div:nth-child(3){padding-left:0}
+html[data-layout="narrow"] .kpi>div:nth-child(n+3),html[data-layout="narrow"] .hero>div:nth-child(n+3){border-top:1px solid var(--rule)}
+html[data-layout="narrow"] .hero>div:first-child{grid-column:1/-1;border-bottom:1px solid var(--rule)}
+html[data-layout="narrow"] .hero>div:nth-child(2){border-left:0;padding-left:0}
+html[data-layout="narrow"] .hero>div:nth-child(3){border-left:1px solid var(--rule);padding-left:18px;border-top:0}
+html[data-layout="narrow"] .hero.h4>div:first-child{grid-column:auto;border-bottom:0}
+html[data-layout="narrow"] .hero.h4>div:nth-child(2){border-left:1px solid var(--rule);padding-left:12px}
+html[data-layout="narrow"] .hero.h4>div:nth-child(3){border-left:0;padding-left:0;border-top:1px solid var(--rule)}
+html[data-layout="narrow"] .hero.h4>div:nth-child(4){border-top:1px solid var(--rule)}
+html[data-layout="narrow"] .bio{flex-direction:column;margin-top:-18px}
+html[data-layout="narrow"] .bio span+span::before{display:none}
+html[data-layout="narrow"] table.t .opt{display:none}
+html[data-layout="narrow"] table.t td.l b{white-space:nowrap}
+html[data-layout="narrow"] .ledger table.t td,html[data-layout="narrow"] .ledger table.t th{padding-left:6px;padding-right:6px}
+html[data-layout="narrow"] .ledger table.t .big{font-size:14px;white-space:normal}
+html[data-layout="narrow"] .grid2{grid-template-columns:1fr}
+html[data-layout="narrow"] .kpi .v{font-size:26px}
+html[data-layout="narrow"] .lg{grid-template-columns:1fr auto;grid-template-areas:"when res" "my my" "op op" "who who"}
+html[data-layout="narrow"] .lg .when{grid-area:when}
+html[data-layout="narrow"] .lg .res{grid-area:res;flex-direction:row}
+html[data-layout="narrow"] .lg .my{grid-area:my}
+html[data-layout="narrow"] .lg .op{grid-area:op}
+html[data-layout="narrow"] .lg .who{grid-area:who}
+html[data-layout="narrow"] .hm{grid-template-columns:24px 1fr 76px}
+html[data-layout="narrow"] .pr{grid-template-columns:minmax(0,1fr) 84px;grid-auto-flow:row dense}
+html[data-layout="narrow"] .pr .tr{grid-column:1/-1;padding-top:0}
+html[data-layout="narrow"] .pr .lb{border-bottom:0;padding-bottom:2px}
+html[data-layout="narrow"] .pr .vl{border-bottom:0;padding-bottom:2px}
+html[data-layout="narrow"] .pr .ph.lab2,html[data-layout="narrow"] .pr .ph.v2{display:none}
+html[data-layout="narrow"] .pr .ph.sc{grid-column:1/-1}
+html[data-layout="narrow"] .in,html[data-layout="narrow"] .wrap,html[data-layout="narrow"] footer{max-width:480px}
+html[data-layout="narrow"] .bar{gap:10px;flex-wrap:wrap}
+html[data-layout="narrow"] .seg button{padding:4px 8px;font-size:12px}
+html[data-layout="narrow"] .brand{font-size:15px}
+html[data-layout="narrow"] .meta+.lyt{margin-left:auto}
+html{scroll-padding-top:180px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.menu{animation:none}#tip{transition:none}}
 </style>
 
@@ -2953,6 +2982,7 @@ html{scroll-padding-top:180px}
       <div class="brand"><i></i>Clash Log</div>
       <div class="seg modes" id="modes" role="group" aria-label="モード"></div>
       <div class="meta" id="meta"></div>
+      <div class="seg lyt" id="lyt" role="group" aria-label="表示"></div>
     </div>
     <nav class="seasons" id="seasons" aria-label="シーズン"></nav>
     <nav class="tabs" id="tabs" aria-label="ページ"></nav>
@@ -3081,7 +3111,7 @@ function dtable(items, base, o) {
   o = o || {};
   if (!items.length) return '<p class="empty">該当する試合がない。</p>';
   var useCol = o.total != null;
-  if (pageW() < 760) return dtableNarrow(items, base, o, useCol);
+  if (isNarrow()) return dtableNarrow(items, base, o, useCol);
   var cols = (o.labW || "minmax(0,1.3fr)") + (useCol ? " 96px" : "") + " minmax(120px,1.4fr) 62px " + (o.recW || "72px");
   var maxU = 0; items.forEach(function (it) { if (it.n > maxU) maxU = it.n; });
   var h = '<div class="dt' + (o.tight ? " tight" : "") + '" style="--cols:' + cols + '">' +
@@ -3099,14 +3129,15 @@ function dtable(items, base, o) {
   });
   return h + "</div>";
 }
-function tiles(items, base) {
+function tiles(items, base, numOnly) {
   if (!items.length) return '<p class="empty">該当する試合がない。</p>';
   return '<div class="cg">' + items.map(function (it) {
     var r = wilson(it.w, it.n), t = tone(r[0], base, it.n);
     var tip = D.cards[it.c] + "\n" + it.sub + "（" + it.n + "試合）\n勝率 " + pc(r[0]) + "%（" + rec(it.w, it.n) + "）\n95%信頼区間 " + pc(r[1]) + "〜" + pc(r[2]) + "%" +
       (it.n < RELIABLE_N ? "\n" + RELIABLE_N + "試合未満のため判定不可" : "");
     return '<div data-tip="' + esc(tip) + '"><div class="ctop">' + card(+it.c, 34) + '<span class="cnm"><b>' + esc(D.cards[it.c]) + "</b><small>" + it.sub + "</small></span></div>" +
-      '<div class="cmid"><span class="pv ' + t + '-t">' + pc(r[0]) + "<small>%</small></span><span>" + rec(it.w, it.n) + "</span></div>" + dotplot(it.w, it.n, base) + "</div>";
+      '<div class="cmid"><span class="pv ' + t + '-t">' + pc(r[0]) + "<small>%</small></span><span>" + rec(it.w, it.n) + "</span></div>" +
+      (numOnly ? '<div class="cci">95%信頼区間 ' + pc(r[1], 0) + "〜" + pc(r[2], 0) + "%</div>" : dotplot(it.w, it.n, base)) + "</div>";
   }).join("") + "</div>";
 }
 function dtableNarrow(items, base, o, useCol) {
@@ -3233,7 +3264,7 @@ function deckPage() {
     decks[k].n++; if (g.r === "w") decks[k].w++;
     var seen = {}; g.my.forEach(function (c) { if (seen[c]) return; seen[c] = 1; var m = mine[c] || (mine[c] = { w: 0, n: 0 }); m.n++; if (g.r === "w") m.w++; });
   });
-  var narrow = pageW() < 760, cw8 = narrow ? 26 : 24;
+  var narrow = isNarrow(), cw8 = narrow ? 26 : 24;
   var items = Object.keys(decks).sort(function (a, b) { return decks[b].n - decks[a].n; }).slice(0, 8).map(function (k) {
     return { lab: narrow ? deck8(face[k], cw8).replace('class="deck8"', 'class="deck8 d42"') : deck8(face[k], cw8), w: decks[k].w, n: decks[k].n, tip: face[k].map(function (c) { return D.cards[c]; }).join(" / ") };
   });
@@ -3243,7 +3274,7 @@ function deckPage() {
   return anchor("mydeck", sec("デッキ構成別の勝率", "基準線は期間平均 " + pc(base, 0) + "%", dtable(items, base, { head: "構成（8枚）", total: dd.n, labW: labW }),
       "", "使用したデッキ構成は" + Object.keys(decks).length + "種類。試合数の多い順に上位8件。")) +
     '<div id="sec-mycard"></div>' + sec("入れ替えのあったカード", "使用率の高い順", ciHtml,
-      "全試合に入っている固定枠は差が出ないため除外している。", "点が推定値、帯が95%信頼区間。帯どうしが重なる範囲では、差があるとは言えない。" + RELIABLE_N + "試合未満は灰色。");
+      "全試合に入っている固定枠は差が出ないため除外している。", "点が推定値、帯が95%信頼区間、点線が期間平均。帯どうしが重なる範囲では、差があるとは言えない。" + RELIABLE_N + "試合未満は灰色。");
 }
 
 /* ---------- 対戦相手 ---------- */
@@ -3597,7 +3628,7 @@ function rivalsPage() {
       c(x.o.best) + c(x.o.pol, " 位", x.basis === "レート戦") +
       '<td class="' + (x.basis === "GT Top1000" ? "key" : "") + '">' + (x.o.rt ? x.o.rt + " 回" : "-") + "</td>" +
       c(x.o.ladder, " 位", x.basis === "Top Ladder") + c(x.o.battles) +
-      '<td class="l">' + x.g.t.slice(5, 16).replace("-", "/") + '<span class="sub">' + deck8(x.g.op, 14) + "</span></td></tr>";
+      '<td class="l">' + x.g.t.slice(5, 16).replace("-", "/") + '<span class="sub">' + (isNarrow() ? deck8(x.g.op, 24).replace('class="deck8"', 'class="deck8 d42"') : deck8(x.g.op, 26)) + "</span></td></tr>";
   }).join("");
   return sec("勝利した強敵", it.length + "件", '<div class="tw"><table class="t"><thead><tr><th class="l">#</th><th class="l">相手</th><th>最高<br>レート</th><th>レート戦<br>最高順位</th><th>グローバル<br>トーナメント<br>Top1000</th><th>Top Ladder<br>最高順位</th><th>通算<br>試合数</th><th class="l">撃破した試合・相手のデッキ</th></tr></thead><tbody>' + rows + "</tbody></table></div>",
     "それぞれの相手が持つ順位のうち、最も良いものが高い順。太字が並べ替えの基準にした順位。",
@@ -3700,12 +3731,28 @@ function openMenu(btn) {
   document.querySelectorAll(".sn").forEach(function (b) { b.classList.toggle("open", b === btn); });
 }
 function closeMenu() { menuEl.hidden = true; menuFor = null; document.querySelectorAll(".sn.open").forEach(function (b) { b.classList.remove("open"); }); }
+// PC表示／スマホ表示。選んだものは覚えておく。選んでいなければ端末と画面の幅で決める
+var VP = document.querySelector('meta[name="viewport"]'), VP0 = "width=device-width,initial-scale=1,viewport-fit=cover";
+var LAYOUT = null; try { LAYOUT = localStorage.getItem("clashlog.layout"); } catch (e) {}
+function autoLayout() {
+  var mob = /Android|iPhone|iPod|iPad|Mobile/i.test(navigator.userAgent || "") || (/Mac/.test(navigator.platform) && navigator.maxTouchPoints > 1);
+  return mob || window.innerWidth < 760 ? "narrow" : "wide";
+}
+function setLayout(m, save) {
+  document.documentElement.setAttribute("data-layout", m);
+  if (save) { LAYOUT = m; try { localStorage.setItem("clashlog.layout", m); } catch (e) {} }
+  // スマホでPC表示を選んだときは、PCと同じ幅で描いて縮小表示する
+  if (VP) VP.setAttribute("content", m === "wide" && screen.width < 760 ? "width=1200,initial-scale=" + (screen.width / 1200).toFixed(3) : VP0);
+}
+function isNarrow() { return document.documentElement.getAttribute("data-layout") === "narrow"; }
+setLayout(LAYOUT || autoLayout(), false);
 var hoverable = window.matchMedia("(hover:hover)").matches;
 
 /* ---------- 描画 ---------- */
 function renderChrome() {
   document.getElementById("modes").innerHTML = MODES.map(function (m) { return '<button data-m="' + m[0] + '" class="' + (S.mode === m[0] ? "on" : "") + '">' + m[1] + "</button>"; }).join("");
   document.getElementById("meta").textContent = D.me.tag + "　更新 " + D.updated.replace(/-/g, "/");
+  document.getElementById("lyt").innerHTML = [["wide", "PC"], ["narrow", "スマホ"]].map(function (x) { return '<button data-lyt="' + x[0] + '" class="' + ((isNarrow() ? "narrow" : "wide") === x[0] ? "on" : "") + '">' + x[1] + "</button>"; }).join("");
   var items = [{ s: "all", b: "全シーズン", sp: md(SINFO[0].from) + "〜" }].concat(SINFO.slice().reverse().map(function (si) {
     return { s: si.n, b: "シーズン" + si.n, sp: si.from ? md(si.from) + "〜" + (si.last ? "" : md(si.to)) : "記録なし", now: si.last };
   }));
@@ -3759,7 +3806,11 @@ document.addEventListener("click", function (e) {
   }
   var g2 = t.closest("[data-go]"); if (g2) return go({ season: menuFor, page: g2.getAttribute("data-go") });
   var p = t.closest("[data-p]"); if (p) return go({ page: p.getAttribute("data-p") });
-  var u = t.closest("[data-u]"); if (u) { S.unit = u.getAttribute("data-u"); return render(); }
+  var ly = t.closest("[data-lyt]"); if (ly) {
+    setLayout(ly.getAttribute("data-lyt"), true);
+    if (screen.width < 760) { location.reload(); return; }   // スマホでは画面の幅を付け直すため読み込み直す
+    return render();
+  }
   var jp = t.closest("[data-jump]");
   if (jp) {
     var el = document.getElementById("sec-" + jp.getAttribute("data-jump"));
@@ -3797,7 +3848,9 @@ document.addEventListener("change", function (e) {  // 離したら集計を描�
   var a2 = document.getElementById(id); if (a2) a2.focus({ preventScroll: true });
 });
 var rt = null;
-window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (Math.abs(pageW() - lastW) > 16) render(); }, 120); });
+window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () {
+  if (!LAYOUT) { var a = autoLayout(); if ((a === "narrow") !== isNarrow()) { setLayout(a, false); return render(); } }
+  if (Math.abs(pageW() - lastW) > 16) render(); }, 120); });
 
 /* 吹き出し */
 var tip = document.getElementById("tip"), cur = null;
