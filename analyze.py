@@ -2587,6 +2587,7 @@ def build(mode_key, prefix, label, rows, total_records):
 # 見た目と計算はブラウザ側（APP_HTML の中のJS）で行い、ここではデータを詰めて渡すだけ。
 
 APP_HTML = r'''<script>/* PC表示を選んだスマホでは、描く前に画面の幅をPCに合わせる */
+(function () { try { if (localStorage.getItem("clashlog.theme") === "dark") document.documentElement.setAttribute("data-theme", "dark"); } catch (e) {} })();
 (function () { try { if (localStorage.getItem("clashlog.layout") === "wide" && screen.width < 760) { var v = document.querySelector('meta[name="viewport"]');
   if (v) v.setAttribute("content", "width=1200,initial-scale=" + (screen.width / 1200).toFixed(3)); } } catch (e) {} })();</script>
 <title>Clash Log</title>
@@ -2606,6 +2607,15 @@ APP_HTML = r'''<script>/* PC表示を選んだスマホでは、描く前に画�
   --font:"IBM Plex Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic","Meiryo",sans-serif;
 }
 :root{color-scheme:light}
+/* 黒背景（右上のボタンで切り替え） */
+:root[data-theme="dark"]{
+  --bg:#121518;--sunk:#1B1F24;--cell:#20252B;--ink:#E8EBEE;--ink2:#A9B1BA;--ink3:#7D8690;
+  --rule:#262B31;--rule2:#363D45;--accent:#E5323F;
+  --up:#F0566A;--down:#5B9BE8;--na:#6F7882;
+  --upbg:#3A1C22;--downbg:#172A42;--nabg:#23282E;
+  --upband:#5A2630;--downband:#1E3A5E;--naband:#2C3238;
+  --ult:#A57BE8;--ultbg:#231C33;--vol:#46505C;
+  --tipbg:#E8EBEE;--tipfg:#121518;--shadow:rgba(0,0,0,.5);color-scheme:dark}
 
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.7;
@@ -2627,6 +2637,8 @@ button{font-family:inherit;color:inherit}
 .seg button.on{background:var(--bg);color:var(--ink);font-weight:700;box-shadow:0 1px 2px var(--shadow),0 0 0 1px color-mix(in oklab,var(--ink) 6%,transparent)}
 .seg.modes button.on{color:var(--accent)}
 .lyt{margin-left:auto}.meta+.lyt{margin-left:0}
+.thm{flex:0 0 auto;display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:8px;background:var(--sunk);color:var(--ink2);cursor:pointer;padding:0}
+.thm:hover{color:var(--ink)}.thm svg{width:16px;height:16px}
 
 /* シーズンの帯 */
 .seasons{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--rule)}
@@ -2962,7 +2974,8 @@ html[data-layout="narrow"] .brand{font-size:14px;gap:7px}
 html[data-layout="narrow"] .seg{padding:2px}
 html[data-layout="narrow"] .seg button{padding:3px 6px;font-size:11.5px}
 html[data-layout="narrow"] .bar>*{flex-shrink:0}
-@media (max-width:380px){html[data-layout="narrow"] .brand{display:none}html[data-layout="narrow"] .modes{margin-left:0}}
+html[data-layout="narrow"] .thm{width:26px;height:26px}
+@media (max-width:430px){html[data-layout="narrow"] .brand{display:none}html[data-layout="narrow"] .modes{margin-left:0}}
 html[data-layout="narrow"] .sn{min-width:92px;padding-block:7px}
 html[data-layout="narrow"] .sn>span{display:none}
 html[data-layout="narrow"] .tabs button{padding:8px 11px 7px;font-size:13.5px}
@@ -2995,6 +3008,7 @@ html{scroll-padding-top:180px;-webkit-text-size-adjust:100%;text-size-adjust:100
       <div class="seg modes" id="modes" role="group" aria-label="モード"></div>
       <div class="meta" id="meta"></div>
       <div class="seg lyt" id="lyt" role="group" aria-label="表示"></div>
+      <button class="thm" id="thm" type="button" aria-label="背景の白黒を切り替え"></button>
     </div>
     <nav class="seasons" id="seasons" aria-label="シーズン"></nav>
     <nav class="tabs" id="tabs" aria-label="ページ"></nav>
@@ -3766,6 +3780,11 @@ var hoverable = window.matchMedia("(hover:hover)").matches;
 function renderChrome() {
   document.getElementById("modes").innerHTML = MODES.map(function (m) { return '<button data-m="' + m[0] + '" class="' + (S.mode === m[0] ? "on" : "") + '">' + m[1] + "</button>"; }).join("");
   document.getElementById("meta").textContent = D.me.tag + "　更新 " + D.updated.replace(/-/g, "/");
+  var dk = document.documentElement.getAttribute("data-theme") === "dark";
+  document.getElementById("thm").innerHTML = dk ?
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>' :
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
+  document.getElementById("thm").title = dk ? "白い背景にする" : "黒い背景にする";
   document.getElementById("lyt").innerHTML = [["wide", "PC"], ["narrow", "スマホ"]].map(function (x) { return '<button data-lyt="' + x[0] + '" class="' + ((isNarrow() ? "narrow" : "wide") === x[0] ? "on" : "") + '">' + x[1] + "</button>"; }).join("");
   var items = [{ s: "all", b: "全シーズン", sp: md(SINFO[0].from) + "〜" }].concat(SINFO.slice().reverse().map(function (si) {
     return { s: si.n, b: "シーズン" + si.n, sp: si.from ? md(si.from) + "〜" + (si.last ? "" : md(si.to)) : "記録なし", now: si.last };
@@ -3824,6 +3843,12 @@ document.addEventListener("click", function (e) {
   }
   var g2 = t.closest("[data-go]"); if (g2) return go({ season: menuFor, page: g2.getAttribute("data-go") });
   var p = t.closest("[data-p]"); if (p) return go({ page: p.getAttribute("data-p") });
+  if (t.closest("#thm")) {
+    var nd = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", nd);
+    try { localStorage.setItem("clashlog.theme", nd); } catch (e) {}
+    return render();
+  }
   var ly = t.closest("[data-lyt]"); if (ly) {
     setLayout(ly.getAttribute("data-lyt"), true);
     if (screen.width < 760) { location.reload(); return; }   // スマホでは画面の幅を付け直すため読み込み直す
