@@ -2605,22 +2605,7 @@ APP_HTML = r'''<script>/* PC表示を選んだスマホでは、描く前に画�
   --tipbg:#1C2126;--tipfg:#FFFFFF;--shadow:rgba(28,33,38,.14);
   --font:"IBM Plex Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic","Meiryo",sans-serif;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#121518;--sunk:#1B1F24;--cell:#20252B;--ink:#E8EBEE;--ink2:#A9B1BA;--ink3:#7D8690;
-  --rule:#262B31;--rule2:#363D45;--accent:#E5323F;
-  --up:#F0566A;--down:#5B9BE8;--na:#6F7882;
-  --upbg:#3A1C22;--downbg:#172A42;--nabg:#23282E;
-  --upband:#5A2630;--downband:#1E3A5E;--naband:#2C3238;
-  --ult:#A57BE8;--ultbg:#231C33;--vol:#46505C;
-  --tipbg:#E8EBEE;--tipfg:#121518;--shadow:rgba(0,0,0,.5);color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#121518;--sunk:#1B1F24;--cell:#20252B;--ink:#E8EBEE;--ink2:#A9B1BA;--ink3:#7D8690;
-  --rule:#262B31;--rule2:#363D45;--accent:#E5323F;
-  --up:#F0566A;--down:#5B9BE8;--na:#6F7882;
-  --upbg:#3A1C22;--downbg:#172A42;--nabg:#23282E;
-  --upband:#5A2630;--downband:#1E3A5E;--naband:#2C3238;
-  --ult:#A57BE8;--ultbg:#231C33;--vol:#46505C;
-  --tipbg:#E8EBEE;--tipfg:#121518;--shadow:rgba(0,0,0,.5);color-scheme:dark}
+:root{color-scheme:light}
 
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.7;
@@ -2972,6 +2957,33 @@ html[data-layout="narrow"] .bar{gap:10px;flex-wrap:wrap}
 html[data-layout="narrow"] .seg button{padding:4px 8px;font-size:12px}
 html[data-layout="narrow"] .brand{font-size:15px}
 html[data-layout="narrow"] .meta+.lyt{margin-left:auto}
+html[data-layout="narrow"] .bar{gap:8px;flex-wrap:nowrap;padding-block:10px 6px}
+html[data-layout="narrow"] .brand{font-size:14px;gap:7px}
+html[data-layout="narrow"] .seg{padding:2px}
+html[data-layout="narrow"] .seg button{padding:3px 6px;font-size:11.5px}
+html[data-layout="narrow"] .bar>*{flex-shrink:0}
+@media (max-width:380px){html[data-layout="narrow"] .brand{display:none}html[data-layout="narrow"] .modes{margin-left:0}}
+html[data-layout="narrow"] .sn{min-width:92px;padding-block:7px}
+html[data-layout="narrow"] .sn>span{display:none}
+html[data-layout="narrow"] .tabs button{padding:8px 11px 7px;font-size:13.5px}
+html[data-layout="narrow"] .hero>div,html[data-layout="narrow"] .hero.h4>div{padding:10px 10px 12px}
+html[data-layout="narrow"] .hero .k,html[data-layout="narrow"] .kpi .k{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-layout="narrow"] .hero .v{font-size:22px}
+html[data-layout="narrow"] .hero .v.st{font-size:17px}
+html[data-layout="narrow"] .hero .rk{font-size:11px}
+html[data-layout="narrow"] .hero .s,html[data-layout="narrow"] .kpi .s{font-size:11px;margin-top:3px;line-height:1.5}
+html[data-layout="narrow"] .kpi>div,html[data-layout="narrow"] .kpi.sm>div{padding:10px 10px 12px}
+html[data-layout="narrow"] .kpi .v,html[data-layout="narrow"] .kpi.sm .v{font-size:20px}
+html[data-layout="narrow"] .kpi .s.x{display:none}
+html[data-layout="narrow"] .hero.h4>div:nth-child(odd),html[data-layout="narrow"] .kpi>div:nth-child(odd){padding-left:0}
+html[data-layout="narrow"] .bio{flex-direction:row;font-size:12px;margin-top:-20px;gap:0 14px}
+html[data-layout="narrow"] .kpi .dn svg{width:40px;height:40px}
+html[data-layout="narrow"] .sec{margin-bottom:36px}
+details.note{margin:10px 0 0;padding-left:0}details.note::before{content:none}
+details.note summary{cursor:pointer;color:var(--ink3);font-size:12px;list-style:none}
+details.note summary::before{content:"※ "}
+details.note summary::after{content:"（押すと開く）";margin-left:4px;font-size:11px}
+details.note[open] summary::after{content:""}
 html{scroll-padding-top:180px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.menu{animation:none}#tip{transition:none}}
 </style>
@@ -3155,7 +3167,7 @@ function dtableNarrow(items, base, o, useCol) {
 }
 function sec(title, small, inner, lead, note) {
   return '<section class="sec"><h2>' + esc(title) + (small ? "<small>" + esc(small) + "</small>" : "") + "</h2>" +
-    (lead ? '<p class="lead">' + esc(lead) + "</p>" : "") + inner + (note ? '<p class="note">' + esc(note) + "</p>" : "") + "</section>";
+    (lead ? '<p class="lead">' + esc(lead) + "</p>" : "") + inner + (note ? (isNarrow() ? '<details class="note"><summary>注記</summary>' + esc(note) + "</details>" : '<p class="note">' + esc(note) + "</p>") : "") + "</section>";
 }
 function pageW() { return Math.max(300, document.getElementById("page").clientWidth); }
 function niceSep(lo, hi, xOf, y0, y1, labY) {   // シーズンの区切り線と名前（期間内のみ）
@@ -3194,9 +3206,9 @@ function profilePage() {
   var hero = '<div class="hero h4">' +
     '<div><span class="k">自己ベスト</span>' + rateCell(me.best_lg, me.best_tr) +
       '<span class="s">世界 ' + fmtn(me.best_rank) + "位・" + esc(me.best_when) + "に達成</span></div>" +
-    '<div><span class="k">今シーズン（シーズン' + cur.n + (cur.last ? "・開催中" : "") + "）</span>" + rateCell(lastP.lg, lastP.tr) +
+    '<div><span class="k">今シーズン（S' + cur.n + (cur.last ? "・開催中" : "") + "）</span>" + rateCell(lastP.lg, lastP.tr) +
       '<span class="s">' + (c.peak != null ? "シーズン最高 " + fmtn(c.peak) + "<br>" : "") + wl(c) + "</span></div>" +
-    (pf ? '<div><span class="k">前シーズン（シーズン' + pn + "）</span>" + rateCell(pf.lg, pf.tr) +
+    (pf ? '<div><span class="k">前シーズン（S' + pn + "）</span>" + rateCell(pf.lg, pf.tr) +
       '<span class="s">' + (pf.rank ? "世界 " + fmtn(pf.rank) + "位<br>" : "") + (pv.peak != null ? "シーズン最高 " + fmtn(pv.peak) + "<br>" : "") + wl(pv) + "</span></div>" : "<div></div>") +
     '<div><span class="k">通算（全モード）</span><span class="v">' + pc(me.wins / tot) + '<small style="font-size:14px;color:var(--ink3);font-weight:400">%</small></span>' +
       '<span class="rk">勝率</span><span class="s">' + fmtn(me.wins) + "勝 " + fmtn(me.losses) + "敗<br>トロフィー " + fmtn(me.trophies) + "</span></div>" +
@@ -3264,13 +3276,14 @@ function deckPage() {
     decks[k].n++; if (g.r === "w") decks[k].w++;
     var seen = {}; g.my.forEach(function (c) { if (seen[c]) return; seen[c] = 1; var m = mine[c] || (mine[c] = { w: 0, n: 0 }); m.n++; if (g.r === "w") m.w++; });
   });
-  var narrow = isNarrow(), cw8 = narrow ? 26 : 24;
+  // スマホは8枚を1列に収まる大きさで並べる
+  var narrow = isNarrow(), cw8 = narrow ? Math.max(16, Math.min(30, Math.floor((pageW() - 92 - 14 - 21) / 8))) : Math.max(24, Math.min(40, Math.floor((pageW() * 0.28 - 21) / 8)));
   var items = Object.keys(decks).sort(function (a, b) { return decks[b].n - decks[a].n; }).slice(0, 8).map(function (k) {
-    return { lab: narrow ? deck8(face[k], cw8).replace('class="deck8"', 'class="deck8 d42"') : deck8(face[k], cw8), w: decks[k].w, n: decks[k].n, tip: face[k].map(function (c) { return D.cards[c]; }).join(" / ") };
+    return { lab: deck8(face[k], cw8), w: decks[k].w, n: decks[k].n, tip: face[k].map(function (c) { return D.cards[c]; }).join(" / ") };
   });
   var vary = Object.keys(mine).filter(function (c) { return mine[c].n < dd.n; }).sort(function (a, b) { return mine[b].n - mine[a].n; }).slice(0, 12);
   var ciHtml = tiles(vary.map(function (c) { return { c: c, w: mine[c].w, n: mine[c].n, sub: "使用率 " + pc(mine[c].n / dd.n, 0) + "%" }; }), base);
-  var labW = "232px";
+  var labW = (cw8 * 8 + 21 + 16) + "px";
   return anchor("mydeck", sec("デッキ構成別の勝率", "基準線は期間平均 " + pc(base, 0) + "%", dtable(items, base, { head: "構成（8枚）", total: dd.n, labW: labW }),
       "", "使用したデッキ構成は" + Object.keys(decks).length + "種類。試合数の多い順に上位8件。")) +
     '<div id="sec-mycard"></div>' + sec("入れ替えのあったカード", "使用率の高い順", ciHtml,
@@ -3628,7 +3641,7 @@ function rivalsPage() {
       c(x.o.best) + c(x.o.pol, " 位", x.basis === "レート戦") +
       '<td class="' + (x.basis === "GT Top1000" ? "key" : "") + '">' + (x.o.rt ? x.o.rt + " 回" : "-") + "</td>" +
       c(x.o.ladder, " 位", x.basis === "Top Ladder") + c(x.o.battles) +
-      '<td class="l">' + x.g.t.slice(5, 16).replace("-", "/") + '<span class="sub">' + (isNarrow() ? deck8(x.g.op, 30).replace('class="deck8"', 'class="deck8 d42"') : deck8(x.g.op, 36)) + "</span></td></tr>";
+      '<td class="l">' + x.g.t.slice(5, 16).replace("-", "/") + '<span class="sub">' + deck8(x.g.op, isNarrow() ? 24 : 36) + "</span></td></tr>";
   }).join("");
   return sec("勝利した強敵", it.length + "件", '<div class="tw"><table class="t"><thead><tr><th class="l">#</th><th class="l">相手</th><th>最高<br>レート</th><th>レート戦<br>最高順位</th><th>グローバル<br>トーナメント<br>Top1000</th><th>Top Ladder<br>最高順位</th><th>通算<br>試合数</th><th class="l">撃破した試合・相手のデッキ</th></tr></thead><tbody>' + rows + "</tbody></table></div>",
     "それぞれの相手が持つ順位のうち、最も良いものが高い順。太字が並べ替えの基準にした順位。",
@@ -3660,12 +3673,12 @@ function kpiBox(gs) {
   var nd = 0, seen = {}; gs.forEach(function (g) { if (!seen[g.d]) { seen[g.d] = 1; nd++; } });
   var dLo = gs[0].d, dHi = gs[gs.length - 1].d, span = Math.round((ms(dHi) - ms(dLo)) / 864e5) + 1;
   var kpi = '<div class="kpi sm">' +
-    '<div><span class="k">勝率（' + (S.season === "all" ? "全シーズン" : "シーズン" + S.season) + '全体）</span><span class="v ' + t + '-t">' + pc(r[0]) + "<small>%</small></span>" +
+    '<div><span class="k">勝率（' + (S.season === "all" ? "全シーズン" : "S" + S.season) + '）</span><span class="v ' + t + '-t">' + pc(r[0]) + "<small>%</small></span>" +
     '<span class="s">95%信頼区間 ' + pc(r[1]) + "〜" + pc(r[2]) + "%</span></div>" +
     '<div><span class="k">試合</span><span class="v">' + gs.length + '<small>戦</small></span><span class="s">' +
     '<span class="up-t">' + dd.w + '勝</span> <span class="down-t">' + (dd.n - dd.w) + "敗</span>" + (gs.length - dd.n ? " " + (gs.length - dd.n) + "分" : "") + "</span></div>" +
     '<div><span class="k">最長の連勝・連敗</span><span class="v"><span class="up-t">' + sk[0] + '</span><small>連勝</small> <span class="down-t">' + sk[1] + "</span><small>連敗</small></span>" +
-    '<span class="s">日をまたいでも続けて数える</span></div>' +
+    '<span class="s x">日をまたいでも続けて数える</span></div>' +
     '<div><span class="k">1日あたり</span><span class="v">' + (gs.length / nd).toFixed(1) + '<small>戦</small></span><span class="s">' + span + "日間のうち " + nd + "日プレイ</span></div></div>";;
   var rc = gs.slice(-20), rw = 0, rl = 0, rd = 0; rc.forEach(function (g) { if (g.r === "w") rw++; else if (g.r === "l") rl++; else rd++; });
   kpi = kpi.replace(/<\/div>$/, '<div class="dn">' + donut(rw, rl, rd).replace('width="76" height="76"', 'width="54" height="54"') +
@@ -3675,7 +3688,7 @@ function kpiBox(gs) {
 function logPage() {
   var gs = games().slice().reverse(); if (!gs.length) return '<p class="empty">このシーズンの試合がまだない。</p>';
   // デッキの絵は画面の幅に合わせて大きくする（PCは最大36px、スマホは1行に8枚が収まる大きさ）
-  var narrow = isNarrow(), cw = narrow ? Math.min(40, Math.floor((pageW() - 21) / 8)) : Math.max(22, Math.min(36, Math.floor((pageW() - 416) / 16) - 3));
+  var narrow = isNarrow(), cw = narrow ? Math.min(32, Math.floor((pageW() - 21) / 8)) : Math.max(22, Math.min(36, Math.floor((pageW() - 416) / 16) - 3));
   var rows = gs.slice(0, S.logN).map(function (g) {
     var o = D.opps[g.tag] || {}, nm = o.name || g.name, bits = [];
     if (o.best) bits.push("最高レート " + fmtn(o.best));
@@ -3774,6 +3787,10 @@ function render() {
   var f = { profile: profilePage, trend: timePage, deck: deckPage, enemy: enemyPage, rivals: rivalsPage, log: logPage }[S.page];
   document.getElementById("page").innerHTML = f();
   lastW = pageW();
+  var top = document.querySelector(".top"), tabs = document.getElementById("tabs");
+  var hide = isNarrow() ? top.offsetHeight - tabs.offsetHeight - 1 : 0;
+  top.style.top = hide ? -hide + "px" : "";
+  document.documentElement.style.scrollPaddingTop = (top.offsetHeight - hide + 12) + "px";
   fillRange();
 }
 function fillRange() {
