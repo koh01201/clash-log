@@ -1,34 +1,86 @@
 /* 2027年度入試（2027年4月入学・試験は2027年1〜3月）の日程データ
    試験日は2027年度（大学発表、または河合塾Kei-Net掲載）。
-   出願・発表・手続は year=2027 なら2027年度の大学発表、year=2026 なら前年度（参考）。 */
+   出願・発表・手続は year=2027 なら2027年度の大学発表、year=2026 なら前年度（参考）。
+   chk ＝ 日程をどこから取ったか（次に調べ直すときの目印。node yoko-status.js で yoko-status.md に一覧が出る）
+     公式2027     … 2027年度の大学公式（募集要項・入試ガイド・公式の日程ページ）で確認済み → 調べ直し不要
+     公式2027一部 … 2027年度の大学公式で確認したが、一部の項目が公式に未掲載 → 未掲載の項目だけ再確認
+     非公式2027   … 2027年度の値だが、Kei-Net・ベネッセなど大学以外から → 公式で再確認
+     前年度       … 2026年度の値（公式要項またはパスナビ） → 2027年度の要項で再確認
+     試験日のみ   … 試験日（Kei-Net）しかない → 出願・発表・手続を要項で確認 */
 (function () {
 
 var KEINET = function (id) { return { label: "河合塾 Kei-Net（2027年度 試験日）", url: "https://search.keinet.ne.jp/" + id + "/general/schedule" }; };
 var UNIVS = [
   { id: "waseda", name: "早稲田大学", short: "早稲田", hue: 352 },
   { id: "keio", name: "慶應義塾大学", short: "慶應", hue: 220 },
+  { id: "sophia", name: "上智大学", short: "上智", hue: 120 },
   { id: "tus", name: "東京理科大学", short: "東京理科", hue: 28 },
   { id: "meiji", name: "明治大学", short: "明治", hue: 268 },
   { id: "aoyama", name: "青山学院大学", short: "青学", hue: 160 },
+  { id: "rikkyo", name: "立教大学", short: "立教", hue: 285 },
+  { id: "chuo", name: "中央大学", short: "中央", hue: 95 },
   { id: "hosei", name: "法政大学", short: "法政", hue: 200 },
   { id: "nihon", name: "日本大学", short: "日大", hue: 8 },
   { id: "shibaura", name: "芝浦工業大学", short: "芝浦工", hue: 140 },
   { id: "denki", name: "東京電機大学", short: "電機", hue: 45 },
   { id: "tcu", name: "東京都市大学", short: "都市大", hue: 185 },
+  { id: "kogakuin", name: "工学院大学", short: "工学院", hue: 60 },
   { id: "kanagawa", name: "神奈川大学", short: "神奈川", hue: 300 },
+  { id: "tokai", name: "東海大学", short: "東海", hue: 205 },
+  { id: "teu", name: "東京工科大学", short: "東京工科", hue: 115 },
+  { id: "tsuda", name: "津田塾大学", short: "津田塾", hue: 170 },
+  { id: "twcu", name: "東京女子大学", short: "東京女子", hue: 0 },
+  { id: "jwu", name: "日本女子大学", short: "日本女子", hue: 315 },
+  { id: "icu", name: "国際基督教大学", short: "ICU", hue: 75 },
+  { id: "chibatech", name: "千葉工業大学", short: "千葉工", hue: 100 },
   { id: "doshisha", name: "同志社大学", short: "同志社", hue: 245 },
-  { id: "ritsumei", name: "立命館大学", short: "立命館", hue: 330 }
+  { id: "ritsumei", name: "立命館大学", short: "立命館", hue: 330 },
+  { id: "kansai", name: "関西大学", short: "関西", hue: 265 },
+  { id: "kangaku", name: "関西学院大学", short: "関学", hue: 40 }
+];
+
+/* 大学群（絞り込みのまとまり）。missing は群に含まれるがこのサイトに未収録の大学
+   構成：早慶上理・MARCH・日東駒専・関関同立は DIME（https://dime.jp/genre/1971041/）、四工大はベスト進学ネット（https://bestjuku.com/shingaku/s-article/31522/）、
+   女子大御三家（津田塾・東京女子・日本女子）は DIME（https://dime.jp/genre/1972799/） */
+var GROUPS = [
+  { name: "早慶上理", members: ["waseda", "keio", "sophia", "tus"], missing: [] },
+  { name: "MARCH", members: ["meiji", "aoyama", "rikkyo", "chuo", "hosei"], missing: [] },
+  { name: "四工大", members: ["shibaura", "denki", "tcu", "kogakuin"], missing: [] },
+  { name: "日東駒専", members: ["nihon"], missing: ["東洋", "駒澤", "専修"] },
+  { name: "大東亜帝国", members: ["tokai"], missing: ["大東文化", "亜細亜", "帝京", "国士舘"] },
+  { name: "関関同立", members: ["kansai", "kangaku", "doshisha", "ritsumei"], missing: [] },
+  { name: "女子大御三家", members: ["tsuda", "twcu", "jwu"], missing: [] },
+  { name: "その他", members: ["kanagawa", "teu", "chibatech", "icu"], missing: [] }
 ];
 
 var SRC = {
+  tokai: { label: "東海大学 2027年度 全学部統一／一般／大学入学共通テスト利用選抜 要項（医学部医学科を除く）", url: "https://www.u-tokai.ac.jp/uploads/2021/02/3138531a9456e7e37c3281d7a941b022.pdf" },
+  tokaiTop: { label: "東海大学 2027年度入試情報", url: "https://www.u-tokai.ac.jp/examination-admissions/exam/" },
+  teu: { label: "東京工科大学 一般選抜（公式の日程は画像のため、日付は下の Kei-Net 等で確認）", url: "https://www.teu.ac.jp/entrance/info/index.html" },
+  teuKN: { label: "河合塾 Kei-Net 東京工科大学「大学からのお知らせ」（2027年4月入学）", url: "https://search.keinet.ne.jp/2251/topics/12" },
+  teuBen: { label: "ベネッセ マナビジョン 東京工科大学 一般選抜（2027年度）", url: "https://manabi.benesse.ne.jp/daigaku/school/3284/nyushi/hoshiki/ippan/" },
+  jwu: { label: "日本女子大学 2027年度 一般選抜募集要項", url: "https://www.jwu.ac.jp/unv/admission/exam/ct6r0e0000007526-att/2027general.pdf" },
+  jwuWeb: { label: "日本女子大学 一般選抜（個別選抜型）2027年度", url: "https://www.jwu.ac.jp/unv/admission/exam/general.html" },
+  jwuEng: { label: "日本女子大学 英語外部試験利用型 2027年度", url: "https://www.jwu.ac.jp/unv/admission/exam/external_english_exam.html" },
+  icu: { label: "国際基督教大学 一般選抜 2027年度（入学試験要項は10月下旬公開予定）", url: "https://www.icu.ac.jp/admissions/undergraduate/exam/general/" },
+  chibatechBen: { label: "ベネッセ マナビジョン 千葉工業大学 一般選抜（2027年度）", url: "https://manabi.benesse.ne.jp/daigaku/school/3201/nyushi/hoshiki/ippan/" },
+  chibatech: { label: "千葉工業大学 一般選抜（公式。10/7時点で接続できず未確認）", url: "https://admission.chibatech.ac.jp/nyushi/system/ippan/test-a/" },
+  tsuda: { label: "津田塾大学 2027年度一般選抜 試験日程一覧", url: "https://www.tsuda.ac.jp/admissions/ug-general/" },
+  twcuKN: { label: "河合塾 Kei-Net 東京女子大学「一般選抜の特徴」（2027年度・大学からのお知らせ）", url: "https://search.keinet.ne.jp/2254/topics/12" },
+  kansaiKN: { label: "河合塾 Kei-Net 関西大学「大学からのお知らせ」（2027年度）", url: "https://search.keinet.ne.jp/2533/topics/12" },
+  kansaiTop: { label: "関西大学 入試情報", url: "https://www.kansai-u.ac.jp/nyusi/" },
+  kangaku: { label: "関西学院大学 2027年度 一般選抜 入試ガイド（リーフレット）", url: "https://www.kwansei.ac.jp/admissions/assets/kwansei_general_admission_exam_guide_202603.pdf" },
+  kangakuPt: { label: "関西学院大学 2027年度 一般選抜のポイント", url: "https://kwangaku-nyushi.com/ippan-2027/" },
+  kangaku26: { label: "関西学院大学 2026年度 入学試験要項（前年度）", url: "https://www.kwansei.ac.jp/admissions/assets/2026_guidebook.pdf" },
+  kangakuBen: { label: "ベネッセ マナビジョン 関西学院大学 理学部（2027年度）", url: "https://manabi.benesse.ne.jp/daigaku/school/3694/nyushi/ri/index.html" },
   waseda: { label: "早稲田大学 2027年度一般選抜（入学センター）", url: "https://www.waseda.jp/inst/admission/assets/uploads/2026/05/2027_ippan.pdf" },
   keio: { label: "慶應義塾大学 一般選抜（2027年度）", url: "https://www.keio.ac.jp/ja/admissions/faculty/examinations/general-admissions/" },
   keioSub: { label: "慶應義塾大学 2027年度 試験教科・科目", url: "https://www.keio.ac.jp/files/d76245e2bdc5e5a3f397c40b2ae40047b4d41cd3ea399c3b4dbf969c3ad989a7" },
   tus: { label: "東京理科大学 2026年度一般選抜要項（2027年度は未公表）", url: "https://www.tus.ac.jp/today/archive/2025/GeneralExamGuidelines_2026.pdf" },
   tusTop: { label: "東京理科大学 入学者募集要項", url: "https://www.tus.ac.jp/admissions/university/guideline/general/" },
   meijiTop: { label: "明治大学 入試総合サイト", url: "https://www.meiji.ac.jp/exam/information/index.html" },
-  meijiPN1: { label: "旺文社パスナビ 明治大学理工学部（前年度）", url: "https://passnavi.obunsha.co.jp/univ/3120/schedule/?facultyID=040" },
-  meijiPN2: { label: "旺文社パスナビ 明治大学総合数理学部（前年度）", url: "https://passnavi.obunsha.co.jp/univ/3120/schedule/?facultyID=050" },
+  meijiPN: { label: "旺文社パスナビ 明治大学（前年度）", url: "https://passnavi.obunsha.co.jp/univ/3120/schedule/" },
+  meiji2026: { label: "明治大学 2026年度 一般選抜 入学試験要項（前年度・公式PDF）", url: "https://www.meiji.ac.jp/exam/information/guidelines/2026-meiji_guidelines.pdf" },
   aoyama: { label: "青山学院大学 2026年度入学者選抜要項", url: "https://www.aoyama.ac.jp/wp-content/uploads/2026/04/ad_2026_ippan_kyotsutest_20260410_jJ9si.pdf" },
   aoyamaPN: { label: "旺文社パスナビ 青山学院大学（前年度）", url: "https://passnavi.obunsha.co.jp/univ/2260/schedule/" },
   hoseiTop: { label: "法政大学 入試要項・入試ガイド", url: "https://nyushi.hosei.ac.jp/nyushi/guide/" },
@@ -41,17 +93,34 @@ var SRC = {
   tcu: { label: "東京都市大学 2027年度入試概要", url: "https://www.tcu.ac.jp/entrance/summary/" },
   tcu1: { label: "東京都市大学 前期（理工系）2027年度", url: "https://www.tcu.ac.jp/tcucms/wp-content/uploads/2026/05/previous1.pdf" },
   tcu2: { label: "東京都市大学 中期 2027年度", url: "https://www.tcu.ac.jp/tcucms/wp-content/uploads/2026/05/middle.pdf" },
+  tcuEng: { label: "東京都市大学 英語外部試験の利用（2027年度）", url: "https://www.tcu.ac.jp/tcucms/wp-content/uploads/2026/05/externalexamination.pdf" },
   tcu3: { label: "東京都市大学 後期（2教科型）2027年度", url: "https://www.tcu.ac.jp/tcucms/wp-content/uploads/2026/09/latter1_v2.pdf" },
   kanagawa: { label: "神奈川大学 2026年度一般選抜要項（2027年度は未公表）", url: "https://www.kanagawa-u.ac.jp/admissions/faculty/about_application/general/file/general_yoko2026.pdf" },
   doshisha: { label: "同志社大学 2027年度入学試験ガイド", url: "https://www.doshisha.ac.jp/files/nyugk/page/nyushiguide2027.pdf" },
-  ritsumei: { label: "立命館大学 2027年度一般選抜ガイド", url: "https://admission.ritsumei.ac.jp/assets/file/2027/application/guide/04-19.pdf" }
+  ritsumei: { label: "立命館大学 2027年度一般選抜ガイド", url: "https://admission.ritsumei.ac.jp/assets/file/2027/application/guide/04-19.pdf" },
+  chuoTop: { label: "中央大学 一般選抜の概要（2027年度日程PDFあり）", url: "https://www.chuo-u.ac.jp/connect/admission/exam/overview/" },
+  chuoYoko: { label: "中央大学 2026年度入学試験要項（一般選抜）p.9〜31（試験科目・前年度）", url: "https://www.chuo-u.ac.jp/common_d/connect/admission/2026/youkou_pdf/09-31.pdf" },
+  chuoTopic: { label: "河合塾 Kei-Net 中央大学「一般選抜の特徴」（2027年度・大学からのお知らせ）", url: "https://search.keinet.ne.jp/2242/topics/12" },
+  rikkyoTop: { label: "立教大学 2027年度 学部入試の情報", url: "https://www.rikkyo.ac.jp/admissions/undergraduate/" },
+  rikkyoTopic: { label: "河合塾 Kei-Net 立教大学「一般選抜の特徴」（2027年度・大学からのお知らせ）", url: "https://search.keinet.ne.jp/2290/topics/12" },
+  rikkyoPN: { label: "旺文社パスナビ 立教大学（前年度）", url: "https://passnavi.obunsha.co.jp/univ/3160/schedule/" },
+  sophia: { label: "上智大学 2027年度一般選抜入学試験日程", url: "https://adm.sophia.ac.jp/jpn/gakubu_ippan_ad/date/" },
+  sophiaYoko: { label: "上智大学 2026年度一般選抜要項（試験科目・前年度）", url: "https://adm.sophia.ac.jp/assets/uploads/sites/2/2025/10/2026_ippan_youkou1031.pdf" },
+  sophiaTopic: { label: "河合塾 Kei-Net 上智大学「一般選抜の特徴」（2027年度・大学からのお知らせ）", url: "https://search.keinet.ne.jp/2221/topics/12" },
+  kogakuinTop: { label: "工学院大学 入試情報", url: "https://www.kogakuin.ac.jp/admissions/" },
+  kogakuinTopic: { label: "河合塾 Kei-Net 工学院大学「一般選抜の特徴」（2027年度・大学からのお知らせ）", url: "https://search.keinet.ne.jp/2212/topics/12" },
+  chuoPN: { label: "旺文社パスナビ 中央大学（前年度）", url: "https://passnavi.obunsha.co.jp/univ/2680/schedule/" },
+  kogakuinPN: { label: "旺文社パスナビ 工学院大学（前年度）", url: "https://passnavi.obunsha.co.jp/univ/2390/schedule/" }
 };
+
+var CHUO_F = [["基幹理工学部", "数学・物理・応用化学・生命科学"], ["社会理工学部", "都市環境・ビジネスデータサイエンス・人間総合理工"], ["先進理工学部", "精密機械工・電気電子情報通信工・情報工"]];
+var KOGA_F = [["先進工学部", ""], ["工学部", ""], ["建築学部", ""], ["情報学部", ""]];
 
 var EVENTS = [
   /* ---------- 早稲田 ---------- */
-  { u: "waseda", method: "一般選抜", year: 2027,
+  { u: "waseda", method: "一般選抜", year: 2027, chk: "公式2027",
     slots: [
-      { d: "2027-02-16", f: [["基幹理工学部", "学系1・学系2・学系3・学系4"], ["創造理工学部", "建築・総合機械工・経営システム工・社会環境工・環境資源工"], ["先進理工学部", "物理・応用物理・化学・生命化学・応用化学・電気・情報生命工"]] },
+      { d: "2027-02-16", f: [["基幹理工学部", "学系1・学系2・学系3・学系4"], ["創造理工学部", "建築・総合機械工・経営システム工・社会環境工・環境資源工"], ["先進理工学部", "物理・応用物理・化学・生命化学・応用化学・生命医科学・電気・情報生命工"]] },
       { d: "2027-02-17", f: [["創造理工学部", "建築学科のみ。2/16の筆記に加えて空間表現（120分・40点）を受ける"]], tag: "建築学科のみ・空間表現" }
     ],
     apply: ["2027-01-06", "2027-01-19", "締切日消印有効"], result: "2027-02-27", proc: "2027-03-05",
@@ -62,25 +131,30 @@ var EVENTS = [
     src: ["waseda", KEINET(2293)] },
 
   /* ---------- 慶應 ---------- */
-  { u: "keio", method: "一般選抜", year: 2027,
+  { u: "keio", method: "一般選抜", year: 2027, chk: "公式2027",
     slots: [{ d: "2027-02-12", f: [["理工学部", "学門A〜E"]] }],
     apply: ["2026-12-24", "2027-01-18", "Web登録 1/18 17:00まで、書類は1/4〜1/18 消印有効"], result: "2027-02-24", proc: "2027-03-12",
     subjects: "数学 150点（数I・II・III・A・B・C）／理科 200点（物理100・化学100）／外国語 150点",
     eiken: "利用なし（大学資料に記載なし）",
     src: ["keio", "keioSub"] },
+  { u: "keio", method: "一般選抜", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-10", f: [["薬学部", "薬（6年制）・薬科学（4年制）"]] }],
+    apply: ["2026-12-24", "2027-01-18", "Web登録 1/18 17:00まで、書類は1/4〜1/18 消印有効"], result: "2027-02-21", proc: "2027-03-12",
+    subjects: null, eiken: null,
+    src: ["keio", KEINET(2210)] },
 
   /* ---------- 東京理科（試験日=2027 Kei-Net、他=2026参考） ---------- */
-  { u: "tus", method: "B方式", year: 2026,
+  { u: "tus", method: "B方式", year: 2026, chk: "前年度",
     slots: [
-      { d: "2027-02-03", f: [["創域理工学部", "数理科学・先端物理"]], tag: "数理科学・先端物理のみ" },
-      { d: "2027-02-06", f: [["創域理工学部", "建築・先端化学・電気電子情報工・機械航空宇宙工・社会基盤工"]], tag: "数理・先端物理以外の5学科" }
+      { d: "2027-02-03", f: [["創域理工学部", "数理科学・先端物理・生命生物科学"]], tag: "数理科学・先端物理・生命生物科学のみ" },
+      { d: "2027-02-06", f: [["創域理工学部", "建築・先端化学・電気電子情報工・機械航空宇宙工・社会基盤工"]], tag: "この5学科のみ" }
     ],
     apply: ["2026-01-07", "2026-01-22"], result: "2026-02-20", proc: "2026-02-26", procNote: "2次手続 3/11（前年度）",
     subjects: "数学 100点（数I〜III・A〜C）／英語 100点／理科 100点（学科により指定）",
     eiken: "B方式は利用なし（英語資格はA方式の一部で利用）",
     note: "生命生物科学科は除いています。",
     src: [KEINET(2262), "tus", "tusTop"] },
-  { u: "tus", method: "S方式", year: 2026,
+  { u: "tus", method: "S方式", year: 2026, chk: "前年度",
     slots: [
       { d: "2027-02-03", f: [["創域理工学部", "電気電子情報工学科"]], tag: "電気電子情報工のみ" },
       { d: "2027-02-06", f: [["創域理工学部", "数理科学科"]], tag: "数理科学のみ" }
@@ -89,22 +163,27 @@ var EVENTS = [
     subjects: "電気電子情報工：数学100・英語100・物理200／数理科学：数学300・英語100",
     eiken: "利用なし",
     src: [KEINET(2262), "tus", "tusTop"] },
-  { u: "tus", method: "B方式", year: 2026,
-    slots: [{ d: "2027-02-04", f: [["先進工学部", "生命システム工学科を除く各学科"]] }],
+  { u: "tus", method: "B方式", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-02-04", f: [["先進工学部", "全学科"]] }],
     apply: ["2026-01-07", "2026-01-22"], result: "2026-02-19", proc: "2026-02-25", procNote: "2次手続 3/11（前年度）",
     subjects: "数学 100点／英語 100点／理科 100点（学科により指定）", eiken: "利用なし",
     src: [KEINET(2262), "tus", "tusTop"] },
-  { u: "tus", method: "B方式", year: 2026,
+  { u: "tus", method: "B方式", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-02-07", f: [["薬学部", ""]] }],
+    apply: ["2026-01-07", "2026-01-22"], result: "2026-02-21", proc: "2026-02-27", procNote: "1次手続の期間は2/24〜2/27（前年度）",
+    subjects: null, eiken: null,
+    src: [KEINET(2262), "tus", "tusTop"] },
+  { u: "tus", method: "B方式", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-05", f: [["理学部第一部", "数学・物理・化学・応用数学・応用化学"]] }],
     apply: ["2026-01-07", "2026-01-22"], result: "2026-02-21", proc: "2026-02-27", procNote: "2次手続 3/11（前年度）",
     subjects: "数学 100点／英語 100点／理科 100点（学科により指定）", eiken: "利用なし",
     src: [KEINET(2262), "tus", "tusTop"] },
-  { u: "tus", method: "B方式", year: 2026,
+  { u: "tus", method: "B方式", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-08", f: [["工学部", "全学科"]] }],
     apply: ["2026-01-07", "2026-01-22"], result: "2026-02-25", proc: "2026-03-02", procNote: "2次手続 3/11（前年度）",
     subjects: "数学 100点／英語 100点／理科 100点（学科により指定）", eiken: "利用なし",
     src: [KEINET(2262), "tus", "tusTop"] },
-  { u: "tus", method: "B方式", year: 2026,
+  { u: "tus", method: "B方式", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-03", f: [["創域情報学部", ""]] }],
     apply: [null, null], result: null, proc: null,
     subjects: null, eiken: null,
@@ -112,150 +191,258 @@ var EVENTS = [
     src: [KEINET(2262), "tusTop"] },
 
   /* ---------- 明治（試験日=2027 Kei-Net、他=前年度パスナビ） ---------- */
-  { u: "meiji", method: "全学部統一入試", year: 2026,
+  { u: "meiji", method: "全学部統一入試", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-05", f: [["理工学部", ""]] }],
     apply: ["2026-01-06", "2026-01-16"], result: "2026-02-14", proc: "2026-02-26",
     subjects: null, eiken: null,
-    src: [KEINET(2286), "meijiPN1", "meijiTop"] },
-  { u: "meiji", method: "学部別入試", year: 2026,
+    src: [KEINET(2286), "meiji2026", "meijiTop"] },
+  { u: "meiji", method: "学部別入試", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-07", f: [["理工学部", ""]] }],
     apply: ["2026-01-06", "2026-01-22"], result: "2026-02-14", proc: "2026-02-26",
     subjects: null, eiken: null,
-    src: [KEINET(2286), "meijiPN1", "meijiTop"] },
-  { u: "meiji", method: "全学部統一入試", year: 2026,
+    src: [KEINET(2286), "meiji2026", "meijiTop"] },
+  { u: "meiji", method: "全学部統一入試（英語4技能試験活用方式を含む）", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-02-05", f: [["農学部", ""]] }],
+    apply: ["2026-01-06", "2026-01-16"], result: "2026-02-12", proc: "2026-02-18",
+    subjects: null, eiken: null,
+    src: [KEINET(2286), "meijiPN", "meijiTop"] },
+  { u: "meiji", method: "学部別入試", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-02-15", f: [["農学部", ""]] }],
+    apply: ["2026-01-06", "2026-01-26"], result: "2026-02-22", proc: "2026-03-02",
+    subjects: null, eiken: null,
+    src: [KEINET(2286), "meijiPN", "meijiTop"] },
+  { u: "meiji", method: "全学部統一入試", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-05", f: [["総合数理学部", "現象数理・先端メディアサイエンス・ネットワークデザイン"]] }],
     apply: ["2026-01-06", "2026-01-16"], result: "2026-02-11", proc: "2026-02-19",
     subjects: null, eiken: "英語4技能試験活用方式あり（全学部統一入試）",
-    src: [KEINET(2286), "meijiPN2", "meijiTop"] },
-  { u: "meiji", method: "学部別入試", year: 2026,
+    src: [KEINET(2286), "meiji2026", "meijiTop"] },
+  { u: "meiji", method: "学部別入試", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-17", f: [["総合数理学部", "現象数理・先端メディアサイエンス・ネットワークデザイン"]] }],
     apply: ["2026-01-06", "2026-01-26"], result: "2026-02-24", proc: "2026-03-03",
     subjects: null, eiken: null,
     note: "2027年度は学部別入試の出題範囲に変更あり（大学発表）。",
-    src: [KEINET(2286), "meijiPN2", "meijiTop"] },
+    src: [KEINET(2286), "meiji2026", "meijiTop"] },
 
   /* ---------- 青学（試験日=2027 Kei-Net、他=2026） ---------- */
-  { u: "aoyama", method: "全学部日程", year: 2026,
+  { u: "aoyama", method: "全学部日程", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-07", f: [["理工学部", "物理科学・数理サイエンス・化学・生命科学・電気電子工・機械創造工・経営システム工・情報テクノロジー"]] }],
     apply: ["2026-01-05", "2026-01-19", "Web登録 23:00まで、書類は1/22 必着"], result: "2026-02-14", proc: "2026-02-24",
     subjects: "外国語 80分・150点／数学 70分・150点／理科 60分・100点（学科により選択科目が異なる）",
     eiken: null,
     src: [KEINET(2200), "aoyama"] },
-  { u: "aoyama", method: "個別学部日程 A方式", year: 2026,
+  { u: "aoyama", method: "個別学部日程 A方式", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-10", f: [["理工学部", "全7学科"]] }],
     apply: ["2026-01-05", "2026-01-21", "書類は1/23 必着"], result: "2026-02-17", proc: "2026-02-25",
     subjects: "外国語・数学・理科 各150点", eiken: null,
     src: [KEINET(2200), "aoyama", "aoyamaPN"] },
-  { u: "aoyama", method: "個別学部日程 B方式", year: 2026,
+  { u: "aoyama", method: "個別学部日程 B方式", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-11", f: [["理工学部", "全7学科"]] }],
     apply: ["2026-01-05", "2026-01-21", "書類は1/23 必着"], result: "2026-02-17", proc: "2026-02-25",
     subjects: "外国語 100点／数学 200点／理科 200点", eiken: null,
     src: [KEINET(2200), "aoyama", "aoyamaPN"] },
 
   /* ---------- 法政（試験日=2027 Kei-Net、他=前年度パスナビ） ---------- */
-  { u: "hosei", method: "T日程・英語外部試験利用", year: 2026,
+  { u: "hosei", method: "T日程・英語外部試験利用", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-05", f: [["理工学部", ""], ["デザイン工学部", ""], ["情報科学部", ""]] }],
     apply: ["2026-01-07", "2026-01-16"], result: "2026-02-17", proc: "2026-02-20",
     subjects: null, eiken: "英語外部試験利用入試あり（T日程と同日）",
     note: "生命科学部は対象外です。",
     src: [KEINET(2279), "hoseiPN", "hoseiTop"] },
-  { u: "hosei", method: "A方式（個別日程）", year: 2026,
-    slots: [{ d: "2027-02-11", f: [["理工学部", "機械工（機械工学専修）・応用情報工"], ["デザイン工学部", "都市環境デザイン工・システムデザイン"], ["情報科学部", "ディジタルメディア"]], tag: "学科ごとに試験日が違う", l2: "この日に受ける学科：機械工・応用情報工・都市環境デザイン工・システムデザイン・ディジタルメディア" }],
+  { u: "hosei", method: "A方式（個別日程）", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-02-11", f: [["理工学部", "機械工（機械工学専修）・応用情報工"], ["デザイン工学部", "都市環境デザイン工・システムデザイン"], ["情報科学部", "ディジタルメディア"], ["生命科学部", "生命機能"]], tag: "学科ごとに試験日が違う", l2: "機械工・応用情報工・都市環境デザイン工・システムデザイン・ディジタルメディア・生命機能" }],
     apply: ["2026-01-07", "2026-01-28"], result: "2026-02-19", proc: "2026-02-25",
     subjects: null, eiken: null,
     src: [KEINET(2279), "hoseiPN", "hoseiTop"] },
-  { u: "hosei", method: "A方式（個別日程）", year: 2026,
-    slots: [{ d: "2027-02-14", f: [["理工学部", "電気電子工・経営システム工・創生科学"], ["デザイン工学部", "建築"], ["情報科学部", "コンピュータ科学"]], tag: "学科ごとに試験日が違う", l2: "この日に受ける学科：電気電子工・経営システム工・創生科学・建築・コンピュータ科学" }],
+  { u: "hosei", method: "A方式（個別日程）", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-02-14", f: [["理工学部", "電気電子工・経営システム工・創生科学"], ["デザイン工学部", "建築"], ["情報科学部", "コンピュータ科学"], ["生命科学部", "環境応用化学・応用植物科学"]], tag: "学科ごとに試験日が違う", l2: "電気電子工・経営システム工・創生科学・建築・コンピュータ科学・環境応用化学・応用植物科学" }],
     apply: ["2026-01-07", "2026-02-02"], result: "2026-02-21", proc: "2026-02-27",
     subjects: null, eiken: null,
     src: [KEINET(2279), "hoseiPN", "hoseiTop"] },
 
+  /* ---------- 上智（2027年度 公式） ---------- */
+  { u: "sophia", method: "TEAPスコア利用方式（全学統一日程）", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-06", f: [["理工学部", "物質生命理工・機能創造理工・情報理工"]] }],
+    apply: ["2027-01-05", "2027-01-21", "Web出願。書類は1/22（金）消印有効"], result: "2027-02-17",
+    proc: "2027-03-02", procNote: "入学金の支払期限。入学手続の締切は3/17（水）",
+    subjects: "（前年度）TEAPのスコア 100点／数学 90分・150点／理科（物理・化学・生物から2科目）90分・150点",
+    eiken: "英語はTEAPのスコアを得点として利用（4技能のスコアが必要。2025年度・2026年度の受験分が有効）",
+    note: "試験は2/6（土）の午後です。",
+    src: ["sophia", "sophiaYoko", KEINET(2221), "sophiaTopic"] },
+  { u: "sophia", method: "学部学科試験・共通テスト併用方式", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-11", f: [["理工学部", "物質生命理工・機能創造理工・情報理工"]] }],
+    apply: ["2027-01-05", "2027-01-21", "Web出願。書類は1/22（金）消印有効"], result: "2027-02-24",
+    proc: "2027-03-02", procNote: "入学金の支払期限。入学手続の締切は3/17（水）",
+    subjects: "（前年度）共通テスト（英語 80点・数学 60点・理科1科目 60点）＋個別試験（数学 90分・100点、理科1科目 90分・100点）",
+    eiken: "CEFR A2以上の外国語外部検定（英検など）の結果を任意で提出すると加点（共通テストの外国語と同じ言語に限る）",
+    src: ["sophia", "sophiaYoko", KEINET(2221), "sophiaTopic"] },
+
+  /* ---------- 立教（試験日=2027 Kei-Net・大学発表、他=前年度パスナビ） ---------- */
+  { u: "rikkyo", method: "一般入試（試験日自由選択）", year: 2026, chk: "前年度",
+    slots: ["2027-02-06", "2027-02-09"].map(function (d) {
+      return { d: d, f: [["理学部", "数学・物理・化学・生命理学"]], l2: "理学部", pick: "2/6と2/9から選べる。1試験日につき1学科で、試験日が違えば同じ学科をもう一度受けられる（理学部は最大2回）", tag: "2/6・2/9・両日受験可" };
+    }),
+    apply: ["2026-01-06", "2026-01-20"], result: "2026-02-21", proc: "2026-02-27",
+    subjects: null,
+    eiken: "英語は、英語資格・検定試験のスコアか共通テストの英語の得点を使う（大学発表）",
+    src: ["rikkyoTop", KEINET(2290), "rikkyoTopic", "rikkyoPN"] },
+
+  /* ---------- 中央（試験日=2027 Kei-Net・大学発表、他=前年度パスナビ） ---------- */
+  { u: "chuo", method: "学部別選抜 一般方式", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-02-15", f: CHUO_F }],
+    apply: ["2026-01-05", "2026-01-24"], result: "2026-02-26", proc: "2026-03-05",
+    subjects: "（前年度）外国語 100点／数学 100点／理科1科目 100点（基幹理工の数学科、社会理工のビジネスデータサイエンス学科は配点が異なる）",
+    eiken: null,
+    src: ["chuoTop", "chuoYoko", KEINET(2242), "chuoTopic", "chuoPN"] },
+  { u: "chuo", method: "学部別選抜 英語外部試験利用方式", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-02-15", f: CHUO_F }],
+    apply: ["2026-01-05", "2026-01-24"], result: "2026-02-26", proc: "2026-03-05",
+    subjects: "（前年度）数学・理科1科目の2教科（英語の試験はなし）",
+    eiken: "英検などの英語外部試験は出願資格としてだけ使い、スコアや級は合否に影響しない（前年度要項）",
+    src: ["chuoTop", "chuoYoko", KEINET(2242), "chuoTopic", "chuoPN"] },
+  { u: "chuo", method: "学部別選抜 共通テスト併用方式", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-02-08", f: CHUO_F }],
+    apply: ["2026-01-05", "2026-01-24"], result: "2026-02-19", proc: "2026-02-27",
+    subjects: "（前年度）共通テストの外国語 150点＋個別試験の数学・理科 各150点",
+    eiken: null,
+    src: ["chuoTop", "chuoYoko", KEINET(2242), "chuoTopic", "chuoPN"] },
+
+  /* ---------- 工学院（試験日=2027 Kei-Net・大学発表、他=前年度パスナビ） ---------- */
+  { u: "kogakuin", method: "S日程（全学統一）", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-01-28", f: KOGA_F }],
+    apply: ["2026-01-06", "2026-01-20"], result: "2026-02-03", proc: "2026-02-20",
+    subjects: null, eiken: null,
+    note: "1回の受験で4学科まで併願できます（大学発表）。機械理工学科航空理工学専攻は2次試験があります。",
+    src: ["kogakuinTop", KEINET(2212), "kogakuinTopic", "kogakuinPN"] },
+  { u: "kogakuin", method: "A日程（英語外部試験利用日程を含む）", year: 2026, chk: "前年度",
+    slots: ["2027-02-05", "2027-02-06", "2027-02-07", "2027-02-08"].map(function (d) {
+      return { d: d, f: KOGA_F, pick: "2/5〜2/8から自由に選べる。複数の日を受けることもでき、最大4日間受験できる（4学科まで併願可）", tag: "2/5〜2/8・複数日受験可" };
+    }),
+    apply: ["2026-01-06", "2026-01-25"], result: "2026-02-12", proc: "2026-02-20",
+    subjects: null,
+    eiken: "英語外部試験利用日程は、英語の試験が免除される（基準は要項で確認）",
+    note: "機械理工学科航空理工学専攻は2次試験があり、英語外部試験の基準スコアが必要です。",
+    src: ["kogakuinTop", KEINET(2212), "kogakuinTopic", "kogakuinPN"] },
+  { u: "kogakuin", method: "B日程（中期）", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-02-22", f: KOGA_F }],
+    apply: ["2026-02-02", "2026-02-16"], result: "2026-02-26", proc: "2026-03-05",
+    subjects: null, eiken: null,
+    note: "第2志望の学科を申し込めます（検定料は1学科分）。",
+    src: ["kogakuinTop", KEINET(2212), "kogakuinTopic", "kogakuinPN"] },
+  { u: "kogakuin", method: "M日程（後期）", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-03-08", f: KOGA_F }],
+    apply: ["2026-02-17", "2026-03-02"], result: "2026-03-18", proc: "2026-03-23",
+    subjects: "2教科2科目（大学発表）", eiken: null,
+    note: "第2志望の学科を申し込めます。",
+    src: ["kogakuinTop", KEINET(2212), "kogakuinTopic", "kogakuinPN"] },
+
   /* ---------- 日大 ---------- */
-  { u: "nihon", method: "N全学統一方式 第1期", year: 2027,
+  { u: "nihon", method: "N全学統一方式 第1期", year: 2027, chk: "公式2027一部",
     slots: [{ d: "2027-02-01", f: [["理工学部", ""], ["生産工学部", ""], ["工学部（郡山）", ""]] }],
     apply: [null, "2027-01-22", "郵送必着"], result: "2027-02-15", resultNote: "理工・生産工 2/15、工 2/12",
     proc: null, subjects: null, eiken: null,
     src: ["nihonN", KEINET(2267)] },
-  { u: "nihon", method: "A個別方式", year: 2026,
+  { u: "nihon", method: "N全学統一方式 第1期", year: 2027, chk: "公式2027一部",
+    slots: [{ d: "2027-02-01", f: [["薬学部", ""], ["生物資源科学部", ""]] }],
+    apply: [null, "2027-01-22", "郵送必着"], result: "2027-02-10", proc: null, subjects: null, eiken: null,
+    src: ["nihonN", KEINET(2267)] },
+  { u: "nihon", method: "N全学統一方式 第2期", year: 2027, chk: "公式2027一部",
+    slots: [{ d: "2027-03-04", f: [["薬学部", ""], ["生物資源科学部", ""]] }],
+    apply: [null, "2027-02-25", "郵送必着"], result: "2027-03-15", proc: null, subjects: null, eiken: null,
+    src: ["nihonN", KEINET(2267)] },
+  { u: "nihon", method: "A個別方式", year: 2027, chk: "試験日のみ",
+    slots: [{ d: "2027-02-05", f: [["薬学部", ""]] }],
+    apply: null, result: null, proc: null, subjects: null, eiken: null,
+    note: "出願期間・合格発表・手続締切は要項で確認してください。",
+    src: [KEINET(2267)] },
+  { u: "nihon", method: "A個別方式 第1期", year: 2027, chk: "試験日のみ",
+    slots: [{ d: "2027-02-02", f: [["生物資源科学部", ""]] }],
+    apply: null, result: null, proc: null, subjects: null, eiken: null,
+    note: "出願期間・合格発表・手続締切は要項で確認してください。",
+    src: [KEINET(2267)] },
+  { u: "nihon", method: "A個別方式 第2期", year: 2027, chk: "試験日のみ",
+    slots: [{ d: "2027-02-20", f: [["生物資源科学部", ""]] }],
+    apply: null, result: null, proc: null, subjects: null, eiken: null,
+    note: "出願期間・合格発表・手続締切は要項で確認してください。",
+    src: [KEINET(2267)] },
+  { u: "nihon", method: "A個別方式", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-11", f: [["理工学部", "土木・交通システム・建築・海洋建築・まちづくり・機械・精密機械・航空宇宙・電気・電子・応用情報・物質応用化学・物理・数学"]] }],
     apply: ["2026-01-05", "2026-01-30"], result: "2026-02-19", proc: "2026-02-27", procNote: "二段階手続で3/25まで延長可（前年度）",
     subjects: "数学（数I・II・III・A・B・C）／理科（物理・化学から選択）／英語（全問マークシート）",
     eiken: null,
     src: [KEINET(2267), "nihonCst"] },
-  { u: "nihon", method: "A個別方式 第1期", year: 2026,
+  { u: "nihon", method: "A個別方式 第1期", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-02", f: [["生産工学部", ""]] }],
     apply: [null, null], result: null, proc: null, subjects: null, eiken: null,
     src: [KEINET(2267)] },
-  { u: "nihon", method: "A個別方式", year: 2026,
+  { u: "nihon", method: "A個別方式", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-03", f: [["工学部（郡山）", ""]], pick: "2/3・2/4の2日実施。1日だけか両日受けられるかは要項で確認", tag: "2/3・2/4・受け方は要項で確認" }, { d: "2027-02-04", f: [["工学部（郡山）", ""]], pick: "2/3・2/4の2日実施。1日だけか両日受けられるかは要項で確認", tag: "2/3・2/4・受け方は要項で確認" }],
     apply: [null, null], result: null, proc: null, subjects: null, eiken: null,
     src: [KEINET(2267)] },
-  { u: "nihon", method: "A個別方式 第2期", year: 2026,
+  { u: "nihon", method: "A個別方式 第2期", year: 2026, chk: "前年度",
     slots: [{ d: "2027-02-09", f: [["生産工学部", ""]] }],
     apply: [null, null], result: null, proc: null, subjects: null, eiken: null,
     src: [KEINET(2267)] },
-  { u: "nihon", method: "N全学統一方式 第2期", year: 2027,
+  { u: "nihon", method: "N全学統一方式 第2期", year: 2027, chk: "公式2027一部",
     slots: [{ d: "2027-03-04", f: [["理工学部", ""], ["生産工学部", ""], ["工学部（郡山）", ""]] }],
     apply: [null, "2027-02-25", "郵送必着"], result: "2027-03-15", resultNote: "理工・工 3/15、生産工 3/12",
     proc: null, subjects: null, eiken: null,
     src: ["nihonN", KEINET(2267)] },
 
   /* ---------- 芝浦工（2027年度 公式） ---------- */
-  { u: "shibaura", method: "前期日程（A方式・B方式）", year: 2027,
+  { u: "shibaura", method: "前期日程（A方式・B方式）", year: 2027, chk: "公式2027",
     slots: [
-      { d: "2027-02-01", f: [["工学部", "機械（基幹機械）・電気（電気・ロボット工学）・情報（情報工学）"], ["システム理工学部", "数理科学"], ["デザイン工学部", "プロダクトデザイン"], ["建築学部", "都市・建築デザイン"]], tag: "学科ごとに試験日が違う", l2: "この日に受ける学科：基幹機械・電気ロボット工学・情報工学・数理科学・プロダクトデザイン・都市建築デザイン" },
-      { d: "2027-02-02", f: [["工学部", "機械（先進機械）・物質（化学・生命工学）・情報（情報通信）"], ["システム理工学部", "情報（IoT・ソフトウェア・メディア・データサイエンス）"], ["デザイン工学部", "システムデザイン・UXデザイン"], ["建築学部", "空間・建築デザイン"]], tag: "学科ごとに試験日が違う", l2: "この日に受ける学科：先進機械・化学生命工学・情報通信・情報（IoT／ソフトウェア／メディア／データサイエンス）・システムデザイン・UXデザイン・空間建築デザイン" },
-      { d: "2027-02-03", f: [["工学部", "物質（環境・物質工学）・電気（先端電子工学）・土木工学"], ["システム理工学部", "機械・電気、建築（建築・環境都市）"], ["建築学部", "先進的プロジェクトデザイン"]], tag: "学科ごとに試験日が違う", l2: "この日に受ける学科：環境物質工学・先端電子工学・土木工学・機械電気（システム理工）・建築／環境都市（システム理工）・先進的プロジェクトデザイン" }
+      { d: "2027-02-01", f: [["工学部", "機械（基幹機械）・電気（電気・ロボット工学）・情報（情報工学）"], ["システム理工学部", "数理科学"], ["デザイン工学部", "プロダクトデザイン"], ["建築学部", "都市・建築デザイン"]], tag: "学科ごとに試験日が違う", l2: "基幹機械・電気ロボット工学・情報工学・数理科学・プロダクトデザイン・都市建築デザイン" },
+      { d: "2027-02-02", f: [["工学部", "機械（先進機械）・物質（化学・生命工学）・情報（情報通信）"], ["システム理工学部", "情報（IoT・ソフトウェア・メディア・データサイエンス）"], ["デザイン工学部", "システムデザイン・UXデザイン"], ["建築学部", "空間・建築デザイン"]], tag: "学科ごとに試験日が違う", l2: "先進機械・化学生命工学・情報通信・情報（IoT／ソフトウェア／メディア／データサイエンス）・システムデザイン・UXデザイン・空間建築デザイン" },
+      { d: "2027-02-03", f: [["工学部", "物質（環境・物質工学）・電気（先端電子工学）・土木工学"], ["システム理工学部", "機械・電気、建築（建築・環境都市）、生命科学"], ["建築学部", "先進的プロジェクトデザイン"]], tag: "学科ごとに試験日が違う", l2: "環境物質工学・先端電子工学・土木工学・機械電気（システム理工）・建築／環境都市（システム理工）・生命科学（システム理工）・先進的プロジェクトデザイン" }
     ],
     apply: ["2027-01-07", "2027-01-15", "消印有効"], result: "2027-02-14", proc: "2027-02-20", procNote: "1次手続 2/20、2次手続 3/14",
     subjects: "数学・理科（物理・化学）。A方式は英語を共通テストまたは英検で得点化、B方式は数学の配点が高い",
     eiken: "A方式：英語は共通テストか英検のスコアで得点化。B方式：英語資格・検定試験の基準を満たすことが出願要件",
-    note: "システム理工学部の生命科学科は除いています。",
     src: ["shibaura", KEINET(2219)] },
-  { u: "shibaura", method: "全学統一日程（A方式・B方式）", year: 2027,
+  { u: "shibaura", method: "全学統一日程（A方式・B方式）", year: 2027, chk: "公式2027",
     slots: [{ d: "2027-02-04", f: [["工学部", ""], ["システム理工学部", "生命科学科を除く"], ["デザイン工学部", ""], ["建築学部", ""]] }],
     apply: ["2027-01-07", "2027-01-15", "消印有効"], result: "2027-02-14", proc: "2027-02-20", procNote: "1次手続 2/20、2次手続 3/14",
     subjects: "数学・理科（物理・化学）。英語の扱いは前期日程と同じ",
     eiken: "前期日程と同じ（A方式は英検等で得点化、B方式は基準スコアが出願要件）",
     src: ["shibaura", KEINET(2219)] },
-  { u: "shibaura", method: "後期日程", year: 2027,
-    slots: [{ d: "2027-02-21", f: [["工学部", ""], ["システム理工学部", "生命科学科を除く"], ["デザイン工学部", ""], ["建築学部", ""]] }],
+  { u: "shibaura", method: "後期日程", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-21", f: [["工学部", ""], ["システム理工学部", ""], ["デザイン工学部", ""], ["建築学部", ""]] }],
     apply: ["2027-02-05", "2027-02-15", "消印有効"], result: "2027-03-01", proc: "2027-03-05", procNote: "1次手続 3/5、2次手続 3/14",
     subjects: null, eiken: null,
     src: ["shibaura", KEINET(2219)] },
 
   /* ---------- 電機（2027年度 公式） ---------- */
-  { u: "denki", method: "前期（英語外部試験利用を含む）", year: 2027,
+  { u: "denki", method: "前期（英語外部試験利用を含む）", year: 2027, chk: "公式2027",
     slots: ["2027-02-01", "2027-02-02", "2027-02-03", "2027-02-04", "2027-02-05"].map(function (d) {
-      return { d: d, f: [["工学部", ""], ["システムデザイン工学部", ""], ["未来科学部", ""], ["理工学部", "生命科学系を除く"]], pick: "学科に関係なく2/1〜2/5から自由に選べる。複数の日を受けることもできる（同じ日に4学科・学系まで併願可）", tag: "2/1〜2/5・複数日受験可" };
+      return { d: d, f: [["工学部", ""], ["システムデザイン工学部", ""], ["未来科学部", ""], ["理工学部", ""]], pick: "学科に関係なく2/1〜2/5から自由に選べる。複数の日を受けることもできる（同じ日に4学科・学系まで併願可）", tag: "2/1〜2/5・複数日受験可" };
     }),
     apply: ["2027-01-07", "2027-01-20"], result: "2027-02-12", proc: "2027-02-19", procNote: "1次（入学金）2/19、2次（授業料等）3/3",
     subjects: null, eiken: "前期・英語外部試験利用あり（基準は要項で確認）",
     src: ["denki1", KEINET(2259)] },
-  { u: "denki", method: "後期（英語外部試験利用を含む）", year: 2027,
+  { u: "denki", method: "後期（英語外部試験利用を含む）", year: 2027, chk: "公式2027",
     slots: ["2027-02-27", "2027-02-28"].map(function (d) {
-      return { d: d, f: [["工学部", ""], ["システムデザイン工学部", ""], ["未来科学部", ""], ["理工学部", "生命科学系を除く"]], pick: "学科に関係なく2/27・2/28から自由に選べる。両日受けることもできる", tag: "2/27・2/28・両日受験可" };
+      return { d: d, f: [["工学部", ""], ["システムデザイン工学部", ""], ["未来科学部", ""], ["理工学部", ""]], pick: "学科に関係なく2/27・2/28から自由に選べる。両日受けることもできる", tag: "2/27・2/28・両日受験可" };
     }),
     apply: ["2027-02-12", "2027-02-18"], result: "2027-03-08", proc: "2027-03-15",
     subjects: null, eiken: null,
     src: ["denki2", KEINET(2259)] },
 
   /* ---------- 都市大（2027年度 公式） ---------- */
-  { u: "tcu", method: "前期（3教科型）", year: 2027,
+  { u: "tcu", method: "前期（3教科型）", year: 2027, chk: "公式2027",
     slots: ["2027-02-01", "2027-02-02", "2027-02-03"].map(function (d) {
       return { d: d, f: [["理工学部", ""], ["建築都市デザイン学部", ""], ["情報工学部", ""]], pick: "3日間とも全学科が対象。何日でも受けられ、同じ学科を複数日受けることもできる（1日最大4出願、3日間で最大12出願）。学外試験場は2/1・2/2のみ", tag: "2/1〜2/3・複数日受験可" };
     }),
     apply: ["2027-01-05", "2027-01-21", "1/21 17:00まで"], result: "2027-02-12", proc: "2027-02-18", procNote: "1次手続 2/18。2次は併願先により3/2・3/11・3/24",
     subjects: "理科（物理・化学）・数学・英語の3教科 300点",
-    eiken: "英検・GTECなどを英語のみなし得点（50〜90点）に換算可。英検は準2級以上",
-    src: ["tcu1", "tcu", KEINET(2282)] },
-  { u: "tcu", method: "中期", year: 2027,
+    eiken: "英検・GTECなどを英語のみなし得点に換算可（前期・中期）。英検は準2級以上を4技能で受験していれば合否は問わず、CSEスコアで換算：2304以上90点／2142以上70点／1980以上60点／1855以上50点。2024年4月以降の受験が有効、証明書の提出は不要。本学の英語も受けた場合は高いほうを採用",
+    src: ["tcu1", "tcuEng", "tcu", KEINET(2282)] },
+  { u: "tcu", method: "中期", year: 2027, chk: "公式2027",
     slots: [{ d: "2027-02-20", f: [["理工学部", ""], ["建築都市デザイン学部", ""], ["情報工学部", ""]] }],
     apply: ["2027-01-05", "2027-02-13", "2/13 17:00まで"], result: "2027-02-25", proc: "2027-03-02", procNote: "国公立併願者は3/11・3/24まで延納可",
     subjects: "理科（物理・化学）80分・数学（数I〜III・A・B）90分・英語 80分の3教科 300点",
-    eiken: null,
-    src: ["tcu2", "tcu", KEINET(2282)] },
-  { u: "tcu", method: "後期（2教科型）", year: 2027,
+    eiken: "英検・GTECなどを英語のみなし得点に換算可。英検は準2級以上を4技能で受験（合否は問わない）、CSE 1855以上で50点〜2304以上で90点（前期と同じ基準）",
+    src: ["tcu2", "tcuEng", "tcu", KEINET(2282)] },
+  { u: "tcu", method: "後期（2教科型）", year: 2027, chk: "公式2027",
     slots: [{ d: "2027-03-04", f: [["理工学部", ""], ["建築都市デザイン学部", ""], ["情報工学部", ""]] }],
     apply: ["2027-01-05", "2027-02-26", "2/26 17:00まで"], result: "2027-03-10", proc: "2027-03-14",
     subjects: "数学と、理科または英語の2教科",
@@ -263,34 +450,44 @@ var EVENTS = [
     src: ["tcu3", "tcu", KEINET(2282)] },
 
   /* ---------- 神奈川（試験日=2027 Kei-Net、他=2026要項） ---------- */
-  { u: "kanagawa", method: "全学統一", year: 2026,
-    slots: [{ d: "2027-02-04", f: [["工学部・建築学部・情報学部・理学部・化学生命学部（応用化学科）", "生物系を除く"]] }],
+  { u: "kanagawa", method: "全学統一", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-02-04", f: [["工学部・建築学部・情報学部・理学部・化学生命学部", "", ["sci", "eng", "info", "arch", "bio"]]] }],
     apply: ["2026-01-07", "2026-01-16", "消印有効"], result: "2026-02-18", proc: "2026-03-06",
     subjects: null, eiken: "利用できる方式あり（要項で確認）",
     note: "学部ごとに実施する方式は要項で確認が必要です。",
     src: [KEINET(2306), "kanagawa"] },
-  { u: "kanagawa", method: "前期 3科目型", year: 2026,
+  { u: "kanagawa", method: "前期 3科目型", year: 2026, chk: "前年度",
     slots: ["2027-02-06", "2027-02-07", "2027-02-08"].map(function (d) {
-      return { d: d, f: [["工学部・建築学部・情報学部・理学部・化学生命学部（応用化学科）", "生物系を除く"]], pick: "3日間の3科目型はまとめて合否を判定（2026年度要項）。何日受けられるかは要項で確認", tag: "2/6〜2/8・受け方は要項で確認" };
+      return { d: d, f: [["工学部・建築学部・情報学部・理学部・化学生命学部", "", ["sci", "eng", "info", "arch", "bio"]]], pick: "3日間の3科目型はまとめて合否を判定（2026年度要項）。何日受けられるかは要項で確認", tag: "2/6〜2/8・受け方は要項で確認" };
     }),
     apply: ["2026-01-07", "2026-01-16", "消印有効"], result: "2026-02-18", proc: "2026-03-06",
     subjects: "理科・数学（90分）・外国語", eiken: "利用できる方式あり（要項で確認）",
     note: "学部ごとに実施する方式は要項で確認が必要です。",
     src: [KEINET(2306), "kanagawa"] },
-  { u: "kanagawa", method: "後期 2科目型", year: 2026,
-    slots: [{ d: "2027-03-04", f: [["工学部・建築学部・情報学部・理学部・化学生命学部（応用化学科）", "生物系を除く"]] }],
+  { u: "kanagawa", method: "後期 2科目型", year: 2026, chk: "前年度",
+    slots: [{ d: "2027-03-04", f: [["工学部・建築学部・情報学部・理学部・化学生命学部（応用化学科）", "生物系を除く", ["sci", "eng", "info", "arch"]]] }],
     apply: ["2026-02-13", "2026-02-20", "消印有効"], result: "2026-03-12", proc: "2026-03-18",
     subjects: null, eiken: null,
     src: [KEINET(2306), "kanagawa"] },
 
   /* ---------- 同志社（2027年度 公式） ---------- */
-  { u: "doshisha", method: "全学部日程（理系）", year: 2027,
+  { u: "doshisha", method: "全学部日程（理系）", year: 2027, chk: "公式2027一部",
     slots: [{ d: "2027-02-04", f: [["理工学部", "インテリジェント情報工・情報システムデザイン・電気工・電子工・機械システム工・機械理工・機能分子・生命化学・化学システム創成工・環境システム・数理システム"]] }],
     apply: ["2026-12-21", "2027-01-07", "締切日消印有効"], result: "2027-02-15", proc: null,
     subjects: "英語 100分・200点／数学 100分・200点／理科 75分・150点",
     eiken: "利用なし",
     src: ["doshisha", KEINET(2498)] },
-  { u: "doshisha", method: "学部個別日程", year: 2027,
+  { u: "doshisha", method: "全学部日程（理系）", year: 2027, chk: "公式2027一部",
+    slots: [{ d: "2027-02-04", f: [["生命医科学部", ""], ["文化情報学部", ""]] }],
+    apply: ["2026-12-21", "2027-01-07", "締切日消印有効"], result: "2027-02-15", proc: null,
+    subjects: null, eiken: null,
+    src: ["doshisha", KEINET(2498)] },
+  { u: "doshisha", method: "学部個別日程", year: 2027, chk: "公式2027一部",
+    slots: [{ d: "2027-02-07", f: [["生命医科学部", ""], ["文化情報学部", "理系型"]] }],
+    apply: ["2026-12-21", "2027-01-07", "締切日消印有効"], result: "2027-02-16", proc: null,
+    subjects: null, eiken: null,
+    src: ["doshisha", KEINET(2498)] },
+  { u: "doshisha", method: "学部個別日程", year: 2027, chk: "公式2027一部",
     slots: [{ d: "2027-02-10", f: [["理工学部", "全10学科"]] }],
     apply: ["2026-12-21", "2027-01-07", "締切日消印有効"], result: "2027-02-19", proc: null,
     subjects: "英語・数学・理科（全学部日程と同じ教科で配点が異なる）",
@@ -298,32 +495,245 @@ var EVENTS = [
     src: ["doshisha", KEINET(2498)] },
 
   /* ---------- 立命館（2027年度 公式） ---------- */
-  { u: "ritsumei", method: "全学統一方式（理系）", year: 2027,
+  { u: "ritsumei", method: "全学統一方式（理系）", year: 2027, chk: "公式2027",
     slots: ["2027-02-02", "2027-02-03"].map(function (d) {
-      return { d: d, f: [["理工学部", ""], ["情報理工学部", ""]], pick: "試験日が違えば、同じ学部・学科でも両日受けられる", tag: "2/2・2/3・両日受験可" };
+      return { d: d, f: [["理工学部", ""], ["情報理工学部", ""], ["生命科学部", ""]].concat(d === "2027-02-03" ? [["薬学部", ""]] : []), pick: "試験日が違えば、同じ学部・学科でも両日受けられる（薬学部は2/3のみ）", tag: "2/2・2/3・両日受験可" };
     }),
     apply: ["2027-01-06", "2027-01-22", "1/22 23:00まで"], result: "2027-02-16", proc: "2027-03-01",
-    subjects: "英語 100点／数学 100点／理科（物理または化学）100点",
+    subjects: "英語 100点／数学 100点／理科（物理または化学）100点（理工・情報理工学部。生命科学部・薬学部は要項で確認）",
     eiken: "個別試験の方式では利用なし（共通テスト方式で英検準1級以上などを満点換算）",
     src: ["ritsumei", KEINET(2504)] },
-  { u: "ritsumei", method: "学部個別配点方式", year: 2027,
-    slots: [{ d: "2027-02-07", f: [["理工学部", "理科1科目型・理科2科目型"], ["情報理工学部", "理科1科目型・情報理工学部型"]] }],
+  { u: "ritsumei", method: "学部個別配点方式", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-07", f: [["理工学部", "理科1科目型・理科2科目型"], ["情報理工学部", "理科1科目型・情報理工学部型"], ["生命科学部", "理科1科目型・理科2科目型"], ["薬学部", "理科1科目型・理科2科目型"]] }],
     apply: ["2027-01-06", "2027-01-26", "1/26 23:00まで"], result: "2027-02-17", proc: "2027-03-01",
     subjects: "全学統一方式と同じ形式で、配点が学部ごとに異なる",
     eiken: null,
     src: ["ritsumei", KEINET(2504)] },
-  { u: "ritsumei", method: "後期分割方式", year: 2027,
-    slots: [{ d: "2027-03-07", f: [["理工学部", ""], ["情報理工学部", ""]] }],
+  { u: "ritsumei", method: "後期分割方式", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-03-07", f: [["理工学部", ""], ["情報理工学部", ""], ["生命科学部", ""], ["薬学部", ""]] }],
     apply: ["2027-02-12", "2027-02-26", "2/26 23:00まで"], result: "2027-03-17", proc: "2027-03-24",
     subjects: null, eiken: null,
-    src: ["ritsumei", KEINET(2504)] }
+    src: ["ritsumei", KEINET(2504)] },
+  { u: "ritsumei", method: "薬学方式", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-02", f: [["薬学部", ""]] }],
+    apply: ["2027-01-06", "2027-01-22", "1/22 23:00まで"], result: "2027-02-16", proc: "2027-03-01",
+    subjects: null, eiken: null,
+    src: ["ritsumei", KEINET(2504)] },
+  { u: "ritsumei", method: "共通テスト併用方式", year: 2027, chk: "公式2027一部",
+    slots: [{ d: "2027-02-08", f: [["理工学部", "数学重視型・情報活用型"], ["情報理工学部", "数国活用型・情報活用型"], ["生命科学部", "数学重視型・情報活用型（生命情報）"]] }],
+    apply: ["2027-01-06", "2027-01-26", "1/26 23:00まで"], result: "2027-02-19", proc: null,
+    procNote: "要項の表記は「合格発表日の翌金融機関営業日〜3月24日（水）」。入学金の締切は要項で確認",
+    subjects: "共通テストの得点＋大学の試験（型により数学・情報など）", eiken: null,
+    src: ["ritsumei", KEINET(2504)] },
+
+  /* ---------- 千葉工業（試験日=2027 Kei-Net、出願・発表・手続=ベネッセ掲載の2027年度。公式は未確認） ---------- */
+  { u: "chibatech", method: "一般選抜 A日程", year: 2027, chk: "非公式2027",
+    slots: ["2027-02-01", "2027-02-02", "2027-02-03", "2027-02-04"].map(function (d) {
+      return { d: d, f: [["工学部", ""], ["宇宙・半導体工学部", ""], ["創造工学部", ""], ["先進工学部", ""], ["情報変革科学部", ""], ["未来変革科学部", ""]], pick: "2/1〜2/4の試験日自由選択（Kei-Net表記）。何日受けられるかは要項で確認", tag: "2/1〜2/4・試験日自由選択" };
+    }),
+    apply: ["2026-12-22", "2027-01-31"], result: "2027-02-09", proc: "2027-02-15",
+    subjects: null, eiken: null,
+    note: "日程ごとにタイプI・タイプIIがあります。B・C日程を行わない学科があるかは要項で確認してください。",
+    src: ["chibatechBen", "chibatech", KEINET(2178)] },
+  { u: "chibatech", method: "一般選抜 B日程", year: 2027, chk: "非公式2027",
+    slots: ["2027-02-17", "2027-02-18"].map(function (d) {
+      return { d: d, f: [["工学部", ""], ["宇宙・半導体工学部", ""], ["創造工学部", ""], ["先進工学部", ""], ["情報変革科学部", ""], ["未来変革科学部", ""]], pick: "2/17・2/18の試験日自由選択（Kei-Net表記）。何日受けられるかは要項で確認", tag: "2/17・2/18・試験日自由選択" };
+    }),
+    apply: ["2027-02-05", "2027-02-16"], result: "2027-02-22", proc: "2027-03-01",
+    subjects: null, eiken: null,
+    src: ["chibatechBen", "chibatech", KEINET(2178)] },
+  { u: "chibatech", method: "一般選抜 C日程", year: 2027, chk: "非公式2027",
+    slots: [{ d: "2027-03-04", f: [["工学部", ""], ["宇宙・半導体工学部", ""], ["創造工学部", ""], ["先進工学部", ""], ["情報変革科学部", ""], ["未来変革科学部", ""]] }],
+    apply: ["2027-02-22", "2027-03-03"], result: "2027-03-08", proc: "2027-03-15",
+    subjects: null, eiken: null,
+    src: ["chibatechBen", "chibatech", KEINET(2178)] },
+
+  /* ---------- 津田塾（2027年度 公式の日程一覧） ---------- */
+  { u: "tsuda", method: "A方式", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-05", f: [["学芸学部", "数学・情報科学"]] }],
+    apply: ["2027-01-04", "2027-01-22"], result: "2027-02-16", proc: "2027-02-22",
+    subjects: null, eiken: "英検などは「A方式（英語外部試験利用型）」で利用（別の方式）",
+    src: ["tsuda", KEINET(2243)] },
+  { u: "tsuda", method: "A方式（英語外部試験利用型）", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-05", f: [["学芸学部", "数学・情報科学"]] }],
+    apply: ["2027-01-04", "2027-01-22"], result: "2027-02-16", proc: "2027-02-22",
+    subjects: null, eiken: "英語外部試験の成績を利用。対象の試験と基準は要項で確認",
+    src: ["tsuda", KEINET(2243)] },
+  { u: "tsuda", method: "B方式", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-28", f: [["学芸学部", "数学・情報科学"]] }],
+    apply: ["2027-01-04", "2027-02-18"], result: "2027-03-08", proc: "2027-03-15",
+    subjects: null, eiken: null,
+    note: "Kei-Netでは共通テストを使う方式に分類されています。内容は要項で確認してください。",
+    src: ["tsuda", KEINET(2243)] },
+
+  /* ---------- 東京女子（2027年度。Kei-Net「大学からのお知らせ」。公式サイトは未確認） ---------- */
+  { u: "twcu", method: "個別学力試験型", year: 2027, chk: "非公式2027",
+    slots: [{ d: "2027-02-04", f: [["現代教養学部", "情報数理科学", ["sci", "info"]]] }],
+    apply: ["2027-01-04", "2027-01-18", "Web登録 1/18 23:00まで"], result: "2027-02-12", proc: "2027-02-18",
+    subjects: null, eiken: "英検などは「英語外部検定試験利用型」で利用（別の方式）",
+    src: ["twcuKN", KEINET(2254)] },
+  { u: "twcu", method: "英語外部検定試験利用型", year: 2027, chk: "非公式2027",
+    slots: [{ d: "2027-02-04", f: [["現代教養学部", "情報数理科学", ["sci", "info"]]] }],
+    apply: ["2027-01-04", "2027-01-18", "Web登録 1/18 23:00まで"], result: "2027-02-12", proc: "2027-03-01",
+    subjects: null, eiken: "対象は英検（従来型・S-CBT・S-Interview）・TEAP（4技能パターン）・GTEC（検定版・CBT）。基準は要項で確認",
+    src: ["twcuKN", KEINET(2254)] },
+
+  /* ---------- 関西（試験日=2027 Kei-Net、出願・発表・手続=Kei-Net「大学からのお知らせ」。公式サイトは未確認） ---------- */
+  { u: "kansai", method: "全学日程1（3教科型・理科1科目／理科2科目）", year: 2027, chk: "非公式2027",
+    slots: [{ d: "2027-02-02", f: [["システム理工学部", ""], ["環境都市工学部", ""], ["化学生命工学部", ""]] }],
+    apply: ["2027-01-07", "2027-01-19", "Web登録 1/19 23:00まで"], result: "2027-02-16", proc: "2027-02-24", procNote: "入学金 2/24 13:00まで、授業料等 3/24 13:00まで",
+    subjects: "英語・数学・理科（理科1科目型と理科2科目型がある）", eiken: null,
+    note: "全学日程1（2/1〜2/3）のうち、理工系3学部は2/2のみ。",
+    src: ["kansaiKN", "kansaiTop", KEINET(2533)] },
+  { u: "kansai", method: "全学日程2（3教科型・理科設問選択方式）", year: 2027, chk: "非公式2027",
+    slots: [{ d: "2027-02-05", f: [["システム理工学部", ""], ["環境都市工学部", ""], ["化学生命工学部", ""]] }],
+    apply: ["2027-01-07", "2027-01-19", "Web登録 1/19 23:00まで"], result: "2027-02-16", proc: "2027-02-24", procNote: "入学金 2/24 13:00まで、授業料等 3/24 13:00まで",
+    subjects: null, eiken: null,
+    src: ["kansaiKN", "kansaiTop", KEINET(2533)] },
+  { u: "kansai", method: "全学日程2（3教科型・理数重視）", year: 2027, chk: "非公式2027",
+    slots: [{ d: "2027-02-07", f: [["システム理工学部", ""], ["環境都市工学部", ""], ["化学生命工学部", ""]] }],
+    apply: ["2027-01-07", "2027-01-19", "Web登録 1/19 23:00まで"], result: "2027-02-16", proc: "2027-02-24", procNote: "入学金 2/24 13:00まで、授業料等 3/24 13:00まで",
+    subjects: null, eiken: null,
+    note: "全学日程2（2/5〜2/7）のうち、理工系3学部は2/5と2/7。",
+    src: ["kansaiKN", "kansaiTop", KEINET(2533)] },
+  { u: "kansai", method: "共通テスト利用入試（併用）", year: 2027, chk: "非公式2027",
+    slots: [
+      { d: "2027-02-02", f: [["環境都市工学部", ""]], tag: "数学力重視" },
+      { d: "2027-02-04", f: [["システム理工学部", ""], ["環境都市工学部", ""], ["化学生命工学部", ""]], tag: "語学力重視" },
+      { d: "2027-02-05", f: [["システム理工学部", ""], ["環境都市工学部", ""]], tag: "数・理重視" },
+      { d: "2027-02-06", f: [["システム理工学部", ""], ["環境都市工学部", ""], ["化学生命工学部", ""]], tag: "総合力重視" },
+      { d: "2027-02-07", f: [["システム理工学部", ""], ["環境都市工学部", ""], ["化学生命工学部", ""]], tag: "数・理重視" }],
+    apply: ["2027-01-07", "2027-01-19", "Web登録 1/19 23:00まで"], result: "2027-02-16", proc: "2027-02-24", procNote: "入学金 2/24 13:00まで、授業料等 3/24 13:00まで",
+    subjects: "共通テストの得点＋大学の試験（型ごとに日が違う）", eiken: null,
+    note: "数・理重視型は、システム理工・環境都市工は2/5・2/7から選択、化学生命工は2/7（Kei-Net表記）。",
+    src: ["kansaiKN", "kansaiTop", KEINET(2533)] },
+
+  /* ---------- 関西学院（試験日=2027 公式、出願締切=2027 公式、出願開始・合格発表=ベネッセ、手続=未掲載） ---------- */
+  { u: "kangaku", method: "全学部日程（均等配点型・数学・理科重視型）", year: 2027, chk: "非公式2027",
+    slots: ["2027-02-01", "2027-02-02"].map(function (d) {
+      return { d: d, f: [["理学部", ""], ["工学部", ""], ["建築学部", ""], ["生命環境学部", ""]], pick: "2/1・2/2の両日とも理系全学部で受験できる（公式）。試験日ごとに学科を1つ選んで出願", tag: "2/1・2/2・両日受験可" };
+    }),
+    apply: ["2027-01-04", "2027-01-22", "締切1/22は公式。開始日はベネッセ掲載"], result: "2027-02-15", resultNote: "ベネッセ掲載の日付（公式は未掲載）",
+    proc: null, procNote: "2027年度は未掲載。前年度は入学手続Ⅰが2/16〜2/27（2026年度要項）",
+    subjects: "数学・理科・英語の3教科（均等配点型と、数学・理科を重く見る型がある）", eiken: "一般選抜では利用なし（共通テスト利用の英語資格・検定試験利用方式のみ）",
+    src: ["kangaku", "kangakuPt", "kangakuBen", "kangaku26", KEINET(2558)] },
+  { u: "kangaku", method: "英数日程", year: 2027, chk: "非公式2027",
+    slots: [{ d: "2027-02-05", f: [["理学部", ""], ["工学部", ""], ["建築学部", ""], ["生命環境学部", ""]] }],
+    apply: ["2027-01-04", "2027-01-22", "締切1/22は公式。開始日はベネッセ掲載"], result: "2027-02-20", resultNote: "ベネッセ掲載の日付（公式は未掲載）",
+    proc: null, procNote: "2027年度は未掲載。前年度は入学手続Ⅰが2/24〜2/27（2026年度要項）",
+    subjects: "数学・英語の2教科", eiken: null,
+    src: ["kangaku", "kangakuPt", "kangakuBen", "kangaku26", KEINET(2558)] },
+  { u: "kangaku", method: "共通テスト併用日程（数学）", year: 2027, chk: "非公式2027",
+    slots: [{ d: "2027-02-05", f: [["理学部", ""], ["工学部", ""], ["建築学部", ""], ["生命環境学部", ""]] }],
+    apply: ["2027-01-04", "2027-01-22", "締切1/22は公式。開始日はベネッセ掲載"], result: "2027-02-20", resultNote: "ベネッセ掲載の日付（公式は未掲載）",
+    proc: null, procNote: "2027年度は未掲載。前年度は入学手続Ⅰが2/24〜2/27（2026年度要項）",
+    subjects: "共通テスト2科目＋大学の試験は数学", eiken: null,
+    src: ["kangaku", "kangakuPt", "kangakuBen", "kangaku26", KEINET(2558)] },
+
+  /* ---------- 東海（2027年度 公式要項） ---------- */
+  { u: "tokai", method: "全学部統一選抜（前期）", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-02", f: [["理学部", ""], ["工学部", "航空宇宙学科航空操縦学専攻を除く"], ["情報理工学部", ""], ["情報通信学部", ""], ["建築都市学部", "建築・土木工"], ["海洋学部", "", ["sci", "eng", "bio"]], ["農学部", ""], ["生物学部", ""]] }],
+    apply: ["2027-01-04", "2027-01-20", "Web登録 1/20 23:59まで、書類は1/22必着"], result: "2027-02-09", proc: "2027-02-18", procNote: "2/18 17:00まで（特待生に選ばれた人は2/27まで）",
+    subjects: "英語・数学・理科1科目の3科目を受け、高得点の2科目で判定（各100点）",
+    eiken: "英検などを英語のみなし得点に換算でき、大学の英語の得点と高いほうを採用（当日の英語は受験が必要）。換算点は要項で確認",
+    note: "建築学科は文理併用の区分（Kei-Netでは文理併学部統一）。",
+    src: ["tokai", "tokaiTop", KEINET(2245)] },
+  { u: "tokai", method: "一般選抜", year: 2027, chk: "公式2027",
+    slots: ["2027-02-07", "2027-02-08", "2027-02-09", "2027-02-10"].map(function (d) {
+      return { d: d, f: [["理学部", ""], ["工学部", "航空宇宙学科航空操縦学専攻を除く"], ["情報理工学部", ""], ["情報通信学部", ""], ["建築都市学部", "建築・土木工"], ["海洋学部", "", ["sci", "eng", "bio"]], ["農学部", ""], ["生物学部", ""], ["文理融合学部", "人間情報工学科"]],
+        pick: "2/7〜2/10の試験日自由選択。同じ学科を複数日受けたときは、3科目の合計が最も高い日の結果で判定", tag: "2/7〜2/10・試験日自由選択" };
+    }),
+    apply: ["2027-01-04", "2027-01-22", "Web登録 1/22 23:59まで、書類は1/25必着"], result: "2027-02-18", proc: "2027-02-27", procNote: "2/27 17:00まで",
+    subjects: "英語・数学（学科により範囲が違う）・理科1科目の3科目（各100点）。農・生物・海洋（水産）は数学のかわりに国語も選べる",
+    eiken: "英検などを英語のみなし得点に換算でき、大学の英語の得点と高いほうを採用（当日の英語は受験が必要）。換算点は要項で確認",
+    src: ["tokai", "tokaiTop", KEINET(2245)] },
+  { u: "tokai", method: "全学部統一選抜（後期）", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-28", f: [["理学部", ""], ["工学部", "航空宇宙学科航空操縦学専攻を除く"], ["情報理工学部", ""], ["情報通信学部", ""], ["建築都市学部", "建築・土木工"], ["海洋学部", "", ["sci", "eng", "bio"]], ["農学部", ""], ["生物学部", ""]] }],
+    apply: ["2027-02-01", "2027-02-14", "Web登録 2/14 23:59まで、書類は2/16必着"], result: "2027-03-06", proc: "2027-03-10", procNote: "3/10 17:00まで",
+    subjects: "3科目を受け、高得点の2科目で判定",
+    eiken: "英検などを英語のみなし得点に換算でき、大学の英語の得点と高いほうを採用。換算点は要項で確認",
+    src: ["tokai", "tokaiTop", KEINET(2245)] },
+
+  /* ---------- 東京工科（2027年度。公式の日程が画像のため Kei-Net「大学からのお知らせ」・ベネッセで確認） ---------- */
+  { u: "teu", method: "奨学生入試", year: 2027, chk: "非公式2027",
+    slots: [{ d: "2027-01-27", f: [["工学部", ""], ["コンピュータサイエンス学部", ""], ["応用生物学部", ""], ["メディア学部", ""]] }],
+    apply: ["2026-12-21", "2027-01-13", "締切日消印有効"], result: "2027-02-03", proc: "2027-02-09", procNote: "1次 2/9、2次 2/16",
+    subjects: null, eiken: null,
+    note: "対象の学部・科目は要項で確認してください。",
+    src: ["teuKN", "teu", KEINET(2251)] },
+  { u: "teu", method: "A日程", year: 2027, chk: "非公式2027",
+    slots: ["2027-02-07", "2027-02-08", "2027-02-09", "2027-02-10"].map(function (d) {
+      return { d: d, f: [["工学部", ""], ["コンピュータサイエンス学部", ""], ["応用生物学部", ""], ["メディア学部", ""]], pick: "2/7〜2/10の試験日自由選択（Kei-Net）。何日受けられるかは要項で確認", tag: "2/7〜2/10・試験日自由選択" };
+    }),
+    apply: ["2026-12-21", "2027-01-21", "締切日消印有効"], result: "2027-02-18", proc: "2027-02-25", procNote: "1次 2/25、2次 3/5",
+    subjects: "国語・数学・理科・外国語から3教科（上位2教科で判定する方式も選べる）。数学の範囲は学部で違う（前年度）",
+    eiken: null,
+    src: ["teuKN", "teuBen", "teu", KEINET(2251)] },
+  { u: "teu", method: "B日程", year: 2027, chk: "非公式2027",
+    slots: [{ d: "2027-02-28", f: [["工学部", ""], ["コンピュータサイエンス学部", ""], ["応用生物学部", ""], ["メディア学部", ""]] }],
+    apply: ["2027-02-12", "2027-02-19", "締切日必着"], result: "2027-03-11", proc: "2027-03-17",
+    subjects: null, eiken: null,
+    src: ["teuKN", "teu", KEINET(2251)] },
+
+  /* ---------- 日本女子（2027年度 公式要項） ---------- */
+  { u: "jwu", method: "個別選抜型（2科目型・3科目型）", year: 2027, chk: "公式2027",
+    slots: ["2027-02-02", "2027-02-03"].map(function (d) {
+      return { d: d, f: [["理学部", "数物情報科学・化学生命科学"], ["建築デザイン学部", ""], ["食科学部", "食科学・栄養"]], pick: "理系の3学部は2/2・2/3のどちらか、または両日（複数日受験可・公式）", tag: "2/2・2/3・複数日受験可" };
+    }),
+    apply: ["2027-01-05", "2027-01-15"], result: "2027-02-15", proc: "2027-02-25", procNote: "手続期間 2/15〜2/25",
+    subjects: "理学部（数物情報科学）は数学＋外国語か理科（2科目型）、数学・外国語・理科（3科目型）。ほかの学科は要項で確認",
+    eiken: "英検などは「英語外部試験利用型」で利用（別の方式）",
+    src: ["jwu", "jwuWeb", KEINET(2272)] },
+  { u: "jwu", method: "英語外部試験利用型", year: 2027, chk: "公式2027",
+    slots: ["2027-02-02", "2027-02-03"].map(function (d) {
+      return { d: d, f: [["理学部", "数物情報科学・化学生命科学"], ["建築デザイン学部", ""], ["食科学部", "食科学・栄養"]], pick: "理系の3学部は2/2・2/3のどちらか、または両日（複数日受験可・公式）", tag: "2/2・2/3・複数日受験可" };
+    }),
+    apply: ["2027-01-05", "2027-01-15"], result: "2027-02-15", proc: "2027-02-25", procNote: "手続期間 2/15〜2/25",
+    subjects: "英語以外の2科目",
+    eiken: "英検2級以上を受けてCSE1950以上なら出願でき、英語以外の2科目で受験。CSE2100以上・2300以上で加点。2025年1月15日以降の受験が対象（従来型は二次試験も受験が必要）",
+    src: ["jwu", "jwuEng", KEINET(2272)] },
+
+  /* ---------- ICU（2027年度 公式ページ。入学試験要項は10月下旬公開予定） ---------- */
+  { u: "icu", method: "一般選抜（数理・自然科学選択）", year: 2027, chk: "公式2027",
+    slots: [{ d: "2027-02-06", f: [["教養学部", "アーツ・サイエンス学科", ["sci", "info", "bio"]]] }],
+    apply: ["2027-01-06", "2027-01-19", "Web 1/19 23:59まで、書類は1/20消印有効"], result: "2027-02-12", proc: "2027-02-22",
+    subjects: "数理・自然科学（数学・物理・化学・生物の4分野から2分野）、総合教養（ATLAS）、英語",
+    eiken: "この方式では利用なし",
+    note: "ほかに「日英バイリンガル面接利用」「英語外部試験利用」（1次2/6・2次2/20）があります（文系の表示に掲載）。",
+    src: ["icu", KEINET(2214)] }
 ];
+
+/* 学部の系統（理系）。学部名・学科名の文字から自動で決める（1つの学部が複数の系統に入ることもある） */
+var FIELDS = [
+  { id: "sci", name: "理学", desc: "数学・物理・化学など" },
+  { id: "eng", name: "工学", desc: "機械・電気・材料など" },
+  { id: "info", name: "情報" },
+  { id: "arch", name: "建築・都市", desc: "建築・都市・土木・交通" },
+  { id: "bio", name: "生物・農学" },
+  { id: "phar", name: "薬学" }
+];
+var FIELD_RULES = [
+  ["phar", /薬/],
+  ["bio", /生命|生物|農|バイオ|食|獣医|動物|植物|海洋生物|森林/],
+  ["info", /情報|データ|メディア|コンピュータ|ネットワーク|ソフトウェア|知能|デジタル|学系3/],
+  ["arch", /建築|都市|土木|まちづくり|空間|交通|社会環境|社会基盤|環境デザイン/],
+  ["sci", /数学|数理|物理|化学|理学|宇宙|地球|物質|学系1|学系2/],
+  ["eng", /機械|電気|電子|航空|ロボット|工学|工$|工・|システム|精密|材料|経営工|学門|学系4|未来科学/]
+];
+function fieldOf(fac, depts) {
+  var d = (depts || "").replace(/\S*を除く\S*/g, "").trim();
+  if (/^(全\d*学科|全学科|各学科|学門)/.test(d) || /型/.test(d)) d = "";   // 学科が具体的に書かれていないときは学部名で判断
+  var t = d ? fac + " " + d : fac, out = [];
+  FIELD_RULES.forEach(function (r) { if (r[1].test(t)) out.push(r[0]); });
+  if (!d && /理工/.test(fac)) ["sci", "eng", "info"].forEach(function (k) { if (out.indexOf(k) < 0) out.push(k); });
+  return out.length ? out : ["sci", "eng"];
+}
 
 window.NYUSHI = window.NYUSHI || {};
 window.NYUSHI[2027] = {
   y: 2027, asof: "2026年10月7日", exam: "2027年1〜3月", enroll: "2027年4月",
   months: [["2026-12", "12月"], ["2027-01", "1月"], ["2027-02", "2月"], ["2027-03", "3月"]], defaultMonth: "2027-02",
   holidays: { "2027-01-01": "元日", "2027-01-11": "成人の日", "2027-02-11": "建国記念の日", "2027-02-23": "天皇誕生日" },
-  univs: UNIVS, src: SRC, events: EVENTS
+  univs: UNIVS, groups: GROUPS, src: SRC, events: EVENTS, fields: FIELDS, fieldOf: fieldOf, scope: "理工系・生物系・薬学系の学部（医・歯・看護などは除く）"
 };
 })();

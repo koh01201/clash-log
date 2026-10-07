@@ -3,7 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>私立理系 入試カレンダー</title>
+<title>私立大学 入試カレンダー</title>
+<meta name="description" content="私立大学の一般入試（理系26大学・文系30大学）の試験日・出願締切・合格発表を、月ごとのカレンダーで確認できます。早慶上理・MARCH・四工大・日東駒専・成成明学・大東亜帝国・関関同立。">
+<!-- LINE などで送ったときのプレビュー（OGP）。独自ドメインに移したら SITE の URL をまとめて書き換える -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="私立大学 入試カレンダー">
+<meta property="og:title" content="私立大学 一般入試カレンダー（理系・文系／2027年度）">
+<meta property="og:description" content="理系26大学・文系30大学の試験日・出願締切・合格発表を、月ごとのカレンダーで。学科ごとに日が違う試験も書き分けています。">
+<meta property="og:url" content="https://nyushi-calendar.com/">
+<meta property="og:image" content="https://nyushi-calendar.com/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<!-- ホーム画面に追加したときの名前とアイコン（PWA） -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="入試カレンダー">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F6F7F9">
 <script>(function () {
   var mob = /Android|iPhone|iPod|iPad|Mobile/i.test(navigator.userAgent || "") || (/Mac/.test(navigator.platform) && navigator.maxTouchPoints > 1);
   var l = null; try { l = localStorage.getItem("nyushical.layout"); } catch (e) {}
@@ -39,9 +59,9 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.65;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
 button{font-family:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-.wrap{max-width:1280px;margin:0 auto;padding-inline:24px;padding-block:28px 56px}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:24px;padding-block:20px 56px}
 
-header.h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px 32px;margin-bottom:20px}
+header.h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px 32px;margin-bottom:14px}
 header.h h1{margin:0;font-family:var(--disp);font-size:28px;line-height:1.3;letter-spacing:.02em;text-wrap:balance}
 header.h h1 small{display:block;font-family:var(--font);font-size:13px;font-weight:400;color:var(--ink2);letter-spacing:0;margin-top:4px}
 .status{max-width:46em;font-size:12px;color:var(--ink2);line-height:1.7}
@@ -67,6 +87,95 @@ header.h h1 small{display:block;font-family:var(--font);font-size:13px;font-weig
 .uc.on{color:var(--ink);border-color:hsl(var(--h) 45% var(--chipEdge));background:hsl(var(--h) 60% var(--chipL))}
 .uc:not(.on) i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink3)}
 .uc.all{border-style:dashed}
+/* 理系・文系の切り替え */
+.seg.trk{padding:4px}
+.seg.trk button{font-size:15px;font-weight:700;padding:7px 22px}
+/* 学部の系統 */
+.flds{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:12px 0 0}
+.flds .lb{font-size:12px;font-weight:700;color:var(--ink2);margin-right:4px}
+.fc{border:1px solid var(--rule2);background:var(--surface);border-radius:999px;padding:3px 12px;font-size:12.5px;color:var(--ink2);cursor:pointer}
+.fc.on{border-color:var(--accent);background:var(--accent);color:var(--surface);font-weight:700}
+.fc.all{border-style:dashed}
+/* 大学群ごとの行（群の名前を押すと、その群をまとめて入れる・外す） */
+.unis.g{display:flex;flex-direction:column;gap:8px}
+.grp{display:flex;align-items:flex-start;gap:10px}
+.gb{flex:0 0 88px;display:inline-flex;align-items:center;justify-content:space-between;gap:6px;border:1px solid var(--rule2);background:var(--surface);border-radius:8px;padding:3px 9px;font-size:12.5px;font-weight:700;color:var(--ink2);cursor:pointer;white-space:nowrap}
+.gb i{width:12px;height:12px;border-radius:3px;box-shadow:inset 0 0 0 1.5px var(--ink3);flex:0 0 auto}
+.gb.on{border-color:var(--accent);color:var(--accent);background:color-mix(in oklab,var(--accent) 8%,var(--surface))}
+.gb.on i{background:var(--accent);box-shadow:none}
+.gb.part i{background:linear-gradient(135deg,var(--accent) 50%,transparent 50%);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.gm{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+.miss{font-size:11.5px;color:var(--ink3);white-space:nowrap}
+.uact{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.uc.share{border-color:var(--accent);color:var(--accent);font-weight:700;gap:5px;padding:3px 12px 3px 9px}
+.uc.share svg{width:14px;height:14px}
+.shared{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 14px;padding:9px 12px;border-radius:8px;background:color-mix(in oklab,var(--accent) 9%,var(--surface));border:1px solid color-mix(in oklab,var(--accent) 30%,transparent);font-size:12.5px;color:var(--ink)}
+.shared button{border:0;background:none;padding:0;color:var(--accent);font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+/* 絞り込みの開け閉め（スマホ表示だけ） */
+.ftog{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin:12px 0 0;padding:10px 12px;border:1px solid var(--rule2);border-radius:10px;background:var(--surface);font-size:13px;text-align:left;cursor:pointer;color:var(--ink)}
+.ftog:hover{border-color:var(--accent)}
+.ftog b{font-weight:700;color:var(--accent);white-space:nowrap}
+.ftog span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fpanel{display:none;padding-bottom:18px}
+.fpanel.open{display:block}
+html[data-layout="narrow"] .presets{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:8px 8px;gap:5px}
+html[data-layout="narrow"] .presets::-webkit-scrollbar{display:none}
+html[data-layout="narrow"] .presets>*{flex:0 0 auto}
+html[data-layout="narrow"] .presets .lb{font-size:11.5px;margin-right:0}
+html[data-layout="narrow"] .presets .hint{font-size:10px;letter-spacing:-.03em;white-space:nowrap}
+html[data-layout="narrow"] .pbtn,html[data-layout="narrow"] .pc button{font-size:12px;padding:3px 8px;white-space:nowrap}
+/* マイ設定・設定コード */
+.presets{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 16px;padding:10px 12px;border-radius:10px;background:var(--sunk)}
+.presets .lb{font-size:12px;font-weight:700;color:var(--ink2);margin-right:4px}
+.pc{display:inline-flex;align-items:center;border:1px solid var(--rule2);background:var(--surface);border-radius:999px;font-size:12.5px;overflow:hidden}
+.pc button{border:0;background:none;padding:3px 10px;cursor:pointer;color:var(--ink)}
+.pc button.del{padding:3px 8px 3px 2px;color:var(--ink3)}
+.pc.cur{border-color:var(--accent);background:color-mix(in oklab,var(--accent) 8%,var(--surface))}
+.pbtn{border:1px solid var(--rule2);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:12.5px;color:var(--ink2);cursor:pointer}
+.pbtn.save{border-color:var(--accent);background:var(--accent);color:var(--surface);font-weight:700}
+.presets .hint{font-size:11.5px;color:var(--ink3)}
+dialog#codeDlg{border:0;padding:0;border-radius:12px;max-width:460px;width:calc(100% - 32px);background:var(--surface);color:var(--ink);box-shadow:0 18px 50px var(--shadow)}
+dialog#codeDlg::backdrop{background:rgba(10,14,22,.45)}
+.cdb{padding:16px 20px 20px;font-size:13px;line-height:1.7}
+.cdb h3{margin:0 0 6px;font-size:15px}
+.cdb .code{display:flex;gap:8px;margin:6px 0 14px}
+.cdb input{flex:1;min-width:0;font:inherit;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;padding:7px 9px;border:1px solid var(--rule2);border-radius:8px;background:var(--bg);color:var(--ink)}
+.cdb button.go{border:0;border-radius:8px;padding:7px 14px;background:var(--accent);color:var(--surface);font-weight:700;cursor:pointer;white-space:nowrap}
+.cdb .n{font-size:12px;color:var(--ink2)}
+/* 間違い報告 */
+.rep{display:inline-flex;align-items:center;gap:6px;margin-top:14px;border:1px solid var(--rule2);background:var(--surface);border-radius:8px;padding:6px 12px;font-size:12.5px;color:var(--ink2);cursor:pointer}
+.rep:hover{border-color:var(--accent);color:var(--accent)}
+.repl{border:0;background:none;padding:0;color:var(--accent);font-size:12px;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+dialog#repDlg{border:0;padding:0;border-radius:12px;max-width:520px;width:calc(100% - 32px);max-height:calc(100% - 48px);background:var(--surface);color:var(--ink);box-shadow:0 18px 50px var(--shadow)}
+dialog#repDlg::backdrop{background:rgba(10,14,22,.45)}
+.rpb{padding:14px 20px 20px;font-size:13px;line-height:1.7}
+.rpb label{display:block;margin:12px 0 4px;font-size:12.5px;font-weight:700;color:var(--ink2)}
+.rpb label small{font-weight:400;color:var(--ink3);margin-left:6px}
+.rpb input,.rpb textarea{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--rule2);border-radius:8px;background:var(--bg);color:var(--ink)}
+.rpb textarea{min-height:110px;resize:vertical}
+.rpb .tgt{padding:8px 10px;border-radius:8px;background:var(--sunk);font-size:12.5px;color:var(--ink2)}
+.rpb .send{margin-top:14px;border:0;border-radius:8px;padding:9px 18px;background:var(--accent);color:var(--surface);font-weight:700;font-size:14px;cursor:pointer}
+.rpb .send:disabled{opacity:.5;cursor:default}
+.rpb .msg{margin-top:10px;font-size:12.5px}
+.rpb .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);z-index:60;padding:9px 16px;border-radius:999px;background:var(--ink);color:var(--bg);font-size:13px;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;max-width:calc(100% - 32px)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+/* 日程の非表示（長押し）と「元に戻す」 */
+#snack{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);z-index:61;display:flex;align-items:center;gap:12px;width:max-content;max-width:calc(100% - 24px);padding:10px 10px 10px 16px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:13px;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+#snack.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#snack span{min-width:0}
+#snack button{flex:0 0 auto;border:0;background:none;color:color-mix(in oklab,var(--accent) 45%,var(--bg));font-weight:700;font-size:13px;padding:4px 6px;cursor:pointer;white-space:nowrap}
+.chip[data-d],.row[data-d]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.chip.lp,.row.lp{transition:transform .45s ease-in .1s,opacity .45s ease-in .1s;transform:scale(.96);opacity:.5}
+.hidbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin:0 0 12px;font-size:11.5px;color:var(--ink3)}
+.hidbar.has{padding:8px 12px;border-radius:8px;border:1px dashed var(--rule2);font-size:12.5px;color:var(--ink2)}
+.hidbar button{border:0;background:none;padding:0;color:var(--accent);font-size:inherit;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.hl{list-style:none;margin:0;padding:0}
+.hl li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.hl li span{min-width:0}
+.hl li small{display:block;color:var(--ink3);font-size:11.5px}
+.hl button,.hlall{flex:0 0 auto;border:1px solid var(--rule2);background:var(--surface);border-radius:8px;padding:4px 10px;font-size:12.5px;color:var(--ink2);cursor:pointer}
+.hlall{margin-top:12px}
 
 /* 上の帯 */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in oklab,var(--bg) 94%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
@@ -96,6 +205,7 @@ header.h h1 small{display:block;font-family:var(--font);font-size:13px;font-weig
 .row .l1,.row .l2{display:inline}.row .l2{margin-left:6px;opacity:.85;font-size:12px}
 .chip:hover{filter:brightness(.97);box-shadow:0 1px 3px var(--shadow)}
 .chip.pick{border-style:dashed}
+.chip .ab,.chip .fs{display:none}
 .ev{display:flex;align-items:center;gap:5px;font-size:11px;line-height:1.35;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border:0;background:none;padding:0 2px;text-align:left;width:100%}
 .ev:hover{color:var(--ink)}
 .more{font-size:11px;color:var(--accent);border:0;background:none;padding:0 2px;text-align:left;cursor:pointer}
@@ -113,7 +223,10 @@ header.h h1 small{display:block;font-family:var(--font);font-size:13px;font-weig
 .row.pick{border-style:dashed}
 .empty{padding:28px 0;color:var(--ink3)}
 
-.foot{margin-top:28px;font-size:12px;color:var(--ink3);line-height:1.8;max-width:60em}
+.about{margin-top:28px;font-size:12px;color:var(--ink3);line-height:1.8;max-width:60em}
+.about p{margin:0 0 6px}.about b{color:var(--ink2)}
+.foot{margin-top:6px;font-size:12px;color:var(--ink3);line-height:1.8;max-width:60em}
+.copy{margin:18px 0 0;padding-top:14px;border-top:1px solid var(--rule);font-size:12px;color:var(--ink3)}
 
 /* ツールチップ */
 #tip{position:fixed;z-index:50;max-width:300px;padding:9px 12px;border-radius:8px;background:var(--ink);color:var(--bg);font-size:12px;line-height:1.6;pointer-events:none;opacity:0;transition:opacity .08s;box-shadow:0 6px 18px var(--shadow)}
@@ -153,14 +266,26 @@ dl.kv dd .n{display:block;font-size:12px;color:var(--ink2)}
 /* スマホ表示（PCでも右上のボタンで選べる） */
 html[data-layout="narrow"] .top .in{padding-inline:16px;gap:10px}
 html[data-layout="narrow"] .ylab{display:none}
-html[data-layout="narrow"] .wrap{padding-inline:16px;padding-block:20px 48px}
+html[data-layout="narrow"] .wrap{padding-inline:16px;padding-block:14px 48px}
 html[data-layout="narrow"] header.h h1{font-size:22px}
 html[data-layout="narrow"] .lgd{margin-left:0}
 html[data-layout="narrow"] .day{grid-template-columns:64px minmax(0,1fr)}
+/* スマホのカレンダー：札の1行目は2文字の大学名だけにして、必ず読めるようにする */
+html[data-layout="narrow"] .cell{padding:4px 3px 6px;min-height:96px}
+html[data-layout="narrow"] .cal .wd{padding:5px 4px}
+html[data-layout="narrow"] .cal .chip{padding:2px 3px;border-radius:4px}
+html[data-layout="narrow"] .cal .chip .l1{display:none}
+html[data-layout="narrow"] .cal .chip .ab{display:block;font-weight:700;font-size:13px;line-height:1.35;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:clip}
+html[data-layout="narrow"] .cal .chip .l2{display:none}
+html[data-layout="narrow"] .cal .chip .fs{display:block;font-size:10px;letter-spacing:-.02em;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-layout="narrow"] dialog#dlg{margin:auto auto 0;width:100%;max-width:none;border-radius:14px 14px 0 0;max-height:88%}
 html[data-layout="narrow"] dl.kv{grid-template-columns:6.5em minmax(0,1fr)}
 html[data-layout="narrow"] .wrap,html[data-layout="narrow"] .top .in{max-width:480px}
 html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
+html[data-layout="narrow"] .gb{flex-basis:78px;padding:3px 7px}
+html[data-layout="narrow"] .seg.trk{width:100%}
+html[data-layout="narrow"] .seg.trk button{flex:1;padding:7px 0}
+html[data-layout="narrow"] .grp{gap:8px}
 @media (max-width:430px){html[data-layout="narrow"] .brand{display:none}html[data-layout="narrow"] .top .sp,html[data-layout="narrow"] #years{margin-left:auto}}
 @media (prefers-reduced-motion:reduce){#tip{transition:none}}
 </style>
@@ -176,8 +301,8 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
 </div></div>
 <div class="wrap">
   <header class="h">
-    <h1>私立理系 一般入試カレンダー<small id="hsub"></small></h1>
-    <p class="status" id="status"></p>
+    <h1 id="ttl">私立理系 一般入試カレンダー</h1>
+    <div class="seg trk" id="track" role="group" aria-label="理系・文系"></div>
   </header>
 
   <div class="bar">
@@ -193,43 +318,138 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
       <span><i class="mk proc"></i>手続締切</span>
     </div>
   </div>
+  <button class="ftog" id="ftog" type="button" aria-expanded="false" aria-controls="fpanel"></button>
+  <div class="fpanel" id="fpanel">
+  <div class="flds" id="fields" aria-label="学部の系統で絞り込む"></div>
   <div class="unis" id="unis" aria-label="大学で絞り込む"></div>
+  </div>
+  <div class="presets" id="presets"></div>
+  <div id="sharedNote"></div>
+  <div id="hidNote"></div>
 
   <div id="main"></div>
 
-  <p class="foot">点線の札は、同じ試験を何日かに分けて実施するものです。何日受けられるかは札の1行目と詳細に書いています。日付は各大学の発表と河合塾 Kei-Net・旺文社パスナビをもとにしています。出願の前に、必ず各大学の募集要項で最新の日程を確認してください。</p>
+  <div class="about"><p id="hsub"></p><p id="status"></p><p><button class="repl" data-rep="" type="button">日程の間違いを見つけましたら、ここから報告していただけますと幸いです。</button></p></div>
+  <p class="foot">点線の札は、同じ試験を何日かに分けて実施するものです。札を長押し（PCは右クリックも可）すると、その日程を非表示にできます。非表示にした日程もマイ設定・設定コードに一緒に保存されます。何日受けられるかは札の1行目と詳細に書いています。日付は各大学の発表と河合塾 Kei-Net・旺文社パスナビをもとにしています。出願の前に、必ず各大学の募集要項で最新の日程を確認してください。</p>
+  <p class="copy">© 2026 nyushi-calendar.com　当サイトの文章・デザイン・プログラムの無断複製を禁じます</p>
+  <!-- 公式の募集要項だけからデータを取るようになったら、上の1行を次に差し替える：<p class="copy">© 2026 nyushi-calendar.com 無断転載・複製を禁じます</p> -->
 </div>
 
 <div id="tip" role="tooltip"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="snack" role="status" aria-live="polite"><span id="snackT"></span><button id="snackB" type="button">元に戻す</button></div>
+<dialog id="hidDlg" aria-labelledby="hidT"><div class="dh"><div class="t" id="hidT">非表示にした日程</div><button class="x" id="hidX" aria-label="閉じる">×</button></div><div class="db" id="hidB"></div></dialog>
+<dialog id="repDlg" aria-labelledby="repT"><div class="dh"><div class="t" id="repT">間違いを報告する</div><button class="x" id="repX" aria-label="閉じる">×</button></div>
+  <form class="rpb" id="repForm">
+    <div class="tgt" id="repTgt"></div>
+    <label for="repBody">どこが違いますか<small>必須</small></label>
+    <textarea id="repBody" required placeholder="例：2/14は前年度の日付で、今年度の要項では2/13になっています"></textarea>
+    <label for="repSrc">正しい情報の出どころ<small>任意（要項のページやURLなど）</small></label>
+    <input id="repSrc" type="text" placeholder="例：2027年度入試要項 p.12">
+    <label for="repMail">返事がほしい場合のメールアドレス<small>任意</small></label>
+    <input id="repMail" type="email" placeholder="空欄でも送れます" autocomplete="email">
+    <div class="hp" aria-hidden="true"><input type="checkbox" id="repBot" tabindex="-1"></div>
+    <button class="send" id="repSend" type="submit">送信する</button>
+    <p class="msg" id="repMsg"></p>
+  </form></dialog>
+<dialog id="codeDlg" aria-labelledby="codeT"><div class="dh"><div class="t" id="codeT">設定コード</div><button class="x" id="codeX" aria-label="閉じる">×</button></div>
+  <div class="cdb">
+    <h3>今の設定のコード</h3>
+    <p class="n" style="margin:0">理系／文系、選んだ大学、学部の系統をまとめたコードです。メモやLINEに残しておけば、別のスマホやPCでも同じ表示に戻せます。</p>
+    <div class="code"><input id="codeOut" readonly aria-label="今の設定のコード"><button class="go" id="codeCopy">コピー</button></div>
+    <h3>コードから戻す</h3>
+    <div class="code"><input id="codeIn" placeholder="コードを貼り付け" aria-label="戻したい設定のコード"><button class="go" id="codeApply">この設定にする</button></div>
+    <p class="n" id="codeMsg" style="margin:0"></p>
+  </div></dialog>
 <dialog id="dlg" aria-labelledby="dlgT"><div class="dh"><div class="t" id="dlgT"></div><button class="x" id="dlgX" aria-label="閉じる">×</button></div><div class="db" id="dlgB"></div></dialog>
 
 <script src="years.js"></script>
 <script>
 (function () {
   var WD = ["日", "月", "火", "水", "木", "金", "土"];
-  var Y = null, HOLI = {}, MONTHS = [], UNIVS = [], SRC = {}, EVENTS = [], UMAP = {};
+  var Y = null, HOLI = {}, MONTHS = [], UNIVS = [], GROUPS = [], SRC = {}, EVENTS = [], UMAP = {}, FIELDS = [];
+  var TRACKS = [["ri", "理系"], ["bun", "文系"]];
 
-  var S = { year: null, month: null, view: null, marks: false, off: {} };
-  try { var sv = JSON.parse(localStorage.getItem("nyushical.v1") || "{}"); if (sv.year) S.year = sv.year; if (sv.month) S.month = sv.month; if (sv.view) S.view = sv.view; S.marks = !!sv.marks; S.off = sv.off || {}; } catch (e) {}
-  function save() { try { localStorage.setItem("nyushical.v1", JSON.stringify({ year: S.year, month: S.month, view: S.view, marks: S.marks, off: S.off })); } catch (e) {} }
+  // tr＝理系(ri)／文系(bun)。大学の絞り込み(off)と系統の絞り込み(fld)は、理系・文系それぞれで覚える
+  var S = { year: null, tr: "ri", month: null, view: null, marks: false, off: {}, fld: [], hid: {}, offT: { ri: {}, bun: {} }, fldT: { ri: [], bun: [] }, hidT: { ri: {}, bun: {} }, shared: 0 };
+  // hid＝非表示にした日程（試験日の札1枚ずつ）。キーは「年度|理系文系|大学|方式|試験日」を短い記号にしたもの
+  // 送られてきたリンク（?t=bun&u=大学,大学&f=系統&y=年度）を読む
+  var Q = {}; try { var sp = new URLSearchParams(location.search); Q.u = sp.get("u"); Q.y = sp.get("y"); Q.t = sp.get("t"); Q.f = sp.get("f"); Q.h = sp.get("h"); } catch (e) {}
+  try {
+    var sv = JSON.parse(localStorage.getItem("nyushical.v1") || "{}");
+    if (sv.year) S.year = sv.year; if (sv.month) S.month = sv.month; if (sv.view) S.view = sv.view; S.marks = !!sv.marks;
+    if (sv.tr === "bun") S.tr = "bun";
+    if (sv.offT) S.offT = { ri: sv.offT.ri || {}, bun: sv.offT.bun || {} }; else if (sv.off) S.offT.ri = sv.off;
+    if (sv.fldT) S.fldT = { ri: sv.fldT.ri || [], bun: sv.fldT.bun || [] };
+    if (sv.hidT) S.hidT = { ri: sv.hidT.ri || {}, bun: sv.hidT.bun || {} };
+  } catch (e) {}
+  if (Q.t === "bun" || Q.t === "ri") S.tr = Q.t;
+  S.off = S.offT[S.tr]; S.fld = S.fldT[S.tr]; S.hid = S.hidT[S.tr];
+  function save() { S.offT[S.tr] = S.off; S.fldT[S.tr] = S.fld; S.hidT[S.tr] = S.hid; try { localStorage.setItem("nyushical.v1", JSON.stringify({ year: S.year, tr: S.tr, month: S.month, view: S.view, marks: S.marks, offT: S.offT, fldT: S.fldT, hidT: S.hidT })); } catch (e) {} }
+  function useTrack(tr) { S.tr = tr; S.off = S.offT[tr] || {}; S.fld = S.fldT[tr] || []; S.hid = S.hidT[tr] || {}; }
+  function fnv(str) { var h = 0x811c9dc5; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(36); }
 
   // 年度のデータを読み込む（data-2027.js など）
-  function loadYear(y, cb) {
+  function dkey(y, tr) { return tr === "bun" ? y + "-bun" : y; }
+  function hasTrack(y, tr) { var info = YEARS.filter(function (x) { return x.y === y; })[0]; return !!(info && (tr === "bun" ? info.bun : info.file)); }
+  function loadYear(y, cb, tr) {
+    tr = tr || S.tr;
     window.NYUSHI = window.NYUSHI || {};
-    if (window.NYUSHI[y]) return cb();
+    if (window.NYUSHI[dkey(y, tr)]) return cb();
     var info = YEARS.filter(function (x) { return x.y === y; })[0];
-    var sc = document.createElement("script"); sc.src = info.file;
+    var sc = document.createElement("script"); sc.src = tr === "bun" ? info.bun : info.file;
     sc.onload = cb;
     sc.onerror = function () { document.getElementById("main").innerHTML = '<p class="empty">' + y + "年度のデータを読み込めませんでした。ページを読み込み直してください。</p>"; };
     document.head.appendChild(sc);
   }
   function setYear(y) {
-    Y = window.NYUSHI[y]; HOLI = Y.holidays; MONTHS = Y.months; UNIVS = Y.univs; SRC = Y.src; EVENTS = Y.events;
+    Y = window.NYUSHI[dkey(y, S.tr)]; HOLI = Y.holidays; MONTHS = Y.months; UNIVS = Y.univs; GROUPS = Y.groups || []; SRC = Y.src; EVENTS = Y.events; FIELDS = Y.fields || [];
     UMAP = {}; UNIVS.forEach(function (u) { UMAP[u.id] = u; });
     EVENTS.forEach(function (e, i) { e.id = i; });
+    // 学部・学科ごとの系統（データ側の fieldOf で決める）
+    EVENTS.forEach(function (e) { e.slots.forEach(function (sl) { var fs = {}; sl.f.forEach(function (x) { (Array.isArray(x[2]) ? x[2] : Y.fieldOf ? Y.fieldOf(x[0], x[1] || "", e) : []).forEach(function (k) { fs[k] = 1; }); }); sl.fields = Object.keys(fs); sl.hk = fnv(Y.y + "|" + S.tr + "|" + e.u + "|" + e.method + "|" + sl.d); }); });
+    S.fld = S.fld.filter(function (k) { return FIELDS.some(function (f) { return f.id === k; }); });
     if (!MONTHS.some(function (m) { return m[0] === S.month; })) S.month = Y.defaultMonth;
   }
   function viewNow() { return S.view || "list"; }
+  function newestYear() { return YEARS.reduce(function (m, x) { return Math.max(m, x.y); }, 0); }
+
+  // 送られてきた絞り込みを当てはめる（自分の保存した設定は、何か操作するまで上書きしない）
+  function applyShared() {
+    if (Q.h) { var hs = Q.h.split(",").filter(function (k) { return /^[0-9a-z]{1,8}$/.test(k); }); Q.h = null; if (hs.length) { S.hid = {}; hs.forEach(function (k) { S.hid[k] = 1; }); S.shared = S.shared || -1; } }
+    if (Q.f) { var fl = Q.f.split(",").filter(function (k) { return FIELDS.some(function (f) { return f.id === k; }); }); Q.f = null; if (fl.length) { S.fld = fl; S.shared = S.shared || -1; } }
+    if (!Q.u) return;
+    var ids = Q.u.split(",").filter(function (id) { return UMAP[id]; });
+    Q.u = null;
+    if (!ids.length) return;
+    S.off = {}; UNIVS.forEach(function (u) { if (ids.indexOf(u.id) < 0) S.off[u.id] = 1; });
+    S.shared = ids.length;
+  }
+  // いまの絞り込みをアドレス欄に反映する（そのままコピーしても送れるように）
+  function shareQuery() {
+    var on = UNIVS.filter(function (u) { return !S.off[u.id]; }).map(function (u) { return u.id; });
+    var q = [];
+    if (S.tr === "bun") q.push("t=bun");
+    if (on.length && on.length < UNIVS.length) q.push("u=" + on.join(","));
+    if (S.fld.length) q.push("f=" + S.fld.join(","));
+    var hl = hidKeys(); if (hl.length) q.push("h=" + hl.join(","));
+    if (S.year !== newestYear()) q.push("y=" + S.year);
+    return q.length ? "?" + q.join("&") : "";
+  }
+  function shareURL() { return location.origin + location.pathname + shareQuery(); }
+  function syncURL() { try { history.replaceState(null, "", location.pathname + shareQuery() + location.hash); } catch (e) {} }
+  var toastT;
+  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("on"); }, 2600); }
+  function doShare() {
+    var url = shareURL(), on = UNIVS.filter(function (u) { return !S.off[u.id]; });
+    var nm = "私立" + (S.tr === "bun" ? "文系" : "理系") + " 一般入試カレンダー";
+    var text = on.length && on.length < UNIVS.length ? nm + "（" + on.map(function (u) { return u.short; }).join("・") + "）" : nm + "（" + Y.y + "年度・" + UNIVS.length + "大学）";
+    if (navigator.share) { navigator.share({ title: text, text: text, url: url }).catch(function () {}); return; }
+    function fallback() { window.prompt("このリンクをコピーして送ってください", url); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(function () { toast("リンクをコピーしました。LINEなどに貼り付けて送れます"); }, fallback);
+    else fallback();
+  }
+  var SHARE_I = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
 
   function esc(t) { return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
   function dt(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
@@ -238,6 +458,14 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
   function mdy(s) { if (!s) return ""; var d = dt(s); return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日（" + WD[d.getDay()] + "）"; }
   function facShort(f) { return f.map(function (x) { return x[0].replace(/学部/g, "").replace(/（郡山）/, ""); }).join("・"); }
   function visible(e) { return !S.off[e.u]; }
+  function slotOn(sl) { return !S.fld.length || sl.fields.some(function (k) { return S.fld.indexOf(k) >= 0; }); }
+  // 非表示にした日程（いまの年度・理系文系にある札だけ数える）
+  function hiddenList() {
+    var out = [];
+    EVENTS.forEach(function (e) { e.slots.forEach(function (s) { if (S.hid[s.hk]) out.push({ e: e, s: s }); }); });
+    return out.sort(function (a, b) { return a.s.d < b.s.d ? -1 : a.s.d > b.s.d ? 1 : UNIVS.indexOf(UMAP[a.e.u]) - UNIVS.indexOf(UMAP[b.e.u]); });
+  }
+  function hidKeys() { var seen = {}; return hiddenList().map(function (x) { return x.s.hk; }).filter(function (k) { if (seen[k]) return false; seen[k] = 1; return true; }).sort(); }
   function oldTag(e) { return e.year < Y.y ? '<span class="old">前年度</span>' : ""; }
 
   // 日付ごとの札
@@ -246,8 +474,9 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
     function add(k, item) { (m[k] = m[k] || []).push(item); }
     EVENTS.forEach(function (e) {
       if (!visible(e)) return;
-      e.slots.forEach(function (s) { add(s.d, { t: "ex", e: e, s: s }); });
-      if (S.marks && e.year === Y.y) {
+      var anyOn = false;
+      e.slots.forEach(function (s) { if (!slotOn(s) || S.hid[s.hk]) return; anyOn = true; add(s.d, { t: "ex", e: e, s: s }); });
+      if (S.marks && e.year === Y.y && anyOn) {
         // 同じ大学・同じ日・同じ種類の印は1つにまとめる
         [["apply", e.apply && e.apply[1]], ["result", e.result], ["proc", e.proc]].forEach(function (p) {
           if (!p[1]) return;
@@ -266,10 +495,16 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
   }
   var MK = { apply: "出願締切", result: "合格発表", proc: "手続締切" };
 
+  // スマホのカレンダーで使う2文字の大学名
+  var ABBR = { waseda: "早大", keio: "慶應", sophia: "上智", tus: "理科", meiji: "明治", aoyama: "青学", rikkyo: "立教", chuo: "中央", hosei: "法政", nihon: "日大",
+    shibaura: "芝浦", denki: "電機", tcu: "都市", kogakuin: "工院", kanagawa: "神大", doshisha: "同大", ritsumei: "立命", toyo: "東洋", komazawa: "駒澤", senshu: "専修",
+    seikei: "成蹊", seijo: "成城", meigaku: "明学", daito: "大東", tokai: "東海", asia: "亜大", teikyo: "帝京", kokushikan: "国士", kansai: "関大", kangaku: "関学",
+    teu: "工科", jwu: "日女", icu: "ICU", chibatech: "千工", tsuda: "津田", twcu: "東女" };
+  function abbr(u) { return u.abbr || ABBR[u.id] || u.short.slice(0, 2); }
   function chip(it, cls) {
     var e = it.e, u = UMAP[e.u];
     if (it.t !== "ex") return '<button class="ev" data-id="' + e.id + '" data-mk="' + it.t + '"><i class="mk ' + it.t + '"></i>' + esc(u.short) + " " + MK[it.t] + "</button>";
-    return '<button class="' + cls + (it.s.pick ? " pick" : "") + '" style="--h:' + u.hue + '" data-id="' + e.id + '" data-d="' + it.s.d + '"><span class="l1"><b>' + esc(u.short) + "</b>" + (it.s.tag ? "<em>" + esc(it.s.tag) + "</em>" : esc(e.method)) + '</span><span class="l2">' + esc(it.s.l2 || facShort(it.s.f)) + (it.s.tag ? "　" + esc(e.method) : "") + "</span>" +
+    return '<button class="' + cls + (it.s.pick ? " pick" : "") + '" style="--h:' + u.hue + '" data-id="' + e.id + '" data-d="' + it.s.d + '">' + (cls === "chip" ? '<span class="ab">' + esc(abbr(u)) + '</span><span class="fs">' + esc(facShort(it.s.f)) + "</span>" : "") + '<span class="l1"><b>' + esc(u.short) + "</b>" + (it.s.tag ? "<em>" + esc(it.s.tag) + "</em>" : esc(e.method)) + '</span><span class="l2">' + esc(it.s.l2 || facShort(it.s.f)) + (it.s.tag ? "　" + esc(e.method) : "") + "</span>" +
       (cls === "row" ? '<span class="sub">' + esc(applyLine(e)) + "</span>" : "") + "</button>";
   }
   function applyLine(e) {
@@ -298,7 +533,7 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
   }
   function renderList(m) {
     var keys = Object.keys(m).filter(function (k) { return k.slice(0, 7) === S.month; }).sort();
-    if (!keys.length) return '<p class="empty">この月に表示する日程はありません。上の大学の絞り込みを確認してください。</p>';
+    if (!keys.length) return '<p class="empty">この月に表示する日程はありません。上の系統・大学の絞り込みを確認してください。</p>';
     return '<div class="list">' + keys.map(function (k) {
       var d = dt(k), cls = HOLI[k] ? " ho" : d.getDay() === 0 ? " su" : d.getDay() === 6 ? " sa" : "";
       return '<div class="day" id="day-' + k + '"><div class="dd' + cls + '">' + (d.getMonth() + 1) + "/" + d.getDate() + "<small>" + WD[d.getDay()] + "曜" + (HOLI[k] ? "・" + HOLI[k] : "") + "</small></div>" +
@@ -317,18 +552,134 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
     document.getElementById("years").innerHTML = YEARS.slice().sort(function (a, b) { return b.y - a.y; }).map(function (x) {
       return '<button data-y="' + x.y + '" class="' + (S.year === x.y ? "on" : "") + '">' + x.y + "年度</button>";
     }).join("");
-    document.getElementById("hsub").textContent = Y.y + "年度入試（" + Y.enroll + "入学・試験は" + Y.exam + "）・" + UNIVS.length + "大学の理工系学部（生物系・薬学系を除く）";
+    var trName = S.tr === "bun" ? "文系" : "理系";
+    document.getElementById("ttl").textContent = "私立" + trName + " 一般入試カレンダー";
+    document.title = "私立" + trName + " 入試カレンダー";
+    document.getElementById("track").innerHTML = TRACKS.map(function (x) { var ok = hasTrack(S.year, x[0]); return '<button data-tr="' + x[0] + '" class="' + (S.tr === x[0] ? "on" : "") + '"' + (ok ? "" : ' disabled title="この年度はまだありません"') + ">" + x[1] + "</button>"; }).join("");
+    document.getElementById("hsub").textContent = Y.y + "年度入試（" + Y.enroll + "入学・試験は" + Y.exam + "）・" + UNIVS.length + "大学の" + (Y.scope || "理工系学部");
     document.getElementById("status").innerHTML = "試験日はすべて <b>" + Y.y + "年度</b> の日程（大学発表または河合塾 Kei-Net 掲載）。出願締切・合格発表・手続締切は、" + Y.y + "年度がまだ発表されていない大学は <b>前年度の日付</b> を「前年度」と付けて表示しています（" + Y.asof + "時点）。";
     document.getElementById("months").innerHTML = MONTHS.map(function (x) { return '<button data-m="' + x[0] + '" class="' + (S.month === x[0] ? "on" : "") + '">' + x[1] + "</button>"; }).join("");
     document.querySelectorAll("#views button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-v") === viewNow()); });
     document.getElementById("marks").checked = S.marks;
     var allOn = UNIVS.every(function (u) { return !S.off[u.id]; });
-    document.getElementById("unis").innerHTML = UNIVS.map(function (u) {
-      return '<button class="uc' + (S.off[u.id] ? "" : " on") + '" style="--h:' + u.hue + '" data-u="' + u.id + '" aria-pressed="' + !S.off[u.id] + '"><i></i>' + esc(u.name) + "</button>";
-    }).join("") + '<button class="uc all" data-all="1">' + (allOn ? "すべて外す" : "すべて表示") + "</button>";
+    function uchip(u, short) { return '<button class="uc' + (S.off[u.id] ? "" : " on") + '" style="--h:' + u.hue + '" data-u="' + u.id + '" aria-pressed="' + !S.off[u.id] + '"><i></i>' + esc(short ? u.name.replace(/大学$/, "") : u.name) + "</button>"; }
+    var acts = '<button class="uc all" data-all="1">' + (allOn ? "すべて外す" : "すべて表示") + "</button>" +
+      '<button class="uc share" data-share="1">' + SHARE_I + (allOn ? "このサイトを送る" : "この絞り込みを送る") + "</button>";
+    document.getElementById("fields").innerHTML = FIELDS.length ? '<span class="lb">学部の系統</span>' + '<button class="fc all' + (S.fld.length ? "" : " on") + '" data-fldall="1">すべて</button>' +
+      FIELDS.map(function (f) { return '<button class="fc' + (S.fld.indexOf(f.id) >= 0 ? " on" : "") + '" data-fld="' + f.id + '" aria-pressed="' + (S.fld.indexOf(f.id) >= 0) + '"' + (f.desc ? ' title="' + esc(f.desc) + '"' : "") + ">" + esc(f.name) + "</button>"; }).join("") : "";
+    var ue = document.getElementById("unis");
+    if (GROUPS.length) {
+      ue.className = "unis g";
+      ue.innerHTML = GROUPS.map(function (g, gi) {
+        var n = g.members.filter(function (id) { return !S.off[id]; }).length, st = n === g.members.length ? " on" : n ? " part" : "";
+        return '<div class="grp"><button class="gb' + st + '" data-g="' + gi + '" aria-pressed="' + (n === g.members.length) + '" title="' + esc(g.name) + "をまとめて" + (st === " on" ? "外す" : "入れる") + '">' + esc(g.name) + "<i></i></button>" +
+          '<div class="gm">' + g.members.map(function (id) { return uchip(UMAP[id], true); }).join("") +
+          (g.missing.length ? '<span class="miss">未収録：' + esc(g.missing.join("・")) + "</span>" : "") + "</div></div>";
+      }).join("") + '<div class="uact">' + acts + "</div>";
+    } else {
+      ue.className = "unis";
+      ue.innerHTML = UNIVS.map(function (u) { return uchip(u, false); }).join("") + acts;
+    }
+    document.getElementById("sharedNote").innerHTML = S.shared ? '<div class="shared">送られてきたリンクの絞り込み（' + (S.shared > 0 ? S.shared + "大学" : "") + (S.shared > 0 && S.fld.length ? "・" : "") + (S.fld.length ? "系統：" + S.fld.map(function (k) { return (FIELDS.filter(function (f) { return f.id === k; })[0] || {}).name; }).join("・") : "") + "）で表示しています。" + '<button data-clear="1">絞り込みをやめて全部表示する</button></div>' : "";
+    var nh = hiddenList().length;
+    document.getElementById("hidNote").innerHTML = nh ? '<div class="hidbar has"><span>非表示にした日程：<b>' + nh + '件</b></span><button data-hidlist="1">一覧・戻す</button><button data-hidall="1">すべて戻す</button></div>' :
+      '<div class="hidbar">札を長押し' + (document.documentElement.getAttribute("data-layout") === "wide" ? "（または右クリック）" : "") + 'すると、受けない日程を非表示にできます。自分の受験日程だけ残してマイ設定に保存できます。</div>';
+    syncURL();
+    renderPresets();
+    var nOn = UNIVS.filter(function (u) { return !S.off[u.id]; }).length;
+    var ftxt = (nOn === UNIVS.length ? "全" + UNIVS.length + "大学" : nOn + "大学") + "・" + (S.fld.length ? S.fld.map(function (k) { return (FIELDS.filter(function (f) { return f.id === k; })[0] || {}).name; }).join("・") : "系統すべて");
+    var fo = document.getElementById("fpanel").classList.contains("open");
+    document.getElementById("ftog").innerHTML = "<span>絞り込み：" + esc(ftxt) + "</span><b>" + (fo ? "閉じる ▲" : "変える ▼") + "</b>";
+    document.getElementById("ftog").setAttribute("aria-expanded", fo);
     var m = byDay();
     document.getElementById("main").innerHTML = viewNow() === "cal" ? renderCal(m) : renderList(m);
   }
+
+  // ---- 間違い報告（Web3Forms 経由でメールに届く。キーはメールアドレスの代わりの公開用の番号） ----
+  var REPORT_KEY = "2e113b39-3eeb-4be4-b965-50def3b985f0";   // ← Web3Forms のアクセスキーをここに入れる
+  var repDlg = document.getElementById("repDlg"), repCtx = "";
+  function openReport(id) {
+    var e = id === "" || id == null ? null : EVENTS[+id];
+    repCtx = (S.tr === "bun" ? "文系" : "理系") + "・" + Y.y + "年度" + (e ? "｜" + UMAP[e.u].name + "　" + e.method + "　試験日 " + e.slots.map(function (s) { return md(s.d); }).join("・") : "｜（全体）");
+    document.getElementById("repTgt").textContent = "対象：" + repCtx;
+    document.getElementById("repMsg").textContent = REPORT_KEY ? "" : "※ 報告の受け付けは準備中です。";
+    document.getElementById("repSend").disabled = !REPORT_KEY;
+    if (dlg.open) dlg.close();
+    if (repDlg.showModal) repDlg.showModal(); else repDlg.setAttribute("open", "");
+  }
+  document.getElementById("repX").addEventListener("click", function () { repDlg.close(); });
+  repDlg.addEventListener("click", function (ev) { if (ev.target === repDlg) repDlg.close(); });
+  document.getElementById("repForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var body = document.getElementById("repBody").value.trim(), msg = document.getElementById("repMsg"), btn = document.getElementById("repSend");
+    if (!body) { msg.textContent = "どこが違うかを書いてください。"; return; }
+    if (!REPORT_KEY) { msg.textContent = "※ 報告の受け付けは準備中です。"; return; }
+    var data = { access_key: REPORT_KEY, subject: "【入試カレンダー】間違い報告：" + repCtx, from_name: "入試カレンダー", "対象": repCtx, "内容": body, "出どころ": document.getElementById("repSrc").value.trim(), "ページ": location.href, botcheck: document.getElementById("repBot").checked };
+    var mail = document.getElementById("repMail").value.trim(); if (mail) data.email = mail;
+    btn.disabled = true; msg.textContent = "送信しています…";
+    fetch("https://api.web3forms.com/submit", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(data) })
+      .then(function (r) { if (r.status === 200) { msg.textContent = "送信しました。ありがとうございます。"; document.getElementById("repBody").value = ""; document.getElementById("repSrc").value = ""; setTimeout(function () { repDlg.close(); btn.disabled = false; }, 1500); } else { msg.textContent = "送信できませんでした。時間をおいてもう一度お試しください。"; btn.disabled = false; } })
+      .catch(function () { msg.textContent = "送信できませんでした。通信状態を確認してください。"; btn.disabled = false; });
+  });
+
+  // ---- マイ設定・設定コード ----
+  // 設定＝{t:理系/文系, u:表示する大学のid（全部ならnull）, f:系統}
+  function curSetting() { var on = UNIVS.filter(function (u) { return !S.off[u.id]; }).map(function (u) { return u.id; }); return { t: S.tr, u: on.length === UNIVS.length ? null : on, f: S.fld.slice(), h: hidKeys() }; }
+  function sameSetting(a, b) { return a.t === b.t && JSON.stringify(a.u) === JSON.stringify(b.u) && JSON.stringify((a.f || []).slice().sort()) === JSON.stringify((b.f || []).slice().sort()) && JSON.stringify((a.h || []).slice().sort()) === JSON.stringify((b.h || []).slice().sort()); }
+  function b64e(str) { return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  function b64d(str) { str = str.replace(/-/g, "+").replace(/_/g, "/"); while (str.length % 4) str += "="; return decodeURIComponent(escape(atob(str))); }
+  function encSetting(st) { var p = [st.t, st.u ? st.u.join(",") : "*", (st.f || []).join(",")]; if (st.h && st.h.length) p.push(st.h.join(",")); return "NC1." + b64e(p.join("|")); }
+  function decSetting(code) {
+    code = (code || "").trim(); var m = code.match(/NC1\.([A-Za-z0-9_-]+)/); if (!m) return null;
+    try { var p = b64d(m[1]).split("|"); if ((p.length !== 3 && p.length !== 4) || (p[0] !== "ri" && p[0] !== "bun")) return null; return { t: p[0], u: p[1] === "*" ? null : p[1].split(",").filter(Boolean), f: p[2] ? p[2].split(",") : [], h: p[3] ? p[3].split(",").filter(function (k) { return /^[0-9a-z]{1,8}$/.test(k); }) : [] }; } catch (e) { return null; }
+  }
+  function settingName(st) {
+    var tn = st.t === "bun" ? "文系" : "理系", parts = [];
+    if (!st.u) parts.push("全大学"); else {
+      var rest = st.u.slice();
+      GROUPS.forEach(function (g) { if (g.members.length && g.members.every(function (id) { return rest.indexOf(id) >= 0; })) { parts.push(g.name); rest = rest.filter(function (id) { return g.members.indexOf(id) < 0; }); } });
+      rest.forEach(function (id) { if (UMAP[id]) parts.push(UMAP[id].short); });
+    }
+    var fn = (st.f || []).map(function (k) { return (FIELDS.filter(function (f) { return f.id === k; })[0] || {}).name; }).filter(Boolean);
+    return tn + "｜" + (parts.join("・") || "大学なし") + (fn.length ? "｜" + fn.join("・") : "") + (st.h && st.h.length ? "｜" + st.h.length + "件非表示" : "");
+  }
+  function loadPresets() { try { return JSON.parse(localStorage.getItem("nyushical.presets") || "[]"); } catch (e) { return []; } }
+  function savePresets(a) { try { localStorage.setItem("nyushical.presets", JSON.stringify(a)); return true; } catch (e) { return false; } }
+  function applySetting(st, msg) {
+    if (!hasTrack(S.year, st.t)) return;
+    save();
+    loadYear(S.year, function () {
+      useTrack(st.t); setYear(S.year);
+      S.hid = {}; (st.h || []).forEach(function (k) { S.hid[k] = 1; });
+      S.off = {}; if (st.u) UNIVS.forEach(function (u) { if (st.u.indexOf(u.id) < 0) S.off[u.id] = 1; });
+      S.fld = (st.f || []).filter(function (k) { return FIELDS.some(function (f) { return f.id === k; }); });
+      S.shared = 0; save(); render(); if (msg) toast(msg);
+    }, st.t);
+  }
+  function renderPresets() {
+    var ps = loadPresets(), cur = curSetting();
+    document.getElementById("presets").innerHTML = '<span class="lb">マイ設定</span>' + '<button class="pbtn save" data-presave="1" title="今の絞り込みを名前を付けて保存">★ 保存</button><button class="pbtn" data-code="1" title="設定を別の端末へ移すコード">設定コード</button>' + ps.map(function (p, i) {
+      return '<span class="pc' + (sameSetting(p, cur) ? " cur" : "") + '"><button data-pre="' + i + '" title="この設定にする">' + esc(p.name) + '</button><button class="del" data-predel="' + i + '" aria-label="' + esc(p.name) + 'を消す">×</button></span>';
+    }).join("") + (ps.length ? "" : '<span class="hint">（条件を保存できます）</span>');
+  }
+  var codeDlg = document.getElementById("codeDlg");
+  function openCode() {
+    document.getElementById("codeOut").value = encSetting(curSetting());
+    document.getElementById("codeIn").value = ""; document.getElementById("codeMsg").textContent = "";
+    if (codeDlg.showModal) codeDlg.showModal(); else codeDlg.setAttribute("open", "");
+  }
+  document.getElementById("codeX").addEventListener("click", function () { codeDlg.close(); });
+  codeDlg.addEventListener("click", function (ev) { if (ev.target === codeDlg) codeDlg.close(); });
+  document.getElementById("codeCopy").addEventListener("click", function () {
+    var v = document.getElementById("codeOut").value;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(function () { toast("コードをコピーしました"); }, function () { document.getElementById("codeOut").select(); });
+    else document.getElementById("codeOut").select();
+  });
+  document.getElementById("codeApply").addEventListener("click", function () {
+    var st = decSetting(document.getElementById("codeIn").value);
+    if (!st) { document.getElementById("codeMsg").textContent = "コードが読み取れませんでした。NC1. から始まるコードを、そのまま貼り付けてください。"; return; }
+    codeDlg.close(); applySetting(st, "コードの設定にしました");
+  });
 
   // ツールチップ（試験日の札に乗せると出願締切を出す）
   var tip = document.getElementById("tip");
@@ -342,7 +693,7 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
       h += '<br><span class="k">試験日</span>　' + md(s.d) + (s.tag ? "　" + esc(s.tag) : "") + (s.pick ? "<br>" + esc(s.pick) : "");
       h += '<br><span class="k">出願締切</span>　' + (e.apply && e.apply[1] ? md(e.apply[1]) + oldTag(e) + (e.apply[2] ? "　" + esc(e.apply[2]) : "") : "未発表");
     }
-    return h + '<br><span class="k">押すと、科目・合格発表・要項へのリンクを表示</span>';
+    return h + '<br><span class="k">押すと、科目・合格発表・要項へのリンクを表示' + (mk ? "" : "／長押し・右クリックで非表示") + "</span>";
   }
   var cur = null;
   document.addEventListener("pointermove", function (ev) {
@@ -359,7 +710,7 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
   // 詳細
   var dlg = document.getElementById("dlg");
   function srcObj(s) { return typeof s === "string" ? SRC[s] : s; }
-  function openDetail(id) {
+  function openDetail(id, dd) {
     var e = EVENTS[id], u = UMAP[e.u], old = e.year < Y.y, yl = Y.y + "年度";
     tip.style.opacity = 0; cur = null;
     document.getElementById("dlgT").innerHTML = '<span class="sw" style="background:hsl(' + u.hue + ' 60% 48%)"></span>' + esc(u.name) + "<small>" + esc(e.method) + "</small>";
@@ -369,7 +720,7 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
       return "<li><b>" + md(s.d) + "</b>" + (s.tag ? '<span class="flag tagd">' + esc(s.tag) + "</span>" : "") + esc(s.f.map(function (x) { return x[0] + (x[1] ? "（" + x[1] + "）" : ""); }).join("、")) + "</li>";
     }).join("");
     var pick = e.slots[0].pick ? '<span class="n">' + esc(e.slots[0].pick) + "</span>" : "";
-    function val(v, note) { return v ? mdy(v) + (note ? '<span class="n">' + esc(note) + "</span>" : "") : '<span style="color:var(--ink3)">未発表・要項で確認</span>'; }
+    function val(v, note) { return v ? mdy(v) + (note ? '<span class="n">' + esc(note) + "</span>" : "") : note ? esc(note) : '<span style="color:var(--ink3)">未発表・要項で確認</span>'; }
     var ap = e.apply && e.apply[1] ? (e.apply[0] ? md(e.apply[0]) + " 〜 " : "") + mdy(e.apply[1]) + (e.apply[2] ? '<span class="n">' + esc(e.apply[2]) + "</span>" : "") : '<span style="color:var(--ink3)">未発表・要項で確認</span>';
     var tagD = old ? '<span class="flag old">前年度</span>' : '<span class="flag new">' + yl + '</span>';
     var h = '<p style="margin:0;font-size:12.5px;color:var(--ink2)">' + (old ?
@@ -386,16 +737,67 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
     var main = srcs.filter(function (s) { return !/Kei-Net|パスナビ/.test(s.label); })[0] || srcs[0];
     h += '<div class="links"><a class="main" href="' + esc(main.url) + '" target="_blank" rel="noopener">募集要項・大学の入試ページを開く</a>' +
       srcs.map(function (s) { return '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">出典：' + esc(s.label) + "</a>"; }).join("") + "</div>";
+    var vis = e.slots.filter(function (s) { return !S.hid[s.hk]; });
+    if (dd && vis.some(function (s) { return s.d === dd; })) h += '<button class="rep" type="button" data-hide="' + id + "|" + dd + '">この日（' + md(dd) + "）を非表示にする</button> ";
+    if (vis.length > 1) h += '<button class="rep" type="button" data-hideev="' + id + '">この方式の' + vis.length + "日をまとめて非表示にする</button> ";
+    h += '<button class="rep" type="button" data-rep="' + id + '">この日程の間違いを報告する</button>';
     document.getElementById("dlgB").innerHTML = h;
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
   }
   document.getElementById("dlgX").addEventListener("click", function () { dlg.close(); });
+
+  // ---- 日程の非表示（札の長押し・右クリック）。消したあと6秒間「元に戻す」を出す ----
+  var snackT, snackUndo = null;
+  function snack(msg, undo) {
+    var el = document.getElementById("snack"); document.getElementById("snackT").textContent = msg; snackUndo = undo;
+    document.getElementById("snackB").style.display = undo ? "" : "none";
+    el.classList.add("on"); clearTimeout(snackT); snackT = setTimeout(function () { el.classList.remove("on"); snackUndo = null; }, 6000);
+  }
+  document.getElementById("snackB").addEventListener("click", function () { var f = snackUndo; snackUndo = null; document.getElementById("snack").classList.remove("on"); if (f) f(); });
+  function hideSlots(e, dates) {
+    var keys = e.slots.filter(function (s) { return dates.indexOf(s.d) >= 0; }).map(function (s) { return s.hk; }).filter(function (k) { return !S.hid[k]; });
+    if (!keys.length) return;
+    keys.forEach(function (k) { S.hid[k] = 1; }); save(); render();
+    tip.style.opacity = 0; cur = null;
+    snack(UMAP[e.u].short + "　" + (dates.length === 1 ? md(dates[0]) : dates.length + "日分") + " を非表示にしました", function () { keys.forEach(function (k) { delete S.hid[k]; }); save(); render(); });
+  }
+  var hidDlg = document.getElementById("hidDlg");
+  function openHidList() {
+    var hl = hiddenList();
+    document.getElementById("hidB").innerHTML = '<ul class="hl">' + hl.map(function (x) {
+      return '<li><span><b>' + esc(UMAP[x.e.u].short) + "</b>　" + md(x.s.d) + "<small>" + esc(x.e.method) + "　" + esc(x.s.l2 || facShort(x.s.f)) + '</small></span><button type="button" data-unhide="' + x.s.hk + '">戻す</button></li>';
+    }).join("") + '</ul><button class="hlall" type="button" data-hidall="1">すべて表示に戻す</button>';
+    if (!hidDlg.open) { if (hidDlg.showModal) hidDlg.showModal(); else hidDlg.setAttribute("open", ""); }
+  }
+  document.getElementById("hidX").addEventListener("click", function () { hidDlg.close(); });
+  hidDlg.addEventListener("click", function (ev) { if (ev.target === hidDlg) hidDlg.close(); });
+  var lpT = null, lpEl = null, lpX = 0, lpY = 0, lpDone = 0, LPSEL = ".chip[data-d],.row[data-d]";
+  function lpCancel() { if (lpT) { clearTimeout(lpT); lpT = null; } if (lpEl) { lpEl.classList.remove("lp"); lpEl = null; } }
+  function lpHide(el) { lpDone = Date.now(); if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} } hideSlots(EVENTS[+el.getAttribute("data-id")], [el.getAttribute("data-d")]); }
+  document.addEventListener("pointerdown", function (ev) {
+    if (ev.button > 0) return;
+    var el = ev.target.closest && ev.target.closest(LPSEL); if (!el) return;
+    lpCancel(); lpEl = el; lpX = ev.clientX; lpY = ev.clientY; el.classList.add("lp");
+    lpT = setTimeout(function () { lpT = null; var x = lpEl; lpCancel(); if (x) lpHide(x); }, 600);
+  });
+  document.addEventListener("pointermove", function (ev) { if (lpT && (Math.abs(ev.clientX - lpX) > 8 || Math.abs(ev.clientY - lpY) > 8)) lpCancel(); });
+  document.addEventListener("pointerup", lpCancel);
+  document.addEventListener("pointercancel", lpCancel);
+  window.addEventListener("scroll", lpCancel, true);
+  document.addEventListener("contextmenu", function (ev) {
+    var el = ev.target.closest && ev.target.closest(LPSEL); if (!el) return;
+    ev.preventDefault();
+    if (Date.now() - lpDone < 1000) return;   // 長押しで消した直後のメニューは無視
+    lpCancel(); lpHide(el);
+  });
+  // 長押しで消した直後の「指を離したときのクリック」で、下にあった札の詳細が開かないようにする
+  document.addEventListener("click", function (ev) { if (Date.now() - lpDone < 700 && !(ev.target.closest && ev.target.closest("#snack"))) { ev.stopPropagation(); ev.preventDefault(); } }, true);
   dlg.addEventListener("click", function (ev) { if (ev.target === dlg) dlg.close(); });
 
   document.addEventListener("click", function (ev) {
     var t = ev.target.closest ? ev.target : null; if (!t) return;
     var b;
-    if ((b = t.closest("[data-y]"))) { var ny = +b.getAttribute("data-y"); loadYear(ny, function () { S.year = ny; setYear(ny); save(); render(); }); return; }
+    if ((b = t.closest("[data-y]"))) { var ny = +b.getAttribute("data-y"); if (!hasTrack(ny, S.tr)) { save(); useTrack("ri"); } loadYear(ny, function () { S.year = ny; setYear(ny); save(); render(); }); return; }
     if ((b = t.closest("[data-lyt]"))) {
       var nl = b.getAttribute("data-lyt"); document.documentElement.setAttribute("data-layout", nl);
       try { localStorage.setItem("nyushical.layout", nl); } catch (e) {}
@@ -405,10 +807,47 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
     if (t.closest("#thm")) { var nd = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", nd); try { localStorage.setItem("nyushical.theme", nd); } catch (e) {} return render(); }
     if ((b = t.closest("[data-m]"))) { S.month = b.getAttribute("data-m"); save(); return render(); }
     if ((b = t.closest("[data-v]"))) { S.view = b.getAttribute("data-v"); save(); return render(); }
-    if ((b = t.closest("[data-u]"))) { var id = b.getAttribute("data-u"); if (S.off[id]) delete S.off[id]; else S.off[id] = 1; save(); return render(); }
-    if ((b = t.closest("[data-all]"))) { var allOn = UNIVS.every(function (u) { return !S.off[u.id]; }); S.off = {}; if (allOn) UNIVS.forEach(function (u) { S.off[u.id] = 1; }); save(); return render(); }
+    if ((b = t.closest("[data-rep]"))) { openReport(b.getAttribute("data-rep")); return; }
+    if (t.closest("#ftog")) {
+      var op = document.getElementById("fpanel").classList.toggle("open");
+      try { localStorage.setItem("nyushical.fopen." + document.documentElement.getAttribute("data-layout"), op ? "1" : "0"); } catch (e) {}
+      return render();
+    }
+    if (t.closest("[data-share]")) { doShare(); return; }
+    if ((b = t.closest("[data-pre]"))) { var pp = loadPresets()[+b.getAttribute("data-pre")]; if (pp) applySetting(pp, "「" + pp.name + "」にしました"); return; }
+    if ((b = t.closest("[data-predel]"))) { var pa = loadPresets(), pi = +b.getAttribute("data-predel"); if (pa[pi] && window.confirm("「" + pa[pi].name + "」を消しますか？")) { pa.splice(pi, 1); savePresets(pa); renderPresets(); } return; }
+    if (t.closest("[data-presave]")) {
+      var st = curSetting(), nm = window.prompt("この絞り込みの名前", settingName(st));
+      if (nm === null) return; nm = nm.trim() || settingName(st);
+      var arr = loadPresets(); st.name = nm.slice(0, 40); arr.push(st);
+      if (savePresets(arr)) { renderPresets(); toast("「" + st.name + "」を保存しました"); } else toast("このブラウザでは保存できませんでした。設定コードを使ってください");
+      return;
+    }
+    if (t.closest("[data-code]")) { openCode(); return; }
+    if ((b = t.closest("[data-tr]"))) {   // 理系・文系の切り替え
+      var ntr = b.getAttribute("data-tr"); if (ntr === S.tr || !hasTrack(S.year, ntr)) return;
+      save(); S.shared = 0;
+      loadYear(S.year, function () { useTrack(ntr); setYear(S.year); save(); render(); }, ntr);
+      return;
+    }
+    if ((b = t.closest("[data-fld]"))) { S.shared = 0; var fk = b.getAttribute("data-fld"), fi = S.fld.indexOf(fk); S.fld = S.fld.slice(); if (fi >= 0) S.fld.splice(fi, 1); else S.fld.push(fk); save(); return render(); }
+    if (t.closest("[data-fldall]")) { S.shared = 0; S.fld = []; save(); return render(); }
+    if (t.closest("[data-clear]")) { S.shared = 0; S.off = {}; S.fld = []; S.hid = {}; save(); return render(); }
+    if ((b = t.closest("[data-g]"))) {   // 大学群をまとめて入れる・外す
+      S.shared = 0; var g = GROUPS[+b.getAttribute("data-g")];
+      var full = g.members.every(function (id) { return !S.off[id]; });
+      g.members.forEach(function (id) { if (full) S.off[id] = 1; else delete S.off[id]; });
+      save(); return render();
+    }
+    if ((b = t.closest("[data-u]"))) { S.shared = 0; var id = b.getAttribute("data-u"); if (S.off[id]) delete S.off[id]; else S.off[id] = 1; save(); return render(); }
+    if ((b = t.closest("[data-all]"))) { S.shared = 0; var allOn = UNIVS.every(function (u) { return !S.off[u.id]; }); S.off = {}; if (allOn) UNIVS.forEach(function (u) { S.off[u.id] = 1; }); save(); return render(); }
     if ((b = t.closest("[data-day]"))) { var k = b.getAttribute("data-day"); S.view = "list"; save(); render(); var el = document.getElementById("day-" + k); if (el) el.scrollIntoView({ block: "start" }); return; }
-    if ((b = t.closest("[data-id]"))) { openDetail(+b.getAttribute("data-id")); return; }
+    if ((b = t.closest("[data-hide]"))) { var hp = b.getAttribute("data-hide").split("|"); dlg.close(); hideSlots(EVENTS[+hp[0]], [hp[1]]); return; }
+    if ((b = t.closest("[data-hideev]"))) { var he = EVENTS[+b.getAttribute("data-hideev")]; dlg.close(); hideSlots(he, he.slots.filter(function (s) { return !S.hid[s.hk]; }).map(function (s) { return s.d; })); return; }
+    if (t.closest("[data-hidlist]")) { openHidList(); return; }
+    if (t.closest("[data-hidall]")) { var prev = S.hid; S.hid = {}; save(); render(); if (hidDlg.open) hidDlg.close(); snack("非表示をすべて戻しました", function () { S.hid = prev; save(); render(); }); return; }
+    if ((b = t.closest("[data-unhide]"))) { delete S.hid[b.getAttribute("data-unhide")]; save(); render(); if (hiddenList().length) openHidList(); else hidDlg.close(); return; }
+    if ((b = t.closest("[data-id]"))) { openDetail(+b.getAttribute("data-id"), b.getAttribute("data-d")); return; }
   });
   document.getElementById("marks").addEventListener("change", function (ev) { S.marks = ev.target.checked; save(); render(); });
   var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () {
@@ -416,11 +855,15 @@ html[data-layout="narrow"] .seg button{padding:4px 9px;font-size:12px}
     if (!saved) { var a = window.innerWidth < 760 ? "narrow" : "wide"; if (a !== document.documentElement.getAttribute("data-layout")) { document.documentElement.setAttribute("data-layout", a); render(); } }
   }, 150); });
   // 最初は保存した年度、なければいちばん新しい年度
-  var newest = YEARS.reduce(function (m, x) { return Math.max(m, x.y); }, 0);
+  var newest = newestYear();
+  if (Q.y && YEARS.some(function (x) { return x.y === +Q.y; })) S.year = +Q.y;
   if (!YEARS.some(function (x) { return x.y === S.year; })) S.year = newest;
-  loadYear(S.year, function () { setYear(S.year); render(); });
+  if (!hasTrack(S.year, S.tr)) useTrack("ri");
+  try { if (localStorage.getItem("nyushical.fopen." + document.documentElement.getAttribute("data-layout")) === "1") document.getElementById("fpanel").classList.add("open"); } catch (e) {}
+  loadYear(S.year, function () { setYear(S.year); applyShared(); render(); });
 })();
 </script>
 
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "3cb292761c6649f7b8074146b52abb3a"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
